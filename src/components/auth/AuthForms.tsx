@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { Suspense } from "react";
 
 function AuthFormsContent() {
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const selectedPlan = searchParams.get('plan');
-  const isRegister = searchParams.get('register') === 'true';
+  const isRegister = searchParams.get('register') === 'true' || pathname === '/register';
   const [view, setView] = useState<'login' | 'register'>(isRegister ? 'register' : 'login');
   
   const { login, register } = useAuth();
