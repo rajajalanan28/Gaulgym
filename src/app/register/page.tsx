@@ -13,7 +13,7 @@ export default function RegisterPage() {
     name: "",
     username: "",
     password: "",
-    role: "Member",
+    role: "Owner",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");

@@ -8,7 +8,7 @@ interface AuthUser {
   id: string;
   email: string;
   name: string;
-  role: 'owner' | 'admin' | 'member';
+  role: 'Owner' | 'Admin' | 'Member';
   gymId?: string;
 }
 

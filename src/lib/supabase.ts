@@ -10,7 +10,7 @@ export interface DbUser {
   id: string
   email: string
   name: string
-  role: 'owner' | 'admin' | 'member'
+  role: 'Owner' | 'Admin' | 'Member'
   phone?: string
   gym_id?: string
   owner_id?: string
