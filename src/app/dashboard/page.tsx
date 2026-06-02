@@ -5,14 +5,44 @@ import { StatCard } from '@/components/StatCard';
 import { WelcomeCard } from '@/components/WelcomeCard';
 import { MenuItem } from '@/components/MenuItem';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { useAuth } from '@/lib/auth-context';
 
 export default function OwnerDashboard() {
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = '/login';
+  };
+
   return (
     <ProtectedRoute>
     <div style={{ padding: spacing.lg }}>
+      {/* Header Section */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg }}>
+        <h1 style={{ color: colors.primary, fontWeight: 'bold', fontSize: '24px' }}>GAUL GYM</h1>
+        <button
+          onClick={handleLogout}
+          style={{
+            backgroundColor: 'transparent',
+            color: colors.error,
+            border: `1px solid ${colors.error}`,
+            padding: '8px 16px',
+            borderRadius: borderRadius.md,
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(239, 83, 80, 0.1)'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+        >
+          Logout
+        </button>
+      </div>
+
       {/* Welcome Section */}
       <WelcomeCard
-        title="Welcome back, Owner!"
+        title={`Welcome back, ${user?.name || 'Owner'}!`}
         subtitle="Here's an overview of your gym network"
         icon="💪"
       />
