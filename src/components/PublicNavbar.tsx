@@ -19,8 +19,11 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
   );
 }
 
+import { useAuth } from '@/lib/auth-context';
+
 export function PublicNavbar() {
   const pathname = usePathname();
+  const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -57,18 +60,29 @@ export function PublicNavbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          <Link 
-            href="/dashboard"
-            className="text-[13px] font-medium text-[var(--color-ink)] px-[14px] py-[6px] rounded-md transition-colors hover:text-[var(--color-ink-muted)] focus-ring"
-          >
-            Masuk
-          </Link>
-          <Link 
-            href="/daftar"
-            className="text-[13px] font-medium bg-[var(--color-primary)] text-white px-[14px] py-[6px] rounded-md transition-colors hover:bg-[var(--color-primary-hover)] focus-ring"
-          >
-            Daftar
-          </Link>
+          {user ? (
+            <Link 
+              href={user.role === 'Owner' ? '/dashboard' : user.role === 'Admin' ? '/admin/dashboard' : '/member/dashboard'}
+              className="text-[13px] font-medium bg-[var(--color-primary)] text-white px-[14px] py-[6px] rounded-md transition-colors hover:bg-[var(--color-primary-hover)] focus-ring"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link 
+                href="/login"
+                className="text-[13px] font-medium text-[var(--color-ink)] px-[14px] py-[6px] rounded-md transition-colors hover:text-[var(--color-ink-muted)] focus-ring"
+              >
+                Masuk
+              </Link>
+              <Link 
+                href="/daftar"
+                className="text-[13px] font-medium bg-[var(--color-primary)] text-white px-[14px] py-[6px] rounded-md transition-colors hover:bg-[var(--color-primary-hover)] focus-ring"
+              >
+                Daftar
+              </Link>
+            </>
+          )}
         </div>
 
       </div>
