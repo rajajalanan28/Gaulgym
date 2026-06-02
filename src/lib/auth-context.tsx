@@ -89,11 +89,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
-      // Sign in with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
+      if (authError || !authData?.user) throw new Error(authError?.message || 'Login gagal atau user tidak ditemukan');
 
       // Fetch user profile from users table to ensure it exists
       const { data: userData, error: userError } = await supabase
