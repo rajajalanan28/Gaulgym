@@ -161,8 +161,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      setUser(null);
+      // Optional: Clear any additional localStorage data if needed
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('role');
+      localStorage.removeItem('user');
+    }
   };
 
   return (

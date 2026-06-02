@@ -11,8 +11,13 @@ export default function OwnerDashboard() {
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    await logout();
-    window.location.href = '/login';
+    try {
+      await logout();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      window.location.href = '/login';
+    }
   };
 
   return (
