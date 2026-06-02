@@ -4,11 +4,9 @@ import { PublicNavbar } from '@/components/PublicNavbar';
 import { PublicFooter } from '@/components/PublicFooter';
 import Link from 'next/link';
 import { Dumbbell, Activity, ShowerHead } from 'lucide-react';
-import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function Home() {
   return (
-    <ProtectedRoute>
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] overflow-x-hidden selection:bg-[var(--color-primary-focus)] selection:text-white">
       <PublicNavbar />
       
@@ -121,6 +119,5 @@ export default function Home() {
 
       <PublicFooter />
     </div>
-    </ProtectedRoute>
   );
 }

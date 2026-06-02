@@ -3,11 +3,9 @@
 import { PublicNavbar } from '@/components/PublicNavbar';
 import { PublicFooter } from '@/components/PublicFooter';
 import { MapPin, Phone, Mail } from 'lucide-react';
-import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function ContactPage() {
   return (
-    <ProtectedRoute>
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
       <PublicNavbar />
       
@@ -113,6 +111,5 @@ export default function ContactPage() {
 
       <PublicFooter />
     </div>
-    </ProtectedRoute>
   );
 }

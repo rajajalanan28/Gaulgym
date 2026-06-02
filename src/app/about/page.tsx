@@ -2,11 +2,9 @@
 
 import { PublicNavbar } from '@/components/PublicNavbar';
 import { PublicFooter } from '@/components/PublicFooter';
-import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function AboutPage() {
   return (
-    <ProtectedRoute>
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
       <PublicNavbar />
       
@@ -66,6 +64,5 @@ export default function AboutPage() {
 
       <PublicFooter />
     </div>
-    </ProtectedRoute>
   );
 }
