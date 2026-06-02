@@ -272,7 +272,7 @@ export default function LoginPage() {
         <p className="text-center mt-6 text-sm" style={{ color: colors.textSecondary }}>
           Belum punya akun?{" "}
           <a
-            href="#"
+            href="/register"
             className="font-semibold transition-colors duration-200 hover:opacity-80"
             style={{ color: colors.primary }}
           >
