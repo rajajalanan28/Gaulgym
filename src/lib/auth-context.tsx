@@ -39,11 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    // Safety timeout: force stop loading after 3 seconds if something hangs
-    const fallbackTimer = setTimeout(() => {
-      setLoading(false);
-    }, 3000);
-
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
@@ -56,7 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       subscription.unsubscribe();
-      clearTimeout(fallbackTimer);
     };
   }, []);
 
@@ -104,15 +98,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authError || !authData?.user) throw new Error(authError?.message || 'Login gagal atau user tidak ditemukan');
 
       // Fetch user profile from users table to ensure it exists
-      const { data: userData, error: userError } = await supabase
+      let { data: userData, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('id', authData.user.id)
         .single();
 
       if (userError || !userData) {
-        await supabase.auth.signOut();
-        return { success: false, error: 'Akun error: Profil tidak ditemukan di database (Mungkin gagal saat register sebelumnya). Silakan daftar ulang dengan email lain, atau hapus akun ini di Supabase.' };
+        // Auto-recover ghost account using metadata
+        console.log('Ghost account detected. Attempting recovery...');
+        const { error: recoveryError } = await supabase.from('users').insert({
+          id: authData.user.id,
+          email: authData.user.email,
+          name: authData.user.user_metadata?.name || 'User',
+          role: authData.user.user_metadata?.role || 'Member',
+          gym_id: authData.user.user_metadata?.gym_id,
+          is_active: true,
+        });
+
+        if (recoveryError) {
+          await supabase.auth.signOut();
+          return { success: false, error: 'Akun rusak permanen dan gagal dipulihkan. Silakan daftar ulang dengan email baru.' };
+        }
+
+        // Re-fetch the newly recovered profile
+        const { data: recoveredData } = await supabase.from('users').select('*').eq('id', authData.user.id).single();
+        userData = recoveredData;
       }
 
       setUser({

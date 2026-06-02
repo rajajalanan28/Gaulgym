@@ -30,14 +30,17 @@ export default function LoginPage() {
       : `${email.trim().toLowerCase()}@gaulgym.com`;
     
     try {
-      const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => 
-        setTimeout(() => reject(new Error("Koneksi timeout (45 detik). Server Supabase mungkin sedang lambat.")), 45000)
-      );
+      let timeoutId: NodeJS.Timeout;
+      const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error("Koneksi timeout (45 detik). Server Supabase mungkin sedang lambat.")), 45000);
+      });
       
       const result = await Promise.race([
         login(loginEmail, password),
         timeoutPromise
       ]);
+
+      clearTimeout(timeoutId!);
       
       if (result.success) {
         router.push("/dashboard");
