@@ -1,7 +1,5 @@
 'use client';
 
-import { colors, gradients, borderRadius, spacing } from '@/lib/design-tokens';
-
 interface WelcomeCardProps {
   title: string;
   subtitle?: string;
@@ -10,36 +8,15 @@ interface WelcomeCardProps {
 
 export function WelcomeCard({ title, subtitle, icon = '👋' }: WelcomeCardProps) {
   return (
-    <div
-      style={{
-        background: gradients.primary,
-        borderRadius: borderRadius.lg,
-        padding: '24px',
-        color: colors.textPrimary,
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '32px' }}>{icon}</span>
+    <div className="bg-[var(--color-surface-2)] hairline-border-strong rounded-[16px] p-[32px] shadow-sm">
+      <div className="flex items-center gap-[16px]">
+        <span className="text-[40px] leading-none">{icon}</span>
         <div>
-          <h2
-            style={{
-              fontSize: '24px',
-              fontWeight: 'bold',
-              margin: 0,
-              color: colors.textPrimary,
-            }}
-          >
+          <h2 className="text-[20px] font-medium text-[var(--color-ink)] mb-1 tracking-[-0.01em]">
             {title}
           </h2>
           {subtitle && (
-            <p
-              style={{
-                fontSize: '14px',
-                margin: '4px 0 0 0',
-                opacity: 0.9,
-                color: colors.textPrimary,
-              }}
-            >
+            <p className="text-[14px] text-[var(--color-ink-muted)]">
               {subtitle}
             </p>
           )}

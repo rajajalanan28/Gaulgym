@@ -1,59 +1,35 @@
 'use client';
 
-import { colors, borderRadius, spacing } from '@/lib/design-tokens';
-
 interface MenuItemProps {
   icon: React.ReactNode;
   title: string;
   subtitle?: string;
-  color?: string;
   onClick?: () => void;
 }
 
-export function MenuItem({ icon, title, subtitle, color = colors.primary, onClick }: MenuItemProps) {
+export function MenuItem({ icon, title, subtitle, onClick }: MenuItemProps) {
   return (
     <div
       onClick={onClick}
-      style={{
-        backgroundColor: colors.surfaceVariant,
-        borderRadius: borderRadius.md,
-        padding: spacing.md,
-        cursor: onClick ? 'pointer' : 'default',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-      }}
-      onMouseEnter={(e) => {
-        if (onClick) {
-          e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
-      }}
+      className={`bg-[var(--color-surface-1)] hairline-border rounded-[12px] p-[20px] group transition-colors ${
+        onClick ? 'cursor-pointer hover:bg-[var(--color-surface-2)]' : 'cursor-default'
+      }`}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div
-          style={{
-            padding: '12px',
-            borderRadius: borderRadius.md,
-            backgroundColor: `${color}15`,
-            color: color,
-          }}
-        >
+      <div className="flex items-center gap-[16px]">
+        <div className="p-[10px] rounded-[8px] bg-[var(--color-surface-3)] hairline-border text-[var(--color-ink-subtle)] group-hover:text-[var(--color-ink)] transition-colors">
           {icon}
         </div>
-        <div style={{ flex: 1 }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: colors.textPrimary }}>
+        <div className="flex-1">
+          <h3 className="text-[14px] font-medium text-[var(--color-ink)] m-0">
             {title}
           </h3>
           {subtitle && (
-            <p style={{ fontSize: '12px', margin: '4px 0 0 0', color: colors.textSecondary }}>
+            <p className="text-[13px] text-[var(--color-ink-muted)] m-0 mt-1">
               {subtitle}
             </p>
           )}
         </div>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={colors.textSecondary}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-[var(--color-ink-tertiary)] group-hover:text-[var(--color-ink-subtle)] transition-colors">
           <path d="M9 18l6-6-6-6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>

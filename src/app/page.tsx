@@ -3,116 +3,112 @@
 import { PublicNavbar } from '@/components/PublicNavbar';
 import { PublicFooter } from '@/components/PublicFooter';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 
 export default function Home() {
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#050505] overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] overflow-x-hidden selection:bg-[var(--color-primary-focus)] selection:text-white">
       <PublicNavbar />
       
-      <main className="flex-1 pt-[75px]">
+      <main className="flex-1 pt-[120px]">
         {/* Hero Section */}
-        <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 py-20 overflow-hidden">
-          {/* Ambient Background Glows */}
-          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-orange-600/20 blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full bg-red-600/10 blur-[150px] pointer-events-none" />
-          
-          <div className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
-            {/* Badge */}
-            <div className="mb-8 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-orange-500/30 bg-orange-500/10 text-orange-400 text-sm font-semibold backdrop-blur-md">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-              </span>
-              Gym Premium No. 1 di Jakarta
+        <section className="relative flex flex-col items-center justify-center px-6 pt-16 pb-24">
+          <div className="relative z-10 max-w-[1000px] mx-auto text-center flex flex-col items-center">
+            
+            {/* New update badge */}
+            <div className="mb-8 inline-flex items-center gap-3 px-3 py-1 rounded-full hairline-border bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer text-[13px] font-medium text-[var(--color-ink-muted)]">
+              <span className="w-2 h-2 rounded-full bg-[var(--color-primary)]"></span>
+              Pusat Kebugaran No. 1 di Jakarta
+              <svg className="w-3.5 h-3.5 text-[var(--color-ink-subtle)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-[1.1] mb-8">
-              Transformasi Nyata,<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-red-500 to-orange-600">
-                Dimulai dari Sini.
-              </span>
+            <h1 className="text-[56px] md:text-[80px] font-semibold text-[var(--color-ink)] tracking-[-0.035em] leading-[1.05] mb-8 max-w-[900px]">
+              Kebugaran profesional, <br />
+              <span className="text-[var(--color-ink-muted)]">tanpa kompromi.</span>
             </h1>
             
-            <p className="text-lg md:text-xl text-zinc-400 leading-relaxed max-w-2xl mb-12">
-              Bergabunglah dengan fasilitas kebugaran paling eksklusif. Nikmati peralatan berstandar internasional, pelatih profesional, dan komunitas elit yang mendukung tujuan Anda.
+            <p className="text-[18px] md:text-[20px] text-[var(--color-ink-muted)] leading-[1.5] max-w-[640px] mb-12">
+              Gaul Gym menghadirkan fasilitas standar internasional, pelatih bersertifikasi, dan ekosistem kelas dunia untuk membantu Anda mencapai performa puncak.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-5 justify-center w-full sm:w-auto">
-              <Link href="/pricing" className="group relative w-full sm:w-auto outline-none">
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-600 rounded-full blur opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <button className="relative w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-orange-500 to-red-600 rounded-full text-lg font-bold text-white shadow-[0_4px_14px_0_rgba(249,115,22,0.39)] group-hover:shadow-[0_6px_20px_rgba(249,115,22,0.23)] group-hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto">
+              <Link href="/pricing" className="w-full sm:w-auto focus-ring rounded-md">
+                <button className="w-full sm:w-auto px-[18px] py-[12px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-focus)] rounded-md text-[15px] font-medium text-white transition-colors">
                   Mulai Sekarang
                 </button>
               </Link>
-              <Link href="/features" className="w-full sm:w-auto outline-none">
-                <button className="w-full sm:w-auto px-8 py-4 bg-transparent border border-zinc-700 hover:border-zinc-500 rounded-full text-lg font-semibold text-white hover:bg-zinc-800/50 transition-all duration-200">
+              <Link href="/features" className="w-full sm:w-auto focus-ring rounded-md">
+                <button className="w-full sm:w-auto px-[18px] py-[12px] bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] hairline-border rounded-md text-[15px] font-medium text-[var(--color-ink)] transition-colors">
                   Lihat Fasilitas
                 </button>
               </Link>
             </div>
           </div>
           
-          {/* Scroll Indicator */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
-            <span className="text-xs font-medium text-zinc-500 tracking-widest uppercase">Scroll</span>
-            <svg className="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>
+          {/* Dashboard Preview / Screenshot Area */}
+          <div className="w-full max-w-[1200px] mx-auto mt-24">
+            <div className="w-full aspect-[16/9] bg-[var(--color-surface-1)] hairline-border rounded-[16px] p-6 shadow-2xl relative overflow-hidden flex flex-col">
+              {/* Window Controls (Fake Chrome) */}
+              <div className="flex gap-2 mb-6">
+                <div className="w-3 h-3 rounded-full bg-[#33353a]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#33353a]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#33353a]"></div>
+              </div>
+              
+              <div className="flex-1 hairline-border bg-[var(--color-canvas)] rounded-lg p-8 flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-[var(--color-primary)] font-mono text-[13px] mb-4">/// GAUL GYM SYSTEM</div>
+                  <div className="text-[24px] font-medium text-[var(--color-ink-muted)]">Visualisasi Dashboard Interaktif</div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Feature Highlights */}
-        <section className="py-32 px-6 relative z-10 border-t border-zinc-900 bg-[#0A0A0A]">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-20">
-              <h2 className="text-3xl md:text-5xl font-black text-white mb-6 tracking-tight">
-                Mengapa Memilih <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">Gaul Gym?</span>
+        {/* Features Section */}
+        <section className="py-[96px] px-6">
+          <div className="max-w-[1200px] mx-auto">
+            <div className="text-center mb-[64px]">
+              <h2 className="text-[32px] md:text-[40px] font-semibold text-[var(--color-ink)] mb-4 tracking-[-0.02em]">
+                Dirancang untuk hasil maksimal
               </h2>
-              <p className="text-lg text-zinc-400 max-w-2xl mx-auto">
-                Fasilitas kelas dunia yang dirancang khusus untuk memastikan Anda mendapatkan hasil yang maksimal dalam setiap sesi latihan.
+              <p className="text-[18px] text-[var(--color-ink-muted)] max-w-[600px] mx-auto">
+                Setiap detail fasilitas kami dioptimalkan agar Anda dapat berlatih lebih keras, memulihkan diri lebih cepat, dan berkembang lebih jauh.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Feature 1 */}
-              <div className="group glass-card p-8 rounded-3xl hover:-translate-y-2 transition-transform duration-300">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-3xl mb-6 shadow-inner border border-zinc-700/50 group-hover:border-orange-500/50 group-hover:shadow-[0_0_20px_rgba(249,115,22,0.2)] transition-all">
-                  🏋️‍♂️
+              <div className="bg-[var(--color-surface-1)] hairline-border p-[32px] rounded-[12px] hover:bg-[var(--color-surface-2)] transition-colors group">
+                <div className="w-12 h-12 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center mb-6">
+                  <span className="text-xl">🏋️</span>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-4">Alat Standar Internasional</h3>
-                <p className="text-zinc-400 leading-relaxed">
-                  Peralatan terbaru dan terlengkap dari merk ternama yang dirawat secara berkala untuk kenyamanan dan keamanan Anda.
+                <h3 className="text-[18px] font-medium text-[var(--color-ink)] mb-3 tracking-[-0.01em]">Alat Berstandar Global</h3>
+                <p className="text-[15px] text-[var(--color-ink-muted)] leading-[1.6]">
+                  Dilengkapi dengan mesin isolasi presisi dan free weights dari merk terbaik industri kebugaran.
                 </p>
               </div>
               
               {/* Feature 2 */}
-              <div className="group glass-card p-8 rounded-3xl hover:-translate-y-2 transition-transform duration-300">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-3xl mb-6 shadow-inner border border-zinc-700/50 group-hover:border-orange-500/50 group-hover:shadow-[0_0_20px_rgba(249,115,22,0.2)] transition-all">
-                  👨‍🏫
+              <div className="bg-[var(--color-surface-1)] hairline-border p-[32px] rounded-[12px] hover:bg-[var(--color-surface-2)] transition-colors group">
+                <div className="w-12 h-12 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center mb-6">
+                  <span className="text-xl">📊</span>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-4">Pelatih Tersertifikasi</h3>
-                <p className="text-zinc-400 leading-relaxed">
-                  Dapatkan program latihan khusus yang disesuaikan secara saintifik dengan target dan kondisi fisik Anda.
+                <h3 className="text-[18px] font-medium text-[var(--color-ink)] mb-3 tracking-[-0.01em]">Pelatih Tersertifikasi</h3>
+                <p className="text-[15px] text-[var(--color-ink-muted)] leading-[1.6]">
+                  Program yang disesuaikan secara saintifik dengan kondisi tubuh dan target jangka panjang Anda.
                 </p>
               </div>
               
               {/* Feature 3 */}
-              <div className="group glass-card p-8 rounded-3xl hover:-translate-y-2 transition-transform duration-300">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-3xl mb-6 shadow-inner border border-zinc-700/50 group-hover:border-orange-500/50 group-hover:shadow-[0_0_20px_rgba(249,115,22,0.2)] transition-all">
-                  🚿
+              <div className="bg-[var(--color-surface-1)] hairline-border p-[32px] rounded-[12px] hover:bg-[var(--color-surface-2)] transition-colors group">
+                <div className="w-12 h-12 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center mb-6">
+                  <span className="text-xl">🚿</span>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-4">Fasilitas Eksekutif</h3>
-                <p className="text-zinc-400 leading-relaxed">
-                  Ruang ganti eksklusif, shower air panas, sauna, dan lounge premium untuk bersantai setelah sesi latihan yang intens.
+                <h3 className="text-[18px] font-medium text-[var(--color-ink)] mb-3 tracking-[-0.01em]">Fasilitas Eksekutif</h3>
+                <p className="text-[15px] text-[var(--color-ink-muted)] leading-[1.6]">
+                  Ruang ganti premium, sauna, dan lounge untuk bersantai dan memulihkan diri pasca latihan.
                 </p>
               </div>
             </div>

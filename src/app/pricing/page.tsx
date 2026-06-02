@@ -36,78 +36,68 @@ export default function PricingPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#050505]">
+    <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
       <PublicNavbar />
       
-      <main className="flex-1 pt-[120px] pb-32 relative overflow-hidden">
-        {/* Ambient Glows */}
-        <div className="absolute top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-[100%] bg-orange-600/10 blur-[150px] pointer-events-none" />
+      <main className="flex-1 pt-[120px] pb-[96px]">
         
-        <div className="relative z-10 max-w-6xl mx-auto px-6">
+        <div className="max-w-[1200px] mx-auto px-6">
           
-          <div className="text-center mb-20">
-            <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight mb-6">
-              Investasi Terbaik untuk <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">Tubuh Anda</span>
+          <div className="text-center mb-[64px]">
+            <h1 className="text-[40px] md:text-[56px] font-semibold text-[var(--color-ink)] tracking-[-0.03em] leading-[1.1] mb-6">
+              Investasi Terbaik untuk Tubuh Anda
             </h1>
-            <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto">
+            <p className="text-[18px] md:text-[20px] text-[var(--color-ink-muted)] max-w-[600px] mx-auto leading-[1.5]">
               Pilih paket yang sesuai dengan target kebugaran Anda. Tanpa biaya tersembunyi, batal kapan saja.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start max-w-[1000px] mx-auto">
             {plans.map((plan) => (
               <div 
                 key={plan.id} 
-                className={`relative group rounded-3xl transition-all duration-300 ${
+                className={`relative rounded-[12px] flex flex-col p-[24px] transition-colors ${
                   plan.popular 
-                    ? 'p-1 bg-gradient-to-b from-orange-500 to-red-600 md:-translate-y-4 shadow-[0_20px_40px_-15px_rgba(249,115,22,0.5)]' 
-                    : 'glass-card border border-zinc-800/50 hover:border-zinc-600/50 hover:-translate-y-2'
+                    ? 'bg-[var(--color-surface-2)] hairline-border-strong' 
+                    : 'bg-[var(--color-surface-1)] hairline-border'
                 }`}
               >
-                {/* Popular Badge */}
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-orange-500 to-red-600 rounded-full text-xs font-bold text-white tracking-widest uppercase shadow-lg">
-                    Paling Diminati
-                  </div>
-                )}
-                
-                {/* Inner Card */}
-                <div className={`h-full rounded-[23px] flex flex-col ${plan.popular ? 'bg-[#0f0f0f] p-8' : 'p-8'}`}>
-                  <h2 className="text-2xl font-bold text-white mb-2">
+                <div className="mb-6">
+                  <h2 className="text-[22px] font-medium text-[var(--color-ink)] mb-2 tracking-[-0.01em]">
                     {plan.name}
                   </h2>
-                  <p className="text-zinc-400 text-sm mb-8 min-h-[40px]">
+                  <p className="text-[15px] text-[var(--color-ink-muted)] min-h-[44px] leading-[1.5]">
                     {plan.description}
                   </p>
-                  
-                  <div className="mb-8 pb-8 border-b border-zinc-800">
-                    <div className="flex items-end gap-1">
-                      <span className="text-4xl font-black text-white">{plan.price}</span>
-                      <span className="text-zinc-500 text-sm font-medium mb-1">{plan.period}</span>
-                    </div>
-                  </div>
-
-                  <ul className="flex-1 space-y-4 mb-8">
-                    {plan.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-3 text-zinc-300 text-sm">
-                        <svg className={`w-5 h-5 shrink-0 ${plan.popular ? 'text-orange-500' : 'text-zinc-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Link href={`/register?plan=${plan.id}`} className="w-full outline-none">
-                    <button className={`w-full py-4 rounded-xl font-bold text-sm transition-all duration-200 ${
-                      plan.popular
-                        ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-[0_4px_14px_0_rgba(249,115,22,0.39)] hover:shadow-[0_6px_20px_rgba(249,115,22,0.23)]'
-                        : 'bg-zinc-800/50 hover:bg-zinc-700 text-white border border-zinc-700/50'
-                    }`}>
-                      Pilih Paket Ini
-                    </button>
-                  </Link>
                 </div>
+                
+                <div className="mb-8 pb-8 border-b border-[var(--color-hairline)]">
+                  <div className="flex items-end gap-1">
+                    <span className="text-[40px] font-semibold text-[var(--color-ink)] tracking-[-0.02em] leading-[1]">{plan.price}</span>
+                  </div>
+                  <div className="text-[var(--color-ink-subtle)] text-[15px] font-medium mt-1">{plan.period}</div>
+                </div>
+
+                <ul className="flex-1 space-y-4 mb-8">
+                  {plan.features.map((feature, idx) => (
+                    <li key={idx} className="flex items-start gap-3 text-[var(--color-ink-muted)] text-[15px]">
+                      <svg className="w-5 h-5 shrink-0 text-[var(--color-ink-subtle)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <Link href={`/register?plan=${plan.id}`} className="w-full focus-ring rounded-md mt-auto">
+                  <button className={`w-full py-[8px] px-[14px] rounded-md text-[14px] font-medium transition-colors ${
+                    plan.popular
+                      ? 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-focus)]'
+                      : 'bg-[var(--color-surface-1)] text-[var(--color-ink)] hairline-border hover:bg-[var(--color-surface-2)]'
+                  }`}>
+                    Pilih Paket Ini
+                  </button>
+                </Link>
               </div>
             ))}
           </div>

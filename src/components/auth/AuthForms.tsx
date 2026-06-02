@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { colors, gradients, borderRadius } from "@/lib/design-tokens";
 import { useAuth } from "@/lib/auth-context";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
@@ -94,32 +93,16 @@ function AuthFormsContent() {
   };
 
   return (
-    <div
-      className="relative min-h-screen flex items-center justify-center p-4 py-12"
-      style={{ backgroundColor: colors.background }}
-    >
-      {/* Background gradient overlay */}
-      <div
-        className="fixed inset-0 opacity-10 pointer-events-none"
-        style={{ background: gradients.primary }}
-      />
+    <div className="relative min-h-screen flex items-center justify-center p-4 py-12 bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
 
-      <div
-        className="relative w-full max-w-md p-8 rounded-2xl shadow-2xl"
-        style={{
-          backgroundColor: colors.surface,
-          borderRadius: borderRadius.xl,
-        }}
-      >
+      <div className="relative w-full max-w-md p-[32px] md:p-[48px] rounded-[16px] bg-[var(--color-surface-1)] hairline-border shadow-2xl">
+        
         {/* Header */}
         <div className="text-center mb-8">
-          <h1
-            className="text-4xl font-black tracking-tight mb-2 uppercase"
-            style={{ color: colors.primary }}
-          >
+          <h1 className="text-[24px] font-semibold tracking-[-0.02em] mb-2 text-[var(--color-ink)]">
             GAUL GYM
           </h1>
-          <p style={{ color: colors.textSecondary }}>
+          <p className="text-[14px] text-[var(--color-ink-muted)]">
             {view === 'login' 
               ? "Masuk untuk mulai latihan" 
               : selectedPlan ? `Mendaftar untuk Paket ${selectedPlan.toUpperCase()}` : "Buat akun baru"
@@ -129,16 +112,16 @@ function AuthFormsContent() {
 
         {/* Error Message */}
         {errorMsg && (
-          <div className="mb-6 p-4 rounded-xl text-sm font-medium flex items-center gap-2" style={{ backgroundColor: 'rgba(239, 83, 80, 0.1)', color: colors.error, border: `1px solid rgba(239, 83, 80, 0.2)` }}>
-            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          <div className="mb-6 p-3 rounded-md text-[13px] font-medium flex items-center gap-2 bg-red-500/10 text-red-500 border border-red-500/20">
+            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             {errorMsg}
           </div>
         )}
 
         {view === 'login' ? (
-          <form onSubmit={handleLoginSubmit} className="space-y-5">
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>
+              <label className="block text-[13px] font-medium mb-1.5 text-[var(--color-ink-subtle)]">
                 Username atau Email
               </label>
               <input
@@ -147,18 +130,11 @@ function AuthFormsContent() {
                 onChange={(e) => setLoginEmail(e.target.value)}
                 placeholder="Username atau nama@email.com"
                 required
-                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2"
-                style={{
-                  backgroundColor: colors.surfaceVariant,
-                  color: colors.textPrimary,
-                  border: `1px solid ${colors.surfaceVariant}`,
-                }}
-                onFocus={(e) => { e.target.style.borderColor = colors.primary; e.target.style.boxShadow = `0 0 0 3px rgba(255, 87, 34, 0.2)`; }}
-                onBlur={(e) => { e.target.style.borderColor = colors.surfaceVariant; e.target.style.boxShadow = "none"; }}
+                className="w-full px-[12px] py-[8px] rounded-md outline-none bg-[var(--color-surface-1)] text-[var(--color-ink)] hairline-border focus-ring placeholder:text-[var(--color-ink-tertiary)] text-[14px] transition-shadow"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>
+              <label className="block text-[13px] font-medium mb-1.5 text-[var(--color-ink-subtle)]">
                 Kata Sandi
               </label>
               <input
@@ -167,58 +143,42 @@ function AuthFormsContent() {
                 onChange={(e) => setLoginPassword(e.target.value)}
                 placeholder="Masukkan kata sandi"
                 required
-                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2"
-                style={{
-                  backgroundColor: colors.surfaceVariant,
-                  color: colors.textPrimary,
-                  border: `1px solid ${colors.surfaceVariant}`,
-                }}
-                onFocus={(e) => { e.target.style.borderColor = colors.primary; e.target.style.boxShadow = `0 0 0 3px rgba(255, 87, 34, 0.2)`; }}
-                onBlur={(e) => { e.target.style.borderColor = colors.surfaceVariant; e.target.style.boxShadow = "none"; }}
+                className="w-full px-[12px] py-[8px] rounded-md outline-none bg-[var(--color-surface-1)] text-[var(--color-ink)] hairline-border focus-ring placeholder:text-[var(--color-ink-tertiary)] text-[14px] transition-shadow"
               />
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-4 rounded-xl font-semibold text-white transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-              style={{ background: gradients.primary, borderRadius: borderRadius.md }}
+              className="w-full mt-4 py-[8px] px-[14px] rounded-md text-[14px] font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-focus)] transition-colors focus-ring disabled:opacity-50"
             >
               {isLoading ? "Memproses..." : "Masuk"}
             </button>
-            <p className="text-center mt-6 text-sm" style={{ color: colors.textSecondary }}>
+            <p className="text-center mt-6 text-[13px] text-[var(--color-ink-muted)]">
               Belum punya akun?{" "}
               <button
                 type="button"
                 onClick={() => { setView('register'); setErrorMsg(""); }}
-                className="font-semibold transition-colors duration-200 hover:opacity-80"
-                style={{ color: colors.primary }}
+                className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors focus-ring rounded-sm outline-none"
               >
                 Daftar sekarang
               </button>
             </p>
           </form>
         ) : (
-          <form onSubmit={handleRegisterSubmit} className="space-y-5">
+          <form onSubmit={handleRegisterSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>Nama Lengkap</label>
+              <label className="block text-[13px] font-medium mb-1.5 text-[var(--color-ink-subtle)]">Nama Lengkap</label>
               <input
                 type="text"
                 value={regData.name}
                 onChange={(e) => setRegData({ ...regData, name: e.target.value })}
                 required
-                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2"
-                style={{
-                  backgroundColor: colors.surfaceVariant,
-                  color: colors.textPrimary,
-                  border: `1px solid ${colors.surfaceVariant}`,
-                }}
-                onFocus={(e) => { e.target.style.borderColor = colors.primary; e.target.style.boxShadow = `0 0 0 3px rgba(255, 87, 34, 0.2)`; }}
-                onBlur={(e) => { e.target.style.borderColor = colors.surfaceVariant; e.target.style.boxShadow = "none"; }}
+                className="w-full px-[12px] py-[8px] rounded-md outline-none bg-[var(--color-surface-1)] text-[var(--color-ink)] hairline-border focus-ring placeholder:text-[var(--color-ink-tertiary)] text-[14px] transition-shadow"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>Username</label>
+              <label className="block text-[13px] font-medium mb-1.5 text-[var(--color-ink-subtle)]">Username</label>
               <input
                 type="text"
                 value={regData.username}
@@ -226,50 +186,34 @@ function AuthFormsContent() {
                 placeholder="contoh: ucok_sangar"
                 pattern="[a-zA-Z0-9_]+"
                 required
-                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2"
-                style={{
-                  backgroundColor: colors.surfaceVariant,
-                  color: colors.textPrimary,
-                  border: `1px solid ${colors.surfaceVariant}`,
-                }}
-                onFocus={(e) => { e.target.style.borderColor = colors.primary; e.target.style.boxShadow = `0 0 0 3px rgba(255, 87, 34, 0.2)`; }}
-                onBlur={(e) => { e.target.style.borderColor = colors.surfaceVariant; e.target.style.boxShadow = "none"; }}
+                className="w-full px-[12px] py-[8px] rounded-md outline-none bg-[var(--color-surface-1)] text-[var(--color-ink)] hairline-border focus-ring placeholder:text-[var(--color-ink-tertiary)] text-[14px] transition-shadow"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>Kata Sandi</label>
+              <label className="block text-[13px] font-medium mb-1.5 text-[var(--color-ink-subtle)]">Kata Sandi</label>
               <input
                 type="password"
                 value={regData.password}
                 onChange={(e) => setRegData({ ...regData, password: e.target.value })}
                 required
                 minLength={6}
-                className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2"
-                style={{
-                  backgroundColor: colors.surfaceVariant,
-                  color: colors.textPrimary,
-                  border: `1px solid ${colors.surfaceVariant}`,
-                }}
-                onFocus={(e) => { e.target.style.borderColor = colors.primary; e.target.style.boxShadow = `0 0 0 3px rgba(255, 87, 34, 0.2)`; }}
-                onBlur={(e) => { e.target.style.borderColor = colors.surfaceVariant; e.target.style.boxShadow = "none"; }}
+                className="w-full px-[12px] py-[8px] rounded-md outline-none bg-[var(--color-surface-1)] text-[var(--color-ink)] hairline-border focus-ring placeholder:text-[var(--color-ink-tertiary)] text-[14px] transition-shadow"
               />
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-4 py-4 rounded-xl font-semibold text-white transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-              style={{ background: gradients.primary }}
+              className="w-full mt-6 py-[8px] px-[14px] rounded-md text-[14px] font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-focus)] transition-colors focus-ring disabled:opacity-50"
             >
               {isLoading ? "Memproses..." : "Daftar"}
             </button>
-            <p className="text-center mt-6 text-sm" style={{ color: colors.textSecondary }}>
+            <p className="text-center mt-6 text-[13px] text-[var(--color-ink-muted)]">
               Sudah punya akun?{" "}
               <button
                 type="button"
                 onClick={() => { setView('login'); setErrorMsg(""); }}
-                className="font-semibold transition-colors duration-200 hover:opacity-80"
-                style={{ color: colors.primary }}
+                className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors focus-ring rounded-sm outline-none"
               >
                 Masuk
               </button>
@@ -283,7 +227,7 @@ function AuthFormsContent() {
 
 export default function AuthForms() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', backgroundColor: colors.background }} />}>
+    <Suspense fallback={<div className="min-h-screen bg-[var(--color-canvas)]" />}>
       <AuthFormsContent />
     </Suspense>
   );
