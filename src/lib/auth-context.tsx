@@ -26,6 +26,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUserProfile = async (userId: string, retries = 3) => {
+    try {
+      // Add a timeout to prevent hanging forever
+      const fetchPromise = supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+        
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout fetching user profile')), 5000)
+      );
+
+      const { data, error } = (await Promise.race([fetchPromise, timeoutPromise])) as any;
+      
+      if (error) {
+        if (error.code === 'PGRST116' && retries > 0) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return fetchUserProfile(userId, retries - 1);
+        }
+        throw error;
+      }
+      
+      setUser({
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        role: data.role as any,
+        gymId: data.gym_id,
+      });
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -54,38 +92,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  async function fetchUserProfile(userId: string, retries = 3) {
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
-      
-      if (error) {
-        if (error.code === 'PGRST116' && retries > 0) {
-          // Retry after 1 second to handle register race condition
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          return fetchUserProfile(userId, retries - 1);
-        }
-        throw error;
-      }
-      
-      setUser({
-        id: data.id,
-        email: data.email,
-        name: data.name,
-        role: data.role,
-        gymId: data.gym_id,
-      });
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
@@ -98,11 +104,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authError || !authData?.user) throw new Error(authError?.message || 'Login gagal atau user tidak ditemukan');
 
       // Fetch user profile from users table to ensure it exists
-      let { data: userData, error: userError } = await supabase
+      const { data: initialUserData, error: userError } = await supabase
         .from('users')
         .select('*')
         .eq('id', authData.user.id)
         .single();
+
+      let userData = initialUserData;
 
       if (userError || !userData) {
         // Auto-recover ghost account using metadata
@@ -130,15 +138,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: userData.id,
         email: userData.email,
         name: userData.name,
-        role: userData.role,
+        role: userData.role as any,
         gymId: userData.gym_id,
       };
       setUser(authUser);
 
       return { success: true, user: authUser };
-    } catch (error: any) {
+    } catch (error: unknown) {
       setLoading(false);
-      return { success: false, error: error.message || 'Login failed' };
+      return { success: false, error: error instanceof Error ? error.message : 'Login failed' };
     }
   };
 
@@ -186,9 +194,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       setLoading(false);
-      return { success: false, error: error.message || 'Registration failed' };
+      return { success: false, error: error instanceof Error ? error.message : 'Registration failed' };
     }
   };
 
