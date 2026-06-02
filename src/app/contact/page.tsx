@@ -6,7 +6,7 @@ import { colors, spacing, borderRadius } from '@/lib/design-tokens';
 
 export default function ContactPage() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: colors.background }}>
       <PublicNavbar />
       
       <main style={{ flex: 1, paddingTop: '120px', paddingBottom: spacing.xxl }}>
@@ -41,7 +41,7 @@ export default function ContactPage() {
                 <button type="button" style={{
                   padding: '12px',
                   backgroundColor: colors.primary,
-                  color: '#FFFFFF',
+                  color: colors.background,
                   border: 'none',
                   borderRadius: borderRadius.sm,
                   fontWeight: '600',

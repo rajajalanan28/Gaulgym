@@ -4,28 +4,28 @@
  */
 
 export const colors = {
-  // Apple Theme Colors
-  primary: '#0066CC', // Apple Blue
-  secondary: '#86868B', // System Gray
-  background: '#F5F5F7', // Apple Background Gray
-  surface: '#FFFFFF', // Pure White for cards/panels
-  surfaceVariant: '#F5F5F7',
+  // Linear Theme Colors
+  primary: '#5E6AD2', // Lavender Blue
+  secondary: '#888888', // Charcoal text
+  background: '#000000', // Pure Black
+  surface: '#0A0A0A', // Very Dark Gray for panels
+  surfaceVariant: '#111111', // Slightly lighter for borders/cards
   
   // Text
-  textPrimary: '#1D1D1F', // Deep almost black
-  textSecondary: '#86868B',
-  textHint: '#86868B',
-  textInverse: '#FFFFFF',
+  textPrimary: '#EEEEEE',
+  textSecondary: '#888888',
+  textHint: '#555555',
+  textInverse: '#000000',
   
   // Semantic
-  error: '#FF3B30', // Apple Red
-  success: '#34C759', // Apple Green
-  warning: '#FF9500', // Apple Orange
+  error: '#E5484D',
+  success: '#30A46C',
+  warning: '#F5A623',
 } as const;
 
 export const gradients = {
-  primary: 'linear-gradient(135deg, #0066CC 0%, #005BB5 100%)',
-  surface: 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.95) 100%)',
+  primary: 'linear-gradient(135deg, #5E6AD2 0%, #4755C5 100%)',
+  surface: 'linear-gradient(180deg, rgba(10,10,10,1) 0%, rgba(10,10,10,0.8) 100%)',
 } as const;
 
 export const spacing = {
@@ -34,13 +34,13 @@ export const spacing = {
   md: '16px',
   lg: '24px',
   xl: '32px',
-  xxl: '48px',
+  xxl: '64px', // larger for linear layout
 } as const;
 
 export const borderRadius = {
-  sm: '8px',
-  md: '12px',
-  lg: '16px',
-  xl: '20px',
+  sm: '4px',
+  md: '8px',
+  lg: '12px',
+  xl: '16px',
   full: '9999px',
 } as const;

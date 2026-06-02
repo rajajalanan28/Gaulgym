@@ -6,7 +6,7 @@ import { colors, spacing, borderRadius } from '@/lib/design-tokens';
 
 export default function FeaturesPage() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: colors.background }}>
       <PublicNavbar />
       
       <main style={{ flex: 1, paddingTop: '120px', paddingBottom: spacing.xxl }}>

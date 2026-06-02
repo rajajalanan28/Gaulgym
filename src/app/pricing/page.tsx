@@ -37,7 +37,7 @@ export default function PricingPage() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: colors.background }}>
       <PublicNavbar />
       
       <main style={{ flex: 1, paddingTop: '120px', paddingBottom: spacing.xxl }}>
@@ -56,7 +56,7 @@ export default function PricingPage() {
             {plans.map((plan) => (
               <div key={plan.id} style={{
                 position: 'relative',
-                backgroundColor: plan.popular ? '#1D1D1F' : colors.surfaceVariant,
+                backgroundColor: plan.popular ? colors.primary : colors.surfaceVariant,
                 borderRadius: borderRadius.xl,
                 padding: spacing.xl,
                 display: 'flex',
@@ -72,7 +72,7 @@ export default function PricingPage() {
                     left: '50%',
                     transform: 'translateX(-50%)',
                     backgroundColor: colors.primary,
-                    color: '#FFFFFF',
+                    color: colors.background,
                     padding: '4px 16px',
                     borderRadius: borderRadius.full,
                     fontSize: '12px',
@@ -84,7 +84,7 @@ export default function PricingPage() {
                   </div>
                 )}
                 
-                <h2 style={{ fontSize: '24px', fontWeight: '700', color: plan.popular ? '#FFFFFF' : colors.textPrimary, marginBottom: spacing.sm }}>
+                <h2 style={{ fontSize: '24px', fontWeight: '700', color: plan.popular ? colors.background : colors.textPrimary, marginBottom: spacing.sm }}>
                   {plan.name}
                 </h2>
                 <p style={{ color: plan.popular ? '#A1A1A6' : colors.textSecondary, fontSize: '14px', marginBottom: spacing.md, minHeight: '42px' }}>
@@ -92,13 +92,13 @@ export default function PricingPage() {
                 </p>
                 
                 <div style={{ marginBottom: spacing.lg }}>
-                  <span style={{ fontSize: '36px', fontWeight: '800', color: plan.popular ? '#FFFFFF' : colors.textPrimary }}>{plan.price}</span>
+                  <span style={{ fontSize: '36px', fontWeight: '800', color: plan.popular ? colors.background : colors.textPrimary }}>{plan.price}</span>
                   <span style={{ fontSize: '14px', color: plan.popular ? '#A1A1A6' : colors.textSecondary }}>{plan.period}</span>
                 </div>
 
                 <ul style={{ listStyle: 'none', padding: 0, margin: `0 0 ${spacing.xl} 0`, flex: 1, display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
                   {plan.features.map((feature, idx) => (
-                    <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, color: plan.popular ? '#FFFFFF' : colors.textPrimary, fontSize: '15px' }}>
+                    <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, color: plan.popular ? colors.background : colors.textPrimary, fontSize: '15px' }}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M20 6L9 17L4 12" stroke={plan.popular ? colors.primary : colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
@@ -112,8 +112,8 @@ export default function PricingPage() {
                     width: '100%',
                     padding: '16px',
                     borderRadius: borderRadius.full,
-                    backgroundColor: plan.popular ? colors.primary : '#FFFFFF',
-                    color: plan.popular ? '#FFFFFF' : colors.textPrimary,
+                    backgroundColor: plan.popular ? colors.primary : colors.background,
+                    color: plan.popular ? colors.background : colors.textPrimary,
                     border: plan.popular ? 'none' : `1px solid rgba(0,0,0,0.1)`,
                     fontSize: '16px',
                     fontWeight: '600',

@@ -22,7 +22,7 @@ export function PublicNavbar() {
       left: 0,
       right: 0,
       height: '70px',
-      backgroundColor: 'rgba(255, 255, 255, 0.85)',
+      backgroundColor: 'rgba(10, 10, 10, 0.85)',
       backdropFilter: 'blur(12px)',
       borderBottom: `1px solid rgba(0,0,0,0.05)`,
       display: 'flex',

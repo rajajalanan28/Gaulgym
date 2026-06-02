@@ -7,7 +7,7 @@ import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: '#FFFFFF' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: colors.background }}>
       <PublicNavbar />
       
       <main style={{ flex: 1, paddingTop: '70px' }}>
@@ -42,7 +42,7 @@ export default function Home() {
               <Link href="/pricing" style={{ textDecoration: 'none' }}>
                 <button style={{
                   backgroundColor: colors.primary,
-                  color: '#FFFFFF',
+                  color: colors.background,
                   padding: '16px 32px',
                   borderRadius: borderRadius.full,
                   fontSize: '18px',
@@ -78,7 +78,7 @@ export default function Home() {
         </section>
 
         {/* Feature Highlights */}
-        <section style={{ padding: `${spacing.xxl} ${spacing.xl}`, backgroundColor: '#FFFFFF' }}>
+        <section style={{ padding: `${spacing.xxl} ${spacing.xl}`, backgroundColor: colors.background }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ textAlign: 'center', marginBottom: spacing.xxl }}>
               <h2 style={{ fontSize: '32px', fontWeight: '800', color: colors.textPrimary, marginBottom: spacing.sm, letterSpacing: '-0.5px' }}>
