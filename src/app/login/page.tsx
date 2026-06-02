@@ -29,12 +29,24 @@ export default function LoginPage() {
       ? email.trim().toLowerCase() 
       : `${email.trim().toLowerCase()}@gaulgym.com`;
     
-    const { success, error } = await login(loginEmail, password);
-    
-    if (success) {
-      window.location.href = "/dashboard";
-    } else {
-      setErrorMsg(error || "Gagal masuk. Periksa email dan kata sandi Anda.");
+    try {
+      const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => 
+        setTimeout(() => reject(new Error("Koneksi timeout. Server Supabase mungkin sedang tidur/lambat.")), 15000)
+      );
+      
+      const result = await Promise.race([
+        login(loginEmail, password),
+        timeoutPromise
+      ]);
+      
+      if (result.success) {
+        router.push("/dashboard");
+      } else {
+        setErrorMsg(result.error || "Gagal masuk. Periksa email dan kata sandi Anda.");
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "Gagal masuk (Koneksi bermasalah)");
       setIsLoading(false);
     }
   };

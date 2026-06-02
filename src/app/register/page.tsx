@@ -35,17 +35,29 @@ function RegisterForm() {
 
     const email = `${formData.username.trim().toLowerCase()}@gaulgym.com`;
 
-    const { success, error } = await register(
-      formData.name,
-      email,
-      formData.password,
-      formData.role
-    );
+    try {
+      const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => 
+        setTimeout(() => reject(new Error("Koneksi timeout. Server Supabase mungkin sedang tidur/lambat.")), 15000)
+      );
 
-    if (success) {
-      window.location.href = "/dashboard";
-    } else {
-      setErrorMsg(error || "Pendaftaran gagal. Silakan coba lagi.");
+      const result = await Promise.race([
+        register(
+          formData.name,
+          email,
+          formData.password,
+          formData.role
+        ),
+        timeoutPromise
+      ]);
+
+      if (result.success) {
+        window.location.href = "/dashboard";
+      } else {
+        setErrorMsg(result.error || "Pendaftaran gagal. Silakan coba lagi.");
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      setErrorMsg(err.message || "Pendaftaran gagal (Koneksi bermasalah)");
       setIsLoading(false);
     }
   };
