@@ -20,7 +20,7 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     }
   }, [user, loading, router]);
 
@@ -39,7 +39,7 @@ export default function RegisterPage() {
     );
 
     if (success) {
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } else {
       setErrorMsg(error || "Pendaftaran gagal. Silakan coba lagi.");
       setIsLoading(false);

@@ -15,7 +15,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     }
   }, [user, loading, router]);
 
@@ -32,7 +32,7 @@ export default function LoginPage() {
     const { success, error } = await login(loginEmail, password);
     
     if (success) {
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } else {
       setErrorMsg(error || "Gagal masuk. Periksa email dan kata sandi Anda.");
       setIsLoading(false);
