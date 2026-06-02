@@ -4,9 +4,11 @@ import { colors, gradients, spacing, borderRadius } from '@/lib/design-tokens';
 import { StatCard } from '@/components/StatCard';
 import { WelcomeCard } from '@/components/WelcomeCard';
 import { MenuItem } from '@/components/MenuItem';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function OwnerDashboard() {
   return (
+    <ProtectedRoute>
     <div style={{ padding: spacing.lg }}>
       {/* Welcome Section */}
       <WelcomeCard
@@ -100,5 +102,6 @@ export default function OwnerDashboard() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

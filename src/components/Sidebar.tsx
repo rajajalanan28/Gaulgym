@@ -29,7 +29,7 @@ export function Sidebar() {
           🏋️
         </div>
         <div>
-          <div style={{ fontWeight: 'bold', fontSize: '18px' }}>FitGym</div>
+          <div style={{ fontWeight: 'bold', fontSize: '18px' }}>GAUL GYM</div>
           <div style={{ fontSize: '12px', color: colors.textSecondary, textTransform: 'capitalize' }}>{user?.role}</div>
         </div>
       </div>

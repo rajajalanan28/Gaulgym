@@ -1,19 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { colors, gradients, spacing, borderRadius } from "@/lib/design-tokens";
+import { useAuth } from "@/lib/auth-context";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { register, user, loading } = useAuth();
+  
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
     role: "Member",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, loading, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Registration submitted:", formData);
-    alert("Registration successful!");
+    setIsLoading(true);
+    setErrorMsg("");
+
+    const { success, error } = await register(
+      formData.name,
+      formData.email,
+      formData.password,
+      formData.role
+    );
+
+    if (success) {
+      router.push("/dashboard");
+    } else {
+      setErrorMsg(error || "Pendaftaran gagal. Silakan coba lagi.");
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -21,17 +49,38 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
-      <div className="bg-gray-800 rounded-lg shadow-2xl p-8 w-full max-w-md border border-gray-700">
+    <div
+      className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden"
+      style={{ backgroundColor: colors.background }}
+    >
+      <div
+        className="relative w-full max-w-md p-8 rounded-2xl shadow-2xl"
+        style={{
+          backgroundColor: colors.surface,
+          borderRadius: borderRadius.xl,
+        }}
+      >
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Join the Gym</h1>
-          <p className="text-gray-400">Create your account</p>
+          <h1
+            className="text-4xl font-black tracking-tight mb-2 uppercase"
+            style={{ color: colors.primary }}
+          >
+            GAUL GYM
+          </h1>
+          <p style={{ color: colors.textSecondary }}>Buat akun baru</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {errorMsg && (
+          <div className="mb-6 p-4 rounded-xl text-sm font-medium flex items-center gap-2" style={{ backgroundColor: 'rgba(239, 83, 80, 0.1)', color: colors.error, border: `1px solid rgba(239, 83, 80, 0.2)` }}>
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            {errorMsg}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-              Full Name
+            <label htmlFor="name" className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>
+              Nama Lengkap
             </label>
             <input
               type="text"
@@ -40,14 +89,20 @@ export default function RegisterPage() {
               value={formData.name}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
-              placeholder="John Doe"
+              className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2"
+              style={{
+                backgroundColor: colors.surfaceVariant,
+                color: colors.textPrimary,
+                border: `1px solid ${colors.surfaceVariant}`,
+              }}
+              onFocus={(e) => { e.target.style.borderColor = colors.primary; e.target.style.boxShadow = `0 0 0 3px rgba(255, 87, 34, 0.2)`; }}
+              onBlur={(e) => { e.target.style.borderColor = colors.surfaceVariant; e.target.style.boxShadow = "none"; }}
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              Email Address
+            <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>
+              Email
             </label>
             <input
               type="email"
@@ -56,14 +111,20 @@ export default function RegisterPage() {
               value={formData.email}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
-              placeholder="john@example.com"
+              className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2"
+              style={{
+                backgroundColor: colors.surfaceVariant,
+                color: colors.textPrimary,
+                border: `1px solid ${colors.surfaceVariant}`,
+              }}
+              onFocus={(e) => { e.target.style.borderColor = colors.primary; e.target.style.boxShadow = `0 0 0 3px rgba(255, 87, 34, 0.2)`; }}
+              onBlur={(e) => { e.target.style.borderColor = colors.surfaceVariant; e.target.style.boxShadow = "none"; }}
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Password
+            <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>
+              Kata Sandi
             </label>
             <input
               type="password"
@@ -73,21 +134,34 @@ export default function RegisterPage() {
               onChange={handleChange}
               required
               minLength={6}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
-              placeholder="••••••••"
+              className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2"
+              style={{
+                backgroundColor: colors.surfaceVariant,
+                color: colors.textPrimary,
+                border: `1px solid ${colors.surfaceVariant}`,
+              }}
+              onFocus={(e) => { e.target.style.borderColor = colors.primary; e.target.style.boxShadow = `0 0 0 3px rgba(255, 87, 34, 0.2)`; }}
+              onBlur={(e) => { e.target.style.borderColor = colors.surfaceVariant; e.target.style.boxShadow = "none"; }}
             />
           </div>
 
           <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-300 mb-2">
-              Role
+            <label htmlFor="role" className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>
+              Peran
             </label>
             <select
               id="role"
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition cursor-pointer"
+              className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200 cursor-pointer"
+              style={{
+                backgroundColor: colors.surfaceVariant,
+                color: colors.textPrimary,
+                border: `1px solid ${colors.surfaceVariant}`,
+              }}
+              onFocus={(e) => { e.target.style.borderColor = colors.primary; e.target.style.boxShadow = `0 0 0 3px rgba(255, 87, 34, 0.2)`; }}
+              onBlur={(e) => { e.target.style.borderColor = colors.surfaceVariant; e.target.style.boxShadow = "none"; }}
             >
               <option value="Member">Member</option>
               <option value="Admin">Admin</option>
@@ -97,16 +171,22 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 shadow-lg hover:shadow-red-500/25"
+            disabled={isLoading}
+            className="w-full mt-4 py-4 rounded-xl font-semibold text-white transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            style={{ background: gradients.primary }}
           >
-            Create Account
+            {isLoading ? "Memproses..." : "Daftar"}
           </button>
         </form>
 
-        <p className="text-center text-gray-400 mt-6 text-sm">
-          Already have an account?{" "}
-          <a href="/login" className="text-red-500 hover:text-red-400 transition">
-            Sign in
+        <p className="text-center mt-6 text-sm" style={{ color: colors.textSecondary }}>
+          Sudah punya akun?{" "}
+          <a
+            href="/login"
+            className="font-semibold transition-colors duration-200 hover:opacity-80"
+            style={{ color: colors.primary }}
+          >
+            Masuk
           </a>
         </p>
       </div>
