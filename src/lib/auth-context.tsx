@@ -53,21 +53,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as { data: DbUser | null; error: PostgrestError | null };
 
-      if (error) {
-        if (error.code === 'PGRST116' && retries > 0) {
+      if (error || !data) {
+        if (error?.code === 'PGRST116' && retries > 0) {
           await new Promise(resolve => setTimeout(resolve, 1000));
           return fetchUserProfile(userId, retries - 1);
         }
-        throw error;
+        throw error || new Error('User data not found');
       }
-      
-      setUser({
-        id: data.id,
-        email: data.email,
-        name: data.name,
-        role: data.role as AuthUser['role'],
-        gymId: data.gym_id,
-      });
+
+      if (data) {
+        setUser({
+          id: data.id,
+          email: data.email,
+          name: data.name,
+          role: data.role as AuthUser['role'],
+          gymId: data.gym_id,
+        });
+      }
     } catch (error) {
       console.error('Error fetching user profile:', error);
       setUser(null);
