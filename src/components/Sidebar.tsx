@@ -20,7 +20,7 @@ const ADMIN_MENU = [
 
 export function Sidebar() {
   const { user, logout } = useAuth();
-  const menu = user?.role === 'owner' ? OWNER_MENU : ADMIN_MENU;
+  const menu = user?.role === 'Owner' ? OWNER_MENU : ADMIN_MENU;
 
   return (
     <aside style={{ width: '260px', minHeight: '100vh', backgroundColor: colors.surface, padding: spacing.lg }}>

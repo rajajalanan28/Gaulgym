@@ -11,10 +11,10 @@ export default function Home() {
     const userRole = localStorage.getItem('userRole') || localStorage.getItem('role');
     const userData = localStorage.getItem('user');
 
-    if (userRole === 'owner' || userRole === 'admin') {
+    if (userRole === 'Owner' || userRole === 'Admin') {
       console.log('Redirecting to /dashboard (owner/admin)');
       router.push('/dashboard');
-    } else if (userRole === 'member') {
+    } else if (userRole === 'Member') {
       console.log('Redirecting to /member/dashboard (member)');
       router.push('/member/dashboard');
     } else {
