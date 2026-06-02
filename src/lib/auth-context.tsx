@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  async function fetchUserProfile(userId: string) {
+  async function fetchUserProfile(userId: string, retries = 3) {
     try {
       const { data, error } = await supabase
         .from('users')
@@ -68,7 +68,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', userId)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        if (error.code === 'PGRST116' && retries > 0) {
+          // Retry after 1 second to handle register race condition
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          return fetchUserProfile(userId, retries - 1);
+        }
+        throw error;
+      }
       
       setUser({
         id: data.id,
@@ -154,9 +161,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (profileError) throw profileError;
+
+        setUser({
+          id: authData.user.id,
+          email,
+          name,
+          role: role as any,
+          gymId: gymId,
+        });
       }
 
-      // Profile fetching is handled automatically by onAuthStateChange listener
       return { success: true };
     } catch (error: any) {
       setLoading(false);
