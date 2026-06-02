@@ -3,6 +3,7 @@
 import { PublicNavbar } from '@/components/PublicNavbar';
 import { PublicFooter } from '@/components/PublicFooter';
 import Link from 'next/link';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function PricingPage() {
   const plans = [
@@ -36,6 +37,7 @@ export default function PricingPage() {
   ];
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
       <PublicNavbar />
       
@@ -89,7 +91,7 @@ export default function PricingPage() {
                   ))}
                 </ul>
 
-                <Link href={`/register?plan=${plan.id}`} className="w-full focus-ring rounded-md mt-auto">
+                <Link href={`/daftar?plan=${plan.id}`} className="w-full focus-ring rounded-md mt-auto">
                   <button className={`w-full py-[8px] px-[14px] rounded-md text-[14px] font-medium transition-colors ${
                     plan.popular
                       ? 'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-focus)]'
@@ -107,5 +109,6 @@ export default function PricingPage() {
 
       <PublicFooter />
     </div>
+    </ProtectedRoute>
   );
 }

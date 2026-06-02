@@ -64,7 +64,7 @@ export function PublicNavbar() {
             Masuk
           </Link>
           <Link 
-            href="/register"
+            href="/daftar"
             className="text-[13px] font-medium bg-[var(--color-primary)] text-white px-[14px] py-[6px] rounded-md transition-colors hover:bg-[var(--color-primary-hover)] focus-ring"
           >
             Daftar
