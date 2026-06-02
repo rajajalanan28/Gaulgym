@@ -13,8 +13,8 @@ export function StatCard({ icon, value, label, color = colors.primary }: StatCar
   return (
     <div
       style={{
-        backgroundColor: colors.cardBackground,
-        borderRadius: borderRadius.md,
+        backgroundColor: colors.surfaceVariant,
+        borderRadius: borderRadius.lg,
         padding: spacing.md,
       }}
     >

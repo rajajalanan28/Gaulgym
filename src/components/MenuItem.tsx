@@ -15,7 +15,7 @@ export function MenuItem({ icon, title, subtitle, color = colors.primary, onClic
     <div
       onClick={onClick}
       style={{
-        backgroundColor: colors.cardBackground,
+        backgroundColor: colors.surfaceVariant,
         borderRadius: borderRadius.md,
         padding: spacing.md,
         cursor: onClick ? 'pointer' : 'default',

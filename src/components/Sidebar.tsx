@@ -43,8 +43,9 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div style={{ position: 'absolute', bottom: '24px', left: '24px', right: '24px' }}>
-        <div style={{ padding: '16px', backgroundColor: colors.cardBackground, borderRadius: borderRadius.md, marginBottom: '12px' }}>
+      <div style={{ marginTop: 'auto', paddingTop: '24px' }}>
+        <div style={{ padding: '16px', backgroundColor: colors.surfaceVariant, borderRadius: borderRadius.md, marginBottom: '12px' }}>
+          <p style={{ color: colors.textSecondary, fontSize: '12px', marginBottom: '4px' }}>Logged in as</p>
           <div style={{ fontWeight: 600 }}>{user?.name}</div>
           <div style={{ fontSize: '12px', color: colors.textSecondary }}>{user?.email}</div>
         </div>
