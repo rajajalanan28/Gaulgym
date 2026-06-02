@@ -36,12 +36,12 @@ export default function LoginPage() {
 
   return (
     <div
-      className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden"
+      className="relative min-h-screen flex items-center justify-center p-4 py-12"
       style={{ backgroundColor: colors.background }}
     >
       {/* Background gradient overlay */}
       <div
-        className="absolute inset-0 opacity-10"
+        className="fixed inset-0 opacity-10 pointer-events-none"
         style={{
           background: gradients.primary,
         }}

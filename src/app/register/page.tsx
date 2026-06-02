@@ -50,7 +50,7 @@ export default function RegisterPage() {
 
   return (
     <div
-      className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden"
+      className="relative min-h-screen flex items-center justify-center p-4 py-12"
       style={{ backgroundColor: colors.background }}
     >
       <div
