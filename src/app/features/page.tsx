@@ -3,8 +3,12 @@
 import { PublicNavbar } from '@/components/PublicNavbar';
 import { PublicFooter } from '@/components/PublicFooter';
 import { Dumbbell, Activity, Users, ShowerHead, Thermometer, Coffee } from 'lucide-react';
+import { DashboardHeader } from '@/components/DashboardHeader';
+import { useAuth } from '@/lib/auth-context';
 
 export default function FeaturesPage() {
+  const { user } = useAuth();
+
   const features = [
     { icon: <Dumbbell className="w-5 h-5" />, title: 'Free Weights Area', desc: 'Dumbbell dari 1kg hingga 50kg, bench press, squat rack, dan smith machine.' },
     { icon: <Activity className="w-5 h-5" />, title: 'Cardio Center', desc: 'Treadmill, elliptical, dan sepeda statis dengan layar sentuh dan koneksi internet.' },
@@ -16,9 +20,15 @@ export default function FeaturesPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
-      <PublicNavbar />
+      {user ? (
+        <div className="px-6 pt-6">
+          <DashboardHeader />
+        </div>
+      ) : (
+        <PublicNavbar />
+      )}
       
-      <main className="flex-1 pt-[120px] pb-[96px]">
+      <main className={`flex-1 ${user ? 'pt-[32px]' : 'pt-[120px]'} pb-[96px]`}>
         <div className="max-w-[1200px] mx-auto px-6">
           <div className="text-center mb-[64px]">
             <h1 className="text-[40px] md:text-[56px] font-semibold text-[var(--color-ink)] tracking-[-0.03em] leading-[1.1] mb-6">

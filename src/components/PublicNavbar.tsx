@@ -1,8 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth-context';
 
 function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
   return (
@@ -19,11 +19,9 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
   );
 }
 
-import { useAuth } from '@/lib/auth-context';
-
 export function PublicNavbar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -33,6 +31,27 @@ export function PublicNavbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // If user is logged in, don't render this navbar at all
+  // The page will show DashboardHeader instead
+  if (user) {
+    return null;
+  }
+
+  // Don't render anything while checking auth state to prevent flash
+  if (loading) {
+    return (
+      <nav className="fixed top-0 left-0 right-0 z-50 h-[56px] bg-transparent">
+        <div className="max-w-[1280px] mx-auto h-full px-6 flex items-center justify-between">
+          <a href="/" className="flex items-center gap-2 group focus-ring rounded-sm">
+            <span className="text-[var(--color-ink)] font-semibold tracking-tight text-[15px]">
+              GAUL GYM
+            </span>
+          </a>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav 
@@ -60,29 +79,18 @@ export function PublicNavbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          {user ? (
-            <a 
-              href={user.role === 'Owner' ? '/dashboard' : user.role === 'Admin' ? '/admin/dashboard' : '/member/dashboard'}
-              className="text-[13px] font-medium bg-[var(--color-primary)] text-white px-[14px] py-[6px] rounded-md transition-colors hover:bg-[var(--color-primary-hover)] focus-ring"
-            >
-              Dashboard
-            </a>
-          ) : (
-            <>
-              <a 
-                href="/login"
-                className="text-[13px] font-medium text-[var(--color-ink)] px-[14px] py-[6px] rounded-md transition-colors hover:text-[var(--color-ink-muted)] focus-ring"
-              >
-                Masuk
-              </a>
-              <a 
-                href="/daftar"
-                className="text-[13px] font-medium bg-[var(--color-primary)] text-white px-[14px] py-[6px] rounded-md transition-colors hover:bg-[var(--color-primary-hover)] focus-ring"
-              >
-                Daftar
-              </a>
-            </>
-          )}
+          <a 
+            href="/login"
+            className="text-[13px] font-medium text-[var(--color-ink)] px-[14px] py-[6px] rounded-md transition-colors hover:text-[var(--color-ink-muted)] focus-ring"
+          >
+            Masuk
+          </a>
+          <a 
+            href="/daftar"
+            className="text-[13px] font-medium bg-[var(--color-primary)] text-white px-[14px] py-[6px] rounded-md transition-colors hover:bg-[var(--color-primary-hover)] focus-ring"
+          >
+            Daftar
+          </a>
         </div>
 
       </div>

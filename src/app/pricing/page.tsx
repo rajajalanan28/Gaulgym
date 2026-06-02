@@ -3,8 +3,12 @@
 import { PublicNavbar } from '@/components/PublicNavbar';
 import { PublicFooter } from '@/components/PublicFooter';
 import Link from 'next/link';
+import { DashboardHeader } from '@/components/DashboardHeader';
+import { useAuth } from '@/lib/auth-context';
 
 export default function PricingPage() {
+  const { user } = useAuth();
+
   const plans = [
     {
       id: 'reguler',
@@ -37,12 +41,16 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
-      <PublicNavbar />
+      {user ? (
+        <div className="px-6 pt-6">
+          <DashboardHeader />
+        </div>
+      ) : (
+        <PublicNavbar />
+      )}
       
-      <main className="flex-1 pt-[120px] pb-[96px]">
-        
+      <main className={`flex-1 ${user ? 'pt-[32px]' : 'pt-[120px]'} pb-[96px]`}>
         <div className="max-w-[1200px] mx-auto px-6">
-          
           <div className="text-center mb-[64px]">
             <h1 className="text-[40px] md:text-[56px] font-semibold text-[var(--color-ink)] tracking-[-0.03em] leading-[1.1] mb-6">
               Investasi Terbaik untuk Tubuh Anda
@@ -101,7 +109,6 @@ export default function PricingPage() {
               </div>
             ))}
           </div>
-
         </div>
       </main>
 

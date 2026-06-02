@@ -4,13 +4,23 @@ import { PublicNavbar } from '@/components/PublicNavbar';
 import { PublicFooter } from '@/components/PublicFooter';
 import Link from 'next/link';
 import { Dumbbell, Activity, ShowerHead } from 'lucide-react';
+import { DashboardHeader } from '@/components/DashboardHeader';
+import { useAuth } from '@/lib/auth-context';
 
 export default function Home() {
+  const { user } = useAuth();
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] overflow-x-hidden selection:bg-[var(--color-primary-focus)] selection:text-white">
-      <PublicNavbar />
+      {user ? (
+        <div className="px-6 pt-6">
+          <DashboardHeader />
+        </div>
+      ) : (
+        <PublicNavbar />
+      )}
       
-      <main className="flex-1 pt-[120px]">
+      <main className={`flex-1 ${user ? 'pt-[32px]' : 'pt-[120px]'}`}>
         {/* Hero Section */}
         <section className="relative flex flex-col items-center justify-center px-6 pt-16 pb-24">
           <div className="relative z-10 max-w-[1000px] mx-auto text-center flex flex-col items-center">
@@ -80,7 +90,6 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Feature 1 */}
               <div className="bg-[var(--color-surface-1)] hairline-border p-[32px] rounded-[12px] hover:bg-[var(--color-surface-2)] transition-colors group">
                 <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center mb-6 text-[var(--color-ink-subtle)] group-hover:text-[var(--color-ink)] transition-colors">
                   <Dumbbell className="w-5 h-5" />
@@ -91,7 +100,6 @@ export default function Home() {
                 </p>
               </div>
               
-              {/* Feature 2 */}
               <div className="bg-[var(--color-surface-1)] hairline-border p-[32px] rounded-[12px] hover:bg-[var(--color-surface-2)] transition-colors group">
                 <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center mb-6 text-[var(--color-ink-subtle)] group-hover:text-[var(--color-ink)] transition-colors">
                   <Activity className="w-5 h-5" />
@@ -102,7 +110,6 @@ export default function Home() {
                 </p>
               </div>
               
-              {/* Feature 3 */}
               <div className="bg-[var(--color-surface-1)] hairline-border p-[32px] rounded-[12px] hover:bg-[var(--color-surface-2)] transition-colors group">
                 <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center mb-6 text-[var(--color-ink-subtle)] group-hover:text-[var(--color-ink)] transition-colors">
                   <ShowerHead className="w-5 h-5" />
