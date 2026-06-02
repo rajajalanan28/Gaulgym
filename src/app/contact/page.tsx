@@ -2,6 +2,7 @@
 
 import { PublicNavbar } from '@/components/PublicNavbar';
 import { PublicFooter } from '@/components/PublicFooter';
+import { MapPin, Phone, Mail } from 'lucide-react';
 
 export default function ContactPage() {
   return (
@@ -27,8 +28,8 @@ export default function ContactPage() {
               
               <div className="space-y-6 mb-12">
                 <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center shrink-0">
-                    📍
+                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center shrink-0 text-[var(--color-ink-subtle)]">
+                    <MapPin className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="font-medium text-[var(--color-ink)] mb-1 text-[15px]">Alamat Utama</p>
@@ -36,8 +37,8 @@ export default function ContactPage() {
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center shrink-0">
-                    📞
+                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center shrink-0 text-[var(--color-ink-subtle)]">
+                    <Phone className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="font-medium text-[var(--color-ink)] mb-1 text-[15px]">Telepon</p>
@@ -45,8 +46,8 @@ export default function ContactPage() {
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center shrink-0">
-                    ✉️
+                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center shrink-0 text-[var(--color-ink-subtle)]">
+                    <Mail className="w-4 h-4" />
                   </div>
                   <div>
                     <p className="font-medium text-[var(--color-ink)] mb-1 text-[15px]">Email</p>

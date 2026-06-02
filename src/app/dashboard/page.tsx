@@ -41,7 +41,6 @@ export default function OwnerDashboard() {
             <WelcomeCard
               title={`Welcome back, ${user?.name || 'Owner'}!`}
               subtitle="Here's an overview of your gym network"
-              icon="💪"
             />
           </div>
 

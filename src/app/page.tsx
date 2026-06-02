@@ -3,6 +3,7 @@
 import { PublicNavbar } from '@/components/PublicNavbar';
 import { PublicFooter } from '@/components/PublicFooter';
 import Link from 'next/link';
+import { Dumbbell, Activity, ShowerHead } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -81,8 +82,8 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Feature 1 */}
               <div className="bg-[var(--color-surface-1)] hairline-border p-[32px] rounded-[12px] hover:bg-[var(--color-surface-2)] transition-colors group">
-                <div className="w-12 h-12 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center mb-6">
-                  <span className="text-xl">🏋️</span>
+                <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center mb-6 text-[var(--color-ink-subtle)] group-hover:text-[var(--color-ink)] transition-colors">
+                  <Dumbbell className="w-5 h-5" />
                 </div>
                 <h3 className="text-[18px] font-medium text-[var(--color-ink)] mb-3 tracking-[-0.01em]">Alat Berstandar Global</h3>
                 <p className="text-[15px] text-[var(--color-ink-muted)] leading-[1.6]">
@@ -92,8 +93,8 @@ export default function Home() {
               
               {/* Feature 2 */}
               <div className="bg-[var(--color-surface-1)] hairline-border p-[32px] rounded-[12px] hover:bg-[var(--color-surface-2)] transition-colors group">
-                <div className="w-12 h-12 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center mb-6">
-                  <span className="text-xl">📊</span>
+                <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center mb-6 text-[var(--color-ink-subtle)] group-hover:text-[var(--color-ink)] transition-colors">
+                  <Activity className="w-5 h-5" />
                 </div>
                 <h3 className="text-[18px] font-medium text-[var(--color-ink)] mb-3 tracking-[-0.01em]">Pelatih Tersertifikasi</h3>
                 <p className="text-[15px] text-[var(--color-ink-muted)] leading-[1.6]">
@@ -103,8 +104,8 @@ export default function Home() {
               
               {/* Feature 3 */}
               <div className="bg-[var(--color-surface-1)] hairline-border p-[32px] rounded-[12px] hover:bg-[var(--color-surface-2)] transition-colors group">
-                <div className="w-12 h-12 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center mb-6">
-                  <span className="text-xl">🚿</span>
+                <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center mb-6 text-[var(--color-ink-subtle)] group-hover:text-[var(--color-ink)] transition-colors">
+                  <ShowerHead className="w-5 h-5" />
                 </div>
                 <h3 className="text-[18px] font-medium text-[var(--color-ink)] mb-3 tracking-[-0.01em]">Fasilitas Eksekutif</h3>
                 <p className="text-[15px] text-[var(--color-ink-muted)] leading-[1.6]">

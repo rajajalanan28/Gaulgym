@@ -41,7 +41,7 @@ export default function GymsPage() {
 
       {showConfirm && (
         <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-800 rounded-lg">
-          ✅ Fitur tambah gym akan segera hadir! Permintaan Anda telah tercatat.
+          Fitur tambah gym akan segera hadir! Permintaan Anda telah tercatat.
         </div>
       )}
 

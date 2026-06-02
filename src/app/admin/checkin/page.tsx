@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { Check, Camera, Loader2, Smartphone, PenLine } from "lucide-react";
 
 interface CheckInData {
   memberId: string;
@@ -128,14 +129,14 @@ export default function CheckInPage() {
                     className="absolute left-4 right-4 h-1 bg-gradient-to-r from-transparent via-green-400 to-transparent"
                     style={{ top: `${scanLinePosition}%` }}
                   />
-                  <div className="text-green-400 text-lg font-medium animate-pulse">
-                    Scanning...
+                  <div className="text-green-400 text-lg font-medium animate-pulse flex items-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" /> Scanning...
                   </div>
                 </>
               ) : showConfirmation && lastScanResult?.success ? (
-                <div className="text-green-400 text-8xl">✓</div>
+                <div className="text-green-400"><Check className="w-24 h-24" /></div>
               ) : (
-                <div className="text-gray-600 text-6xl">📷</div>
+                <div className="text-gray-600"><Camera className="w-16 h-16" /></div>
               )}
             </div>
           </div>
@@ -167,7 +168,7 @@ export default function CheckInPage() {
             disabled={isScanning}
             className="px-8 py-4 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-xl font-semibold transition-colors flex items-center gap-2"
           >
-            <span className="text-xl">{isScanning ? "⏳" : "📱"}</span>
+            <span className="text-xl flex items-center justify-center">{isScanning ? <Loader2 className="w-5 h-5 animate-spin" /> : <Smartphone className="w-5 h-5" />}</span>
             {isScanning ? "Scanning..." : "Scan QR Code"}
           </button>
 
@@ -176,7 +177,7 @@ export default function CheckInPage() {
             disabled={isScanning}
             className="px-8 py-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-xl font-semibold transition-colors flex items-center gap-2"
           >
-            <span className="text-xl">✏️</span>
+            <span className="text-xl flex items-center justify-center"><PenLine className="w-5 h-5" /></span>
             Manual Entry
           </button>
         </div>
@@ -185,8 +186,8 @@ export default function CheckInPage() {
         {showConfirmation && lastScanResult?.data && (
           <div className="bg-gray-800 rounded-2xl p-6 border border-green-500/30 animate-fade-in">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">✓</span>
+              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 text-white">
+                <Check className="w-8 h-8" />
               </div>
               <h2 className="text-2xl font-bold text-green-400 mb-2">
                 Check-In Successful!
