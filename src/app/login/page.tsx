@@ -24,7 +24,12 @@ export default function LoginPage() {
     setIsLoading(true);
     setErrorMsg("");
     
-    const { success, error } = await login(email, password);
+    // Auto-append @gaulgym.local if it's a username (no @ symbol)
+    const loginEmail = email.includes("@") 
+      ? email.trim().toLowerCase() 
+      : `${email.trim().toLowerCase()}@gaulgym.local`;
+    
+    const { success, error } = await login(loginEmail, password);
     
     if (success) {
       router.push("/dashboard");
@@ -84,14 +89,14 @@ export default function LoginPage() {
               className="block text-sm font-medium mb-2"
               style={{ color: colors.textSecondary }}
             >
-              Email
+              Username atau Email
             </label>
             <input
               id="email"
-              type="email"
+              type="text"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="nama@email.com"
+              placeholder="Username atau nama@email.com"
               required
               className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2"
               style={{

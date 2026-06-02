@@ -11,7 +11,7 @@ export default function RegisterPage() {
   
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    username: "",
     password: "",
     role: "Member",
   });
@@ -29,9 +29,11 @@ export default function RegisterPage() {
     setIsLoading(true);
     setErrorMsg("");
 
+    const email = `${formData.username.trim().toLowerCase()}@gaulgym.local`;
+
     const { success, error } = await register(
       formData.name,
-      formData.email,
+      email,
       formData.password,
       formData.role
     );
@@ -101,15 +103,18 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>
-              Email
+            <label htmlFor="username" className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>
+              Username
             </label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
               onChange={handleChange}
+              placeholder="contoh: ucok_sangar"
+              pattern="[a-zA-Z0-9_]+"
+              title="Hanya huruf, angka, dan underscore (_)"
               required
               className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200 focus:ring-2"
               style={{
