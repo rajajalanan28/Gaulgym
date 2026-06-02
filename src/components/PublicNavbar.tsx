@@ -4,23 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 
-function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
-  return (
-    <a
-      href={href}
-      className={`text-[13px] font-medium transition-colors focus-ring rounded-sm ${
-        active 
-          ? 'text-[var(--color-ink)]' 
-          : 'text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)]'
-      }`}
-    >
-      {children}
-    </a>
-  );
-}
-
 export function PublicNavbar() {
-  const pathname = usePathname();
   const { user, loading } = useAuth();
   const [scrolled, setScrolled] = useState(false);
 
@@ -32,27 +16,12 @@ export function PublicNavbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // If user is logged in, don't render this navbar at all
-  // The page will show DashboardHeader instead
-  if (user) {
+  // If user is logged in, don't render - DashboardHeader handles it
+  if (user || loading) {
     return null;
   }
 
-  // Don't render anything while checking auth state to prevent flash
-  if (loading) {
-    return (
-      <nav className="fixed top-0 left-0 right-0 z-50 h-[56px] bg-transparent">
-        <div className="max-w-[1280px] mx-auto h-full px-6 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2 group focus-ring rounded-sm">
-            <span className="text-[var(--color-ink)] font-semibold tracking-tight text-[15px]">
-              GAUL GYM
-            </span>
-          </a>
-        </div>
-      </nav>
-    );
-  }
-
+  // Not logged in: show only logo + Masuk/Daftar, NO nav links
   return (
     <nav 
       className={`fixed top-0 left-0 right-0 z-50 h-[56px] transition-all duration-300 ${
@@ -68,16 +37,7 @@ export function PublicNavbar() {
           </span>
         </a>
 
-        {/* Links */}
-        <div className="hidden md:flex items-center gap-6">
-          <NavLink href="/" active={pathname === '/'}>Beranda</NavLink>
-          <NavLink href="/about" active={pathname === '/about'}>Tentang</NavLink>
-          <NavLink href="/features" active={pathname === '/features'}>Fasilitas</NavLink>
-          <NavLink href="/pricing" active={pathname === '/pricing'}>Paket</NavLink>
-          <NavLink href="/contact" active={pathname === '/contact'}>Kontak</NavLink>
-        </div>
-
-        {/* Actions */}
+        {/* Actions - only Masuk/Daftar */}
         <div className="flex items-center gap-3">
           <a 
             href="/login"
