@@ -27,7 +27,7 @@ export default function LoginPage() {
     // Auto-append @gaulgym.local if it's a username (no @ symbol)
     const loginEmail = email.includes("@") 
       ? email.trim().toLowerCase() 
-      : `${email.trim().toLowerCase()}@gaulgym.local`;
+      : `${email.trim().toLowerCase()}@gaulgym.com`;
     
     const { success, error } = await login(loginEmail, password);
     

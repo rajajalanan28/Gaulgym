@@ -29,7 +29,7 @@ export default function RegisterPage() {
     setIsLoading(true);
     setErrorMsg("");
 
-    const email = `${formData.username.trim().toLowerCase()}@gaulgym.local`;
+    const email = `${formData.username.trim().toLowerCase()}@gaulgym.com`;
 
     const { success, error } = await register(
       formData.name,
