@@ -1,16 +1,19 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import { Outfit } from 'next/font/google';
 import { AuthProvider } from '@/lib/auth-context';
 
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
+
 export const metadata: Metadata = {
-  title: 'Gym Management System',
-  description: 'Sistem manajemen gym',
+  title: 'Gaul Gym | Investasi Terbaik untuk Tubuh Anda',
+  description: 'Fasilitas kebugaran kelas dunia dengan peralatan premium dan pelatih tersertifikasi.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id">
-      <body style={{ margin: 0, backgroundColor: '#121212', color: '#fff' }}>
+    <html lang="id" className={outfit.variable}>
+      <body className="bg-[#050505] text-white font-sans antialiased selection:bg-orange-500/30">
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

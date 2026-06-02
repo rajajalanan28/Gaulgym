@@ -2,7 +2,6 @@
 
 import { PublicNavbar } from '@/components/PublicNavbar';
 import { PublicFooter } from '@/components/PublicFooter';
-import { colors, spacing, borderRadius } from '@/lib/design-tokens';
 import Link from 'next/link';
 
 export default function PricingPage() {
@@ -37,92 +36,78 @@ export default function PricingPage() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: colors.background }}>
+    <div className="min-h-screen flex flex-col bg-[#050505]">
       <PublicNavbar />
       
-      <main style={{ flex: 1, paddingTop: '120px', paddingBottom: spacing.xxl }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: `0 ${spacing.xl}` }}>
+      <main className="flex-1 pt-[120px] pb-32 relative overflow-hidden">
+        {/* Ambient Glows */}
+        <div className="absolute top-40 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-[100%] bg-orange-600/10 blur-[150px] pointer-events-none" />
+        
+        <div className="relative z-10 max-w-6xl mx-auto px-6">
           
-          <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-            <h1 style={{ fontSize: '48px', fontWeight: '800', color: colors.textPrimary, letterSpacing: '-1px', marginBottom: spacing.md }}>
-              Investasi Terbaik untuk Tubuh Anda
+          <div className="text-center mb-20">
+            <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight mb-6">
+              Investasi Terbaik untuk <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">Tubuh Anda</span>
             </h1>
-            <p style={{ fontSize: '18px', color: colors.textSecondary, maxWidth: '600px', margin: '0 auto' }}>
+            <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto">
               Pilih paket yang sesuai dengan target kebugaran Anda. Tanpa biaya tersembunyi, batal kapan saja.
             </p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: spacing.xl, alignItems: 'center' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-5xl mx-auto">
             {plans.map((plan) => (
-              <div key={plan.id} style={{
-                position: 'relative',
-                backgroundColor: plan.popular ? colors.primary : colors.surfaceVariant,
-                borderRadius: borderRadius.xl,
-                padding: spacing.xl,
-                display: 'flex',
-                flexDirection: 'column',
-                height: plan.popular ? '520px' : '480px',
-                boxShadow: plan.popular ? '0 20px 40px rgba(0,0,0,0.2)' : 'none',
-                transform: plan.popular ? 'scale(1.02)' : 'scale(1)',
-              }}>
+              <div 
+                key={plan.id} 
+                className={`relative group rounded-3xl transition-all duration-300 ${
+                  plan.popular 
+                    ? 'p-1 bg-gradient-to-b from-orange-500 to-red-600 md:-translate-y-4 shadow-[0_20px_40px_-15px_rgba(249,115,22,0.5)]' 
+                    : 'glass-card border border-zinc-800/50 hover:border-zinc-600/50 hover:-translate-y-2'
+                }`}
+              >
+                {/* Popular Badge */}
                 {plan.popular && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '-14px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    backgroundColor: colors.primary,
-                    color: colors.background,
-                    padding: '4px 16px',
-                    borderRadius: borderRadius.full,
-                    fontSize: '12px',
-                    fontWeight: '700',
-                    letterSpacing: '1px',
-                    textTransform: 'uppercase'
-                  }}>
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-gradient-to-r from-orange-500 to-red-600 rounded-full text-xs font-bold text-white tracking-widest uppercase shadow-lg">
                     Paling Diminati
                   </div>
                 )}
                 
-                <h2 style={{ fontSize: '24px', fontWeight: '700', color: plan.popular ? colors.background : colors.textPrimary, marginBottom: spacing.sm }}>
-                  {plan.name}
-                </h2>
-                <p style={{ color: plan.popular ? '#A1A1A6' : colors.textSecondary, fontSize: '14px', marginBottom: spacing.md, minHeight: '42px' }}>
-                  {plan.description}
-                </p>
-                
-                <div style={{ marginBottom: spacing.lg }}>
-                  <span style={{ fontSize: '36px', fontWeight: '800', color: plan.popular ? colors.background : colors.textPrimary }}>{plan.price}</span>
-                  <span style={{ fontSize: '14px', color: plan.popular ? '#A1A1A6' : colors.textSecondary }}>{plan.period}</span>
+                {/* Inner Card */}
+                <div className={`h-full rounded-[23px] flex flex-col ${plan.popular ? 'bg-[#0f0f0f] p-8' : 'p-8'}`}>
+                  <h2 className="text-2xl font-bold text-white mb-2">
+                    {plan.name}
+                  </h2>
+                  <p className="text-zinc-400 text-sm mb-8 min-h-[40px]">
+                    {plan.description}
+                  </p>
+                  
+                  <div className="mb-8 pb-8 border-b border-zinc-800">
+                    <div className="flex items-end gap-1">
+                      <span className="text-4xl font-black text-white">{plan.price}</span>
+                      <span className="text-zinc-500 text-sm font-medium mb-1">{plan.period}</span>
+                    </div>
+                  </div>
+
+                  <ul className="flex-1 space-y-4 mb-8">
+                    {plan.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-3 text-zinc-300 text-sm">
+                        <svg className={`w-5 h-5 shrink-0 ${plan.popular ? 'text-orange-500' : 'text-zinc-500'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Link href={`/register?plan=${plan.id}`} className="w-full outline-none">
+                    <button className={`w-full py-4 rounded-xl font-bold text-sm transition-all duration-200 ${
+                      plan.popular
+                        ? 'bg-gradient-to-r from-orange-500 to-red-600 text-white shadow-[0_4px_14px_0_rgba(249,115,22,0.39)] hover:shadow-[0_6px_20px_rgba(249,115,22,0.23)]'
+                        : 'bg-zinc-800/50 hover:bg-zinc-700 text-white border border-zinc-700/50'
+                    }`}>
+                      Pilih Paket Ini
+                    </button>
+                  </Link>
                 </div>
-
-                <ul style={{ listStyle: 'none', padding: 0, margin: `0 0 ${spacing.xl} 0`, flex: 1, display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: spacing.sm, color: plan.popular ? colors.background : colors.textPrimary, fontSize: '15px' }}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M20 6L9 17L4 12" stroke={plan.popular ? colors.primary : colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <Link href={`/register?plan=${plan.id}`} style={{ textDecoration: 'none' }}>
-                  <button style={{
-                    width: '100%',
-                    padding: '16px',
-                    borderRadius: borderRadius.full,
-                    backgroundColor: plan.popular ? colors.primary : colors.background,
-                    color: plan.popular ? colors.background : colors.textPrimary,
-                    border: plan.popular ? 'none' : `1px solid rgba(0,0,0,0.1)`,
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                  }}>
-                    Pilih Paket Ini
-                  </button>
-                </Link>
               </div>
             ))}
           </div>

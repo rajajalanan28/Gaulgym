@@ -1,26 +1,28 @@
 @import "tailwindcss";
 
-:root {
+@theme {
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  
   --color-primary: #FF5722;
   --color-primary-light: #FF8A50;
   --color-primary-dark: #E64A19;
-  --color-secondary: #00BCD4;
-  --color-background: #121212;
-  --color-surface: #1E1E1E;
-  --color-surface-variant: #2C2C2C;
-  --color-card: #1A1A1A;
+  
+  --color-background: #050505;
+  --color-surface: #0a0a0a;
+  --color-surface-variant: #141414;
+  --color-card: #0f0f0f;
+  
   --color-text-primary: #FFFFFF;
-  --color-text-secondary: #B0B0B0;
-  --color-text-hint: #707070;
-  --color-success: #4CAF50;
-  --color-error: #EF5350;
-  --color-warning: #FFB74D;
-  --color-info: #29B6F6;
+  --color-text-secondary: #a1a1aa;
 }
+
+/* Base styles are now handled mostly by Tailwind utility classes in layout.tsx */
 
 body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
+  /* Smoother scrolling */
+  scroll-behavior: smooth;
 }
 
 /* Custom scrollbar */
@@ -35,5 +37,34 @@ body {
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-hint);
+  background: #3f3f46;
+}
+
+/* Premium Utilities */
+.glass {
+  background: rgba(10, 10, 10, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-card {
+  background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+.text-gradient {
+  background: linear-gradient(to right, #ffffff, #a1a1aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-primary {
+  background: linear-gradient(to right, #FF8A50, #E64A19);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
