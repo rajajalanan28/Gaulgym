@@ -5,19 +5,32 @@ import { useAuth } from "@/lib/auth-context";
 import { useSearchParams, usePathname } from "next/navigation";
 import { Suspense } from "react";
 
+interface TimeoutResult {
+  success: boolean;
+  error?: string;
+  user?: AuthUser;
+}
+
+interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}
+
 function AuthFormsContent() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const selectedPlan = searchParams.get('plan');
   const isRegister = searchParams.get('register') === 'true' || pathname === '/register';
   const [view, setView] = useState<'login' | 'register'>(isRegister ? 'register' : 'login');
-  
+
   const { login, register } = useAuth();
-  
+
   // Login State
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-  
+
   // Register State
   const [regData, setRegData] = useState({
     name: "",
@@ -25,7 +38,7 @@ function AuthFormsContent() {
     password: "",
     role: "Member",
   });
-  
+
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -33,24 +46,24 @@ function AuthFormsContent() {
     e.preventDefault();
     setIsLoading(true);
     setErrorMsg("");
-    
-    const finalEmail = loginEmail.includes("@") 
-      ? loginEmail.trim().toLowerCase() 
+
+    const finalEmail = loginEmail.includes("@")
+      ? loginEmail.trim().toLowerCase()
       : `${loginEmail.trim().toLowerCase()}@gaulgym.com`;
-    
+
     try {
-      let timeoutId: NodeJS.Timeout;
-      const timeoutPromise = new Promise<{success: boolean, error?: string, user?: any}>((_, reject) => {
+      let timeoutId: NodeJS.Timeout | undefined;
+      const timeoutPromise = new Promise<TimeoutResult>((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error("Koneksi timeout (45 detik). Server Supabase mungkin lambat.")), 45000);
       });
-      
+
       const result = await Promise.race([
         login(finalEmail, loginPassword),
         timeoutPromise
       ]);
 
-      clearTimeout(timeoutId!);
-      
+      if (timeoutId) clearTimeout(timeoutId);
+
       if (!result.success) {
         setErrorMsg(result.error || "Gagal masuk. Periksa kembali.");
         setIsLoading(false);
@@ -60,8 +73,9 @@ function AuthFormsContent() {
         else if (role === 'Admin') window.location.href = '/admin/dashboard';
         else window.location.href = '/member/dashboard';
       }
-    } catch (err: any) {
-      setErrorMsg(err.message || "Gagal masuk (Koneksi bermasalah)");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Gagal masuk (Koneksi bermasalah)";
+      setErrorMsg(errorMessage);
       setIsLoading(false);
     }
   };
@@ -74,8 +88,8 @@ function AuthFormsContent() {
     const email = `${regData.username.trim().toLowerCase()}@gaulgym.com`;
 
     try {
-      let timeoutId: NodeJS.Timeout;
-      const timeoutPromise = new Promise<{success: boolean, error?: string, user?: any}>((_, reject) => {
+      let timeoutId: NodeJS.Timeout | undefined;
+      const timeoutPromise = new Promise<TimeoutResult>((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error("Koneksi timeout (45 detik). Server Supabase mungkin lambat.")), 45000);
       });
 
@@ -84,7 +98,7 @@ function AuthFormsContent() {
         timeoutPromise
       ]);
 
-      clearTimeout(timeoutId!);
+      if (timeoutId) clearTimeout(timeoutId);
 
       if (!result.success) {
         setErrorMsg(result.error || "Pendaftaran gagal. Silakan coba lagi.");
@@ -95,8 +109,9 @@ function AuthFormsContent() {
         else if (role === 'Admin') window.location.href = '/admin/dashboard';
         else window.location.href = '/member/dashboard';
       }
-    } catch (err: any) {
-      setErrorMsg(err.message || "Pendaftaran gagal (Koneksi bermasalah)");
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Pendaftaran gagal (Koneksi bermasalah)";
+      setErrorMsg(errorMessage);
       setIsLoading(false);
     }
   };
@@ -105,15 +120,15 @@ function AuthFormsContent() {
     <div className="relative min-h-screen flex items-center justify-center p-4 py-12 bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
 
       <div className="relative w-full max-w-md p-[32px] md:p-[48px] rounded-[16px] bg-[var(--color-surface-1)] hairline-border shadow-2xl">
-        
+
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-[24px] font-semibold tracking-[-0.02em] mb-2 text-[var(--color-ink)]">
             GAUL GYM
           </h1>
           <p className="text-[14px] text-[var(--color-ink-muted)]">
-            {view === 'login' 
-              ? "Masuk untuk mulai latihan" 
+            {view === 'login'
+              ? "Masuk untuk mulai latihan"
               : selectedPlan ? `Mendaftar untuk Paket ${selectedPlan.toUpperCase()}` : "Buat akun baru"
             }
           </p>

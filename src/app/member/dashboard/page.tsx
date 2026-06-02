@@ -8,17 +8,7 @@ import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
 
 export default function MemberDashboard() {
-  const { user, logout } = useAuth();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      window.location.href = '/login';
-    }
-  };
+  const { user } = useAuth();
 
   return (
     <ProtectedRoute>

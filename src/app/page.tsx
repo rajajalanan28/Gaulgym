@@ -61,7 +61,7 @@ export default function Home() {
               
               <div className="flex-1 hairline-border bg-[var(--color-canvas)] rounded-lg p-8 flex items-center justify-center">
                 <div className="text-center">
-                  <div className="text-[var(--color-primary)] font-mono text-[13px] mb-4">/// GAUL GYM SYSTEM</div>
+                  <div className="text-[var(--color-primary)] font-mono text-[13px] mb-4">{`/// GAUL GYM SYSTEM`}</div>
                   <div className="text-[24px] font-medium text-[var(--color-ink-muted)]">Visualisasi Dashboard Interaktif</div>
                 </div>
               </div>

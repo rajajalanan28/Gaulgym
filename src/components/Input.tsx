@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, borderRadius, spacing } from '@/lib/design-tokens';
+import { colors, borderRadius } from '@/lib/design-tokens';
 
 interface InputProps {
   label?: string;

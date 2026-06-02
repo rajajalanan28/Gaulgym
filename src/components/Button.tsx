@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, borderRadius, spacing } from '@/lib/design-tokens';
+import { colors, borderRadius } from '@/lib/design-tokens';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';

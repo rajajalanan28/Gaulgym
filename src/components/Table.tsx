@@ -1,6 +1,6 @@
 'use client';
 
-import { colors, spacing, borderRadius } from '@/lib/design-tokens';
+import { colors, borderRadius } from '@/lib/design-tokens';
 
 interface Column<T> {
   key: keyof T;

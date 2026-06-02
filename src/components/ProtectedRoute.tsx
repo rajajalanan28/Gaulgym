@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import AuthForms from '@/components/auth/AuthForms';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,6 +11,13 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [loading, user, router]);
 
   if (loading) {
     return (
@@ -24,9 +31,6 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
   }
 
   if (!user) {
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
-    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">

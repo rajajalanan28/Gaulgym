@@ -1,8 +1,20 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase, DbUser } from './supabase';
-import { colors } from './design-tokens';
+import { supabase } from './supabase';
+
+interface DbUser {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  gym_id?: string;
+}
+
+interface PostgrestError {
+  code?: string;
+  message?: string;
+}
 
 interface AuthUser {
   id: string;
@@ -39,8 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTimeout(() => reject(new Error('Timeout fetching user profile')), 5000)
       );
 
-      const { data, error } = (await Promise.race([fetchPromise, timeoutPromise])) as any;
-      
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as { data: DbUser | null; error: PostgrestError | null };
+
       if (error) {
         if (error.code === 'PGRST116' && retries > 0) {
           await new Promise(resolve => setTimeout(resolve, 1000));
@@ -53,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: data.id,
         email: data.email,
         name: data.name,
-        role: data.role as any,
+        role: data.role as AuthUser['role'],
         gymId: data.gym_id,
       });
     } catch (error) {
@@ -138,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: userData.id,
         email: userData.email,
         name: userData.name,
-        role: userData.role as any,
+        role: userData.role as AuthUser['role'],
         gymId: userData.gym_id,
       };
       setUser(authUser);
@@ -186,7 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: authData.user.id,
           email,
           name,
-          role: role as any,
+          role: role as AuthUser['role'],
           gymId: gymId,
         };
         setUser(authUser);

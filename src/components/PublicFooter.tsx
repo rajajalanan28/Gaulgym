@@ -9,11 +9,11 @@ export function PublicFooter() {
         
         {/* Brand */}
         <div className="md:col-span-4">
-          <Link href="/" className="inline-block outline-none mb-4 focus-ring rounded-sm">
+          <a href="/" className="inline-block outline-none mb-4 focus-ring rounded-sm">
             <h2 className="text-[15px] font-semibold tracking-tight text-[var(--color-ink)]">
               GAUL GYM
             </h2>
-          </Link>
+          </a>
           <p className="text-[var(--color-ink-subtle)] leading-[1.5] text-[13px] max-w-xs">
             Transformasikan tubuh dan pikiran Anda dengan fasilitas premium dan pelatih profesional kelas dunia.
           </p>
@@ -24,19 +24,19 @@ export function PublicFooter() {
           <h3 className="text-[var(--color-ink)] font-medium mb-4 text-[13px]">Navigasi</h3>
           <ul className="space-y-3">
             <li>
-              <Link href="/about" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <a href="/about" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Tentang Kami
-              </Link>
+              </a>
             </li>
             <li>
-              <Link href="/features" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <a href="/features" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Fasilitas
-              </Link>
+              </a>
             </li>
             <li>
-              <Link href="/pricing" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <a href="/pricing" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Paket Harga
-              </Link>
+              </a>
             </li>
           </ul>
         </div>
@@ -46,19 +46,19 @@ export function PublicFooter() {
           <h3 className="text-[var(--color-ink)] font-medium mb-4 text-[13px]">Bantuan</h3>
           <ul className="space-y-3">
             <li>
-              <Link href="/contact" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <a href="/contact" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Hubungi Kami
-              </Link>
+              </a>
             </li>
             <li>
-              <Link href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <a href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Syarat & Ketentuan
-              </Link>
+              </a>
             </li>
             <li>
-              <Link href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <a href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Kebijakan Privasi
-              </Link>
+              </a>
             </li>
           </ul>
         </div>
@@ -68,14 +68,14 @@ export function PublicFooter() {
           <h3 className="text-[var(--color-ink)] font-medium mb-4 text-[13px]">Sosial</h3>
           <ul className="space-y-3">
             <li>
-              <Link href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <a href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Twitter / X
-              </Link>
+              </a>
             </li>
             <li>
-              <Link href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <a href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Instagram
-              </Link>
+              </a>
             </li>
           </ul>
         </div>

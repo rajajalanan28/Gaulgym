@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 
 function NavLink({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
   return (
-    <Link
+    <a
       href={href}
       className={`text-[13px] font-medium transition-colors focus-ring rounded-sm ${
         active 
@@ -15,7 +15,7 @@ function NavLink({ href, active, children }: { href: string; active: boolean; ch
       }`}
     >
       {children}
-    </Link>
+    </a>
   );
 }
 
@@ -43,11 +43,11 @@ export function PublicNavbar() {
       <div className="max-w-[1280px] mx-auto h-full px-6 flex items-center justify-between">
         
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 group focus-ring rounded-sm">
+        <a href="/" className="flex items-center gap-2 group focus-ring rounded-sm">
           <span className="text-[var(--color-ink)] font-semibold tracking-tight text-[15px]">
             GAUL GYM
           </span>
-        </Link>
+        </a>
 
         {/* Links */}
         <div className="hidden md:flex items-center gap-6">
@@ -61,26 +61,26 @@ export function PublicNavbar() {
         {/* Actions */}
         <div className="flex items-center gap-3">
           {user ? (
-            <Link 
+            <a 
               href={user.role === 'Owner' ? '/dashboard' : user.role === 'Admin' ? '/admin/dashboard' : '/member/dashboard'}
               className="text-[13px] font-medium bg-[var(--color-primary)] text-white px-[14px] py-[6px] rounded-md transition-colors hover:bg-[var(--color-primary-hover)] focus-ring"
             >
               Dashboard
-            </Link>
+            </a>
           ) : (
             <>
-              <Link 
+              <a 
                 href="/login"
                 className="text-[13px] font-medium text-[var(--color-ink)] px-[14px] py-[6px] rounded-md transition-colors hover:text-[var(--color-ink-muted)] focus-ring"
               >
                 Masuk
-              </Link>
-              <Link 
+              </a>
+              <a 
                 href="/daftar"
                 className="text-[13px] font-medium bg-[var(--color-primary)] text-white px-[14px] py-[6px] rounded-md transition-colors hover:bg-[var(--color-primary-hover)] focus-ring"
               >
                 Daftar
-              </Link>
+              </a>
             </>
           )}
         </div>

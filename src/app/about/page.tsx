@@ -33,7 +33,7 @@ export default function AboutPage() {
 
               <div className="py-8 my-8 border-y border-[var(--color-hairline)]">
                 <blockquote className="text-[24px] md:text-[28px] font-medium text-[var(--color-ink)] text-center tracking-[-0.02em] leading-[1.3]">
-                  "Kebugaran bukan hanya tentang mengangkat beban, tetapi tentang membangun versi terbaik dari diri Anda."
+                  {`"Kebugaran bukan hanya tentang mengangkat beban, tetapi tentang membangun versi terbaik dari diri Anda."`}
                 </blockquote>
               </div>
               
