@@ -37,7 +37,7 @@ function RegisterForm() {
 
     try {
       const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => 
-        setTimeout(() => reject(new Error("Koneksi timeout. Server Supabase mungkin sedang tidur/lambat.")), 15000)
+        setTimeout(() => reject(new Error("Koneksi timeout (45 detik). Server Supabase mungkin sedang lambat.")), 45000)
       );
 
       const result = await Promise.race([
