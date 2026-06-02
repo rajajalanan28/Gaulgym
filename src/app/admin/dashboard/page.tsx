@@ -1,4 +1,6 @@
 import React from 'react';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { DashboardHeader } from '@/components/DashboardHeader';
 
 export default function AdminDashboard() {
   const stats = [
@@ -23,8 +25,10 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
+    <ProtectedRoute allowedRoles={['Admin', 'Owner']}>
+    <div className="p-6 max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
+      <DashboardHeader />
+      <h1 className="text-2xl font-bold mb-6 text-[var(--color-ink)]">Admin Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {stats.map((stat, index) => (
           <div key={index} className="bg-white rounded-lg shadow p-6">
@@ -37,5 +41,6 @@ export default function AdminDashboard() {
         ))}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

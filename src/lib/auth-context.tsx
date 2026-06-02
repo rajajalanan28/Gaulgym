@@ -14,8 +14,8 @@ interface AuthUser {
 
 interface AuthContextType {
   user: AuthUser | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (name: string, email: string, password: string, role: string, gymId?: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
+  register: (name: string, email: string, password: string, role: string, gymId?: string) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -126,15 +126,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userData = recoveredData;
       }
 
-      setUser({
+      const authUser: AuthUser = {
         id: userData.id,
         email: userData.email,
         name: userData.name,
         role: userData.role,
         gymId: userData.gym_id,
-      });
+      };
+      setUser(authUser);
 
-      return { success: true };
+      return { success: true, user: authUser };
     } catch (error: any) {
       setLoading(false);
       return { success: false, error: error.message || 'Login failed' };
@@ -173,13 +174,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (profileError) throw profileError;
 
-        setUser({
+        const authUser: AuthUser = {
           id: authData.user.id,
           email,
           name,
           role: role as any,
           gymId: gymId,
-        });
+        };
+        setUser(authUser);
+        return { success: true, user: authUser };
       }
 
       return { success: true };

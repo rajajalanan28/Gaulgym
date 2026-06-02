@@ -7,7 +7,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
 
-export default function OwnerDashboard() {
+export default function MemberDashboard() {
   const { user, logout } = useAuth();
 
   const handleLogout = async () => {

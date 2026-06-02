@@ -40,7 +40,7 @@ function AuthFormsContent() {
     
     try {
       let timeoutId: NodeJS.Timeout;
-      const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => {
+      const timeoutPromise = new Promise<{success: boolean, error?: string, user?: any}>((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error("Koneksi timeout (45 detik). Server Supabase mungkin lambat.")), 45000);
       });
       
@@ -54,8 +54,12 @@ function AuthFormsContent() {
       if (!result.success) {
         setErrorMsg(result.error || "Gagal masuk. Periksa kembali.");
         setIsLoading(false);
+      } else {
+        const role = result.user?.role;
+        if (role === 'Owner') window.location.href = '/dashboard';
+        else if (role === 'Admin') window.location.href = '/admin/dashboard';
+        else window.location.href = '/member/dashboard';
       }
-      // If success, AuthContext sets 'user' and ProtectedRoute instantly shows the dashboard
     } catch (err: any) {
       setErrorMsg(err.message || "Gagal masuk (Koneksi bermasalah)");
       setIsLoading(false);
@@ -71,7 +75,7 @@ function AuthFormsContent() {
 
     try {
       let timeoutId: NodeJS.Timeout;
-      const timeoutPromise = new Promise<{success: boolean, error?: string}>((_, reject) => {
+      const timeoutPromise = new Promise<{success: boolean, error?: string, user?: any}>((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error("Koneksi timeout (45 detik). Server Supabase mungkin lambat.")), 45000);
       });
 
@@ -85,8 +89,12 @@ function AuthFormsContent() {
       if (!result.success) {
         setErrorMsg(result.error || "Pendaftaran gagal. Silakan coba lagi.");
         setIsLoading(false);
+      } else {
+        const role = result.user?.role;
+        if (role === 'Owner') window.location.href = '/dashboard';
+        else if (role === 'Admin') window.location.href = '/admin/dashboard';
+        else window.location.href = '/member/dashboard';
       }
-      // If success, AuthContext sets 'user' and ProtectedRoute instantly shows the dashboard
     } catch (err: any) {
       setErrorMsg(err.message || "Pendaftaran gagal (Koneksi bermasalah)");
       setIsLoading(false);
