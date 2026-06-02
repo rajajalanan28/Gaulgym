@@ -1,29 +1,31 @@
 /**
  * Design tokens dari Flutter app gym management
- * Nike-inspired dark theme
+ * Apple-inspired clean, minimalist theme
  */
 
 export const colors = {
-  primary: '#FF5722',
-  primaryLight: '#FF8A50',
-  primaryDark: '#E64A19',
-  secondary: '#00BCD4',
-  background: '#121212',
-  surface: '#1E1E1E',
-  surfaceVariant: '#2C2C2C',
-  cardBackground: '#1A1A1A',
-  textPrimary: '#FFFFFF',
-  textSecondary: '#B0B0B0',
-  textHint: '#707070',
-  success: '#4CAF50',
-  error: '#EF5350',
-  warning: '#FFB74D',
-  info: '#29B6F6',
+  // Apple Theme Colors
+  primary: '#0066CC', // Apple Blue
+  secondary: '#86868B', // System Gray
+  background: '#F5F5F7', // Apple Background Gray
+  surface: '#FFFFFF', // Pure White for cards/panels
+  surfaceVariant: '#F5F5F7',
+  
+  // Text
+  textPrimary: '#1D1D1F', // Deep almost black
+  textSecondary: '#86868B',
+  textHint: '#86868B',
+  textInverse: '#FFFFFF',
+  
+  // Semantic
+  error: '#FF3B30', // Apple Red
+  success: '#34C759', // Apple Green
+  warning: '#FF9500', // Apple Orange
 } as const;
 
 export const gradients = {
-  primary: 'linear-gradient(135deg, #FF5722 0%, #FF8A50 100%)',
-  card: 'linear-gradient(180deg, #2C2C2C 0%, #1E1E1E 100%)',
+  primary: 'linear-gradient(135deg, #0066CC 0%, #005BB5 100%)',
+  surface: 'linear-gradient(180deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.95) 100%)',
 } as const;
 
 export const spacing = {

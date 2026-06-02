@@ -1,19 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { colors, gradients, spacing, borderRadius } from "@/lib/design-tokens";
 import { useAuth } from "@/lib/auth-context";
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedPlan = searchParams.get('plan');
+  
   const { register, user, loading } = useAuth();
   
   const [formData, setFormData] = useState({
     name: "",
     username: "",
     password: "",
-    role: "Owner",
+    role: "Member", // Default public registration is Member
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -69,7 +73,9 @@ export default function RegisterPage() {
           >
             GAUL GYM
           </h1>
-          <p style={{ color: colors.textSecondary }}>Buat akun baru</p>
+          <p style={{ color: colors.textSecondary }}>
+            {selectedPlan ? `Mendaftar untuk Paket ${selectedPlan.toUpperCase()}` : 'Buat akun baru'}
+          </p>
         </div>
 
         {errorMsg && (
@@ -174,5 +180,13 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', backgroundColor: '#FFFFFF' }} />}>
+      <RegisterForm />
+    </Suspense>
   );
 }
