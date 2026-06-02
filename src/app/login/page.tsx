@@ -1,24 +1,36 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { colors, gradients, spacing, borderRadius } from "@/lib/design-tokens";
+import { useAuth } from "@/lib/auth-context";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Handle login logic here
-    console.log("Login attempt:", { email, password });
-    setTimeout(() => setIsLoading(false), 1000);
+    setErrorMsg("");
+    
+    const { success, error } = await login(email, password);
+    
+    if (success) {
+      router.push("/dashboard");
+    } else {
+      setErrorMsg(error || "Gagal masuk. Periksa email dan kata sandi Anda.");
+      setIsLoading(false);
+    }
   };
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-4"
+      className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden"
       style={{ backgroundColor: colors.background }}
     >
       {/* Background gradient overlay */}
@@ -66,6 +78,14 @@ export default function LoginPage() {
             Masuk untuk mulai latihan
           </p>
         </div>
+
+        {/* Error Message */}
+        {errorMsg && (
+          <div className="mb-6 p-4 rounded-xl text-sm font-medium flex items-center gap-2" style={{ backgroundColor: 'rgba(239, 83, 80, 0.1)', color: colors.error, border: `1px solid rgba(239, 83, 80, 0.2)` }}>
+            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            {errorMsg}
+          </div>
+        )}
 
         {/* Login Form */}
         <form onSubmit={handleLogin} className="space-y-5">
