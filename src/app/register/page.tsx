@@ -145,29 +145,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div>
-            <label htmlFor="role" className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>
-              Peran
-            </label>
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full px-4 py-3 rounded-xl outline-none transition-all duration-200 cursor-pointer"
-              style={{
-                backgroundColor: colors.surfaceVariant,
-                color: colors.textPrimary,
-                border: `1px solid ${colors.surfaceVariant}`,
-              }}
-              onFocus={(e) => { e.target.style.borderColor = colors.primary; e.target.style.boxShadow = `0 0 0 3px rgba(255, 87, 34, 0.2)`; }}
-              onBlur={(e) => { e.target.style.borderColor = colors.surfaceVariant; e.target.style.boxShadow = "none"; }}
-            >
-              <option value="Member">Member</option>
-              <option value="Admin">Admin</option>
-              <option value="Owner">Owner</option>
-            </select>
-          </div>
+
 
           <button
             type="submit"
