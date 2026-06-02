@@ -95,9 +95,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
 
-      if (authError) throw authError;
+      // Fetch user profile from users table to ensure it exists
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authData.user.id)
+        .single();
 
-      // Profile fetching is handled automatically by onAuthStateChange listener
+      if (userError || !userData) {
+        await supabase.auth.signOut();
+        return { success: false, error: 'Akun error: Profil tidak ditemukan di database (Mungkin gagal saat register sebelumnya). Silakan daftar ulang dengan email lain, atau hapus akun ini di Supabase.' };
+      }
+
+      setUser({
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        role: userData.role,
+        gymId: userData.gym_id,
+      });
+
       return { success: true };
     } catch (error: any) {
       setLoading(false);
