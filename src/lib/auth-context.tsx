@@ -97,28 +97,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (authError) throw authError;
 
-      // Fetch user profile from users table
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', authData.user.id)
-        .single();
-
-      if (userError) throw userError;
-
-      setUser({
-        id: userData.id,
-        email: userData.email,
-        name: userData.name,
-        role: userData.role,
-        gymId: userData.gym_id,
-      });
-
+      // Profile fetching is handled automatically by onAuthStateChange listener
       return { success: true };
     } catch (error: any) {
-      return { success: false, error: error.message || 'Login failed' };
-    } finally {
       setLoading(false);
+      return { success: false, error: error.message || 'Login failed' };
     }
   };
 
@@ -153,21 +136,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (profileError) throw profileError;
-
-        setUser({
-          id: authData.user.id,
-          email,
-          name,
-          role: role as AuthUser['role'],
-          gymId,
-        });
       }
 
+      // Profile fetching is handled automatically by onAuthStateChange listener
       return { success: true };
     } catch (error: any) {
-      return { success: false, error: error.message || 'Registration failed' };
-    } finally {
       setLoading(false);
+      return { success: false, error: error.message || 'Registration failed' };
     }
   };
 
