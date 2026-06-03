@@ -6,6 +6,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { PlusCircle, X, Loader2, Shield } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface MemberData {
   id: string;
@@ -23,6 +24,7 @@ const ITEMS_PER_PAGE = 10;
 
 export default function MembersPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [members, setMembers] = useState<MemberData[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
@@ -183,8 +185,8 @@ export default function MembersPage() {
         
         if (!res.ok) throw new Error(data.error || 'Terjadi kesalahan');
 
-        alert(`${member.name} berhasil dipromosikan menjadi Admin! Silakan cek di menu Admin.`);
-        fetchData();
+        alert(`${member.name} berhasil dipromosikan menjadi Admin! Anda akan dialihkan ke halaman Admin.`);
+        router.push('/owner/admin');
       } catch (err: any) {
         console.error("Gagal mempromosikan admin:", err);
         alert("Gagal: " + err.message);
