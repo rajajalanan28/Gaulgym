@@ -214,14 +214,14 @@ export default function POSPage() {
 
           {/* Keranjang Belanja Kanan */}
           <div className="lg:col-span-1">
-            <div className="bg-[var(--color-surface-1)] border border-white/5 rounded-2xl p-6 sticky top-8 shadow-2xl flex flex-col h-[calc(100vh-120px)] max-h-[800px]">
+            <div className="bg-[var(--color-surface-1)] border border-white/5 rounded-2xl p-6 sticky top-8 shadow-2xl flex flex-col max-h-[calc(100vh-200px)] overflow-hidden">
               <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
                 <Receipt size={20} className="text-[var(--color-primary)]" />
                 Keranjang Belanja
               </h2>
               
               {/* List Keranjang */}
-              <div className="flex-1 overflow-y-auto pr-2 space-y-4 min-h-[200px] mb-4">
+              <div className="flex-1 overflow-y-auto pr-2 space-y-4 mb-4">
                 {cart.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center text-gray-500 space-y-2">
                     <ShoppingCart size={48} className="opacity-20" />

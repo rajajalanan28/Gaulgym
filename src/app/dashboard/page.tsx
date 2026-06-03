@@ -95,6 +95,12 @@ export default function OwnerDashboard() {
                 onClick={() => router.push('/owner/member')}
               />
               <MenuItem
+                icon={<Tag size={20} />}
+                title="Manajemen Produk"
+                subtitle="Atur produk kasir & stok"
+                onClick={() => router.push('/owner/products')}
+              />
+              <MenuItem
                 icon={<DollarSign size={20} />}
                 title="Laporan Keuangan"
                 subtitle="Lihat pendapatan dan analitik"
