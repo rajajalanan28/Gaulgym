@@ -130,15 +130,7 @@ export default function MemberDashboard() {
                 </div>
               </div>
 
-              {/* Menu Tambahan */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-[16px]">
-                <button className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[16px] p-[20px] flex flex-col items-center justify-center gap-[12px] aspect-square">
-                  <span className="bg-[var(--color-surface-3)] p-[12px] rounded-full text-[var(--color-primary)]">
-                    <History size={24} />
-                  </span>
-                  <span className="text-[14px] font-medium">Riwayat Paket</span>
-                </button>
-              </div>
+
             </div>
 
             {/* Kanan: Riwayat Kedatangan */}
