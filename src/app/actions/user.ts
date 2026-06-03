@@ -32,43 +32,57 @@ export async function registerMemberAction(formData: FormData) {
       return { error: 'Sistem belum dikonfigurasi sepenuhnya. SUPABASE_SERVICE_ROLE_KEY belum diset.' };
     }
 
-    // 1. Create user in Supabase Auth using Admin API
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: 'gaulgym123',
-      email_confirm: true,
-      user_metadata: { name }
-    });
+    // 1. Check if user already exists
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('id, name')
+      .eq('email', email)
+      .single();
 
-    if (authError) {
-      // If user already exists, it might throw an error. We can catch it or return it.
-      return { error: authError.message };
+    let userId = '';
+
+    if (existingUser) {
+      // User already exists, use their ID
+      userId = existingUser.id;
+      // Optional: Update their gym_id if it's null
+      await supabaseAdmin.from('users').update({ gym_id: gymId }).eq('id', userId);
+    } else {
+      // Create user in Supabase Auth using Admin API
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: 'gaulgym123',
+        email_confirm: true,
+        user_metadata: { name }
+      });
+
+      if (authError) {
+        return { error: authError.message };
+      }
+
+      userId = authData.user.id;
+
+      // Insert into public.users table
+      const { error: userError } = await supabaseAdmin
+        .from('users')
+        .insert({
+          id: userId,
+          email,
+          name,
+          role: 'Member',
+          phone,
+          gym_id: gymId,
+          is_active: true
+        });
+
+      if (userError) {
+        console.error('Error inserting into users:', userError);
+        return { error: 'Gagal membuat profil user' };
+      }
     }
 
-    const userId = authData.user.id;
-    
     // 2. Generate a random display ID for the member
     const displayId = 'GG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
     const qrCode = uuidv4();
-
-    // 3. Insert into public.users table
-    const { error: userError } = await supabaseAdmin
-      .from('users')
-      .insert({
-        id: userId,
-        email,
-        name,
-        role: 'Member',
-        phone,
-        gym_id: gymId,
-        is_active: true
-      });
-
-    if (userError) {
-      console.error('Error inserting into users:', userError);
-      // Fallback, we could delete auth user, but for now just return error
-      return { error: 'Gagal membuat profil user' };
-    }
 
     // 4. Handle Photo Upload
     let photoUrl = null;
