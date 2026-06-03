@@ -3,6 +3,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from './supabase';
 
+const CACHE_KEY = 'gaulgym_user';
+
 interface DbUser {
   id: string;
   email: string;
@@ -34,13 +36,44 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Read cached user from localStorage instantly (no async)
+function getCachedUser(): AuthUser | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) return JSON.parse(cached);
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+function setCachedUser(user: AuthUser | null) {
+  if (typeof window === 'undefined') return;
+  try {
+    if (user) {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(user));
+    } else {
+      localStorage.removeItem(CACHE_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Initialize from cache so there's NO flash on page load
+  const [user, setUser] = useState<AuthUser | null>(getCachedUser);
+  const [loading, setLoading] = useState(!getCachedUser());
+
+  // Wrapper that also updates cache
+  const setUserAndCache = (u: AuthUser | null) => {
+    setUser(u);
+    setCachedUser(u);
+  };
 
   const fetchUserProfile = async (userId: string, retries = 3) => {
     try {
-      // Add a timeout to prevent hanging forever
       const fetchPromise = supabase
         .from('users')
         .select('*')
@@ -62,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data) {
-        setUser({
+        setUserAndCache({
           id: data.id,
           email: data.email,
           name: data.name,
@@ -72,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      setUser(null);
+      setUserAndCache(null);
     } finally {
       setLoading(false);
     }
@@ -84,10 +117,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         fetchUserProfile(session.user.id);
       } else {
+        // No session = clear cache too
+        setUserAndCache(null);
         setLoading(false);
       }
     }).catch((err) => {
       console.error('Session error:', err);
+      setUserAndCache(null);
       setLoading(false);
     });
 
@@ -96,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         await fetchUserProfile(session.user.id);
       } else {
-        setUser(null);
+        setUserAndCache(null);
         setLoading(false);
       }
     });
@@ -117,7 +153,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (authError || !authData?.user) throw new Error(authError?.message || 'Login gagal atau user tidak ditemukan');
 
-      // Fetch user profile from users table to ensure it exists
       const { data: initialUserData, error: userError } = await supabase
         .from('users')
         .select('*')
@@ -127,7 +162,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let userData = initialUserData;
 
       if (userError || !userData) {
-        // Auto-recover ghost account using metadata
         console.log('Ghost account detected. Attempting recovery...');
         const { error: recoveryError } = await supabase.from('users').insert({
           id: authData.user.id,
@@ -143,7 +177,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { success: false, error: 'Akun rusak permanen dan gagal dipulihkan. Silakan daftar ulang dengan email baru.' };
         }
 
-        // Re-fetch the newly recovered profile
         const { data: recoveredData } = await supabase.from('users').select('*').eq('id', authData.user.id).single();
         userData = recoveredData;
       }
@@ -155,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: userData.role as AuthUser['role'],
         gymId: userData.gym_id,
       };
-      setUser(authUser);
+      setUserAndCache(authUser);
 
       return { success: true, user: authUser };
     } catch (error: unknown) {
@@ -168,7 +201,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
 
-      // Sign up with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -184,7 +216,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Create user profile in users table
         const { error: profileError } = await supabase.from('users').insert({
           id: authData.user.id,
           email,
@@ -203,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role: role as AuthUser['role'],
           gymId: gymId,
         };
-        setUser(authUser);
+        setUserAndCache(authUser);
         return { success: true, user: authUser };
       }
 
@@ -220,11 +251,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error during logout:', error);
     } finally {
-      setUser(null);
-      // Optional: Clear any additional localStorage data if needed
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('role');
-      localStorage.removeItem('user');
+      setUserAndCache(null);
     }
   };
 
