@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { WelcomeCard } from '@/components/WelcomeCard';
 import { MenuItem } from '@/components/MenuItem';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -17,6 +18,7 @@ const Tag = dynamic(() => import('lucide-react').then(m => ({ default: m.Tag }))
 
 export default function OwnerDashboard() {
   const { user } = useAuth();
+  const router = useRouter();
   const [stats, setStats] = useState({ totalGyms: 0, totalMembers: 0, totalStaff: 0, totalRevenue: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -85,31 +87,31 @@ export default function OwnerDashboard() {
                 icon={<MapPin size={20} />}
                 title="Kelola Gym"
                 subtitle="Lihat dan edit lokasi gym Anda"
-                onClick={() => window.location.href = '/gyms'}
+                onClick={() => router.push('/gyms')}
               />
               <MenuItem
                 icon={<Tag size={20} />}
                 title="Manajemen Harga"
                 subtitle="Atur paket membership"
-                onClick={() => window.location.href = '/dashboard/packages'}
+                onClick={() => router.push('/dashboard/packages')}
               />
               <MenuItem
                 icon={<Users size={20} />}
                 title="Manajemen Member"
                 subtitle="Kelola seluruh member gym"
-                onClick={() => window.location.href = '/admin/members'}
+                onClick={() => router.push('/admin/members')}
               />
               <MenuItem
                 icon={<DollarSign size={20} />}
                 title="Laporan Keuangan"
                 subtitle="Lihat pendapatan dan analitik"
-                onClick={() => window.location.href = '/dashboard/reports'}
+                onClick={() => router.push('/dashboard/reports')}
               />
               <MenuItem
                 icon={<UserCheck size={20} />}
                 title="Manajemen Staff"
                 subtitle="Kelola karyawan di semua gym"
-                onClick={() => window.location.href = '/staff'}
+                onClick={() => router.push('/staff')}
               />
             </div>
           </div>

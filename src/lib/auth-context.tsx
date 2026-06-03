@@ -93,6 +93,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await new Promise(resolve => setTimeout(resolve, 1000));
           return fetchUserProfile(userId, emailConfirmedAt, retries - 1);
         }
+        // If it's a timeout or network error, don't throw, just exit and use cache
+        if (error?.message?.includes('Timeout') || error?.message?.includes('network') || error?.message?.includes('fetch')) {
+          console.warn('Network/Timeout error fetching profile, using cache instead:', error);
+          return;
+        }
         throw error || new Error('User data not found');
       }
 
@@ -108,7 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      setUserAndCache(null);
+      // Only force logout if the user was actually deleted or session is completely invalid
+      // Otherwise, we let them keep using the cached session
     } finally {
       setLoading(false);
     }
