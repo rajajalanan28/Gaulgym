@@ -49,10 +49,13 @@ export default function MembersPage() {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setCameraActive(true);
-      }
+      setCameraActive(true);
+      // Tunggu React render video, baru set srcObject
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      }, 50);
     } catch (err) {
       console.error("Error accessing camera:", err);
       alert("Gagal mengakses kamera. Pastikan browser memiliki izin.");
@@ -570,9 +573,8 @@ export default function MembersPage() {
                     {!photoBase64 ? (
                       <>
                         <div className="w-48 h-48 bg-black rounded-full overflow-hidden border-2 border-[var(--color-primary)]/50 relative flex items-center justify-center">
-                          {cameraActive ? (
-                            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
-                          ) : (
+                          <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${!cameraActive ? 'hidden' : ''}`} />
+                          {!cameraActive && (
                             <div className="text-center p-4">
                               <Camera className="mx-auto mb-2 text-gray-500" size={32} />
                               <span className="text-xs text-gray-500">Kamera Nonaktif</span>
