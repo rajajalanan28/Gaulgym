@@ -5,6 +5,7 @@ import { Check, Camera, Loader2, Smartphone, PenLine, X, AlertTriangle, User } f
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { DashboardHeader } from "@/components/DashboardHeader";
 import { Html5Qrcode } from "html5-qrcode";
 
 interface CheckInData {
@@ -210,6 +211,8 @@ export default function CheckInPage() {
   return (
     <ProtectedRoute allowedRoles={['Admin', 'Owner']}>
       <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)] p-6 md:p-[48px] selection:bg-[var(--color-primary-focus)] selection:text-white pb-28 md:pb-[48px]">
+        <DashboardHeader />
+        
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
