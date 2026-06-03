@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Suspense } from "react";
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from "lucide-react";
@@ -30,11 +30,21 @@ interface FormErrors {
 function AuthFormsContent() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const router = useRouter();
   const selectedPlan = searchParams.get('plan');
   const isRegister = searchParams.get('register') === 'true' || pathname === '/register' || pathname === '/daftar';
   const [view, setView] = useState<'login' | 'register'>(isRegister ? 'register' : 'login');
 
-  const { login, register, loginWithGoogle } = useAuth();
+  const { login, register, loginWithGoogle, user } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'Owner') router.replace('/dashboard');
+      else if (user.role === 'Admin') router.replace('/admin/dashboard');
+      else router.replace('/member/dashboard');
+    }
+  }, [user, router]);
 
   // Login State
   const [loginEmail, setLoginEmail] = useState("");
