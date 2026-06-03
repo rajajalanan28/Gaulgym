@@ -36,7 +36,7 @@ export default function CheckInPage() {
   // Fetch recent checkins today
   const loadRecentCheckins = useCallback(async () => {
     if (!user) return;
-    const gymId = user.gym_id || 'dummy-gym-id';
+    const gymId = user.gymId || 'dummy-gym-id';
     const today = new Date().toISOString().split('T')[0];
 
     try {
@@ -79,7 +79,7 @@ export default function CheckInPage() {
 
   const processCheckin = async (memberIdQuery: string) => {
     if (!user) return;
-    const gymId = user.gym_id || 'dummy-gym-id';
+    const gymId = user.gymId || 'dummy-gym-id';
     setIsProcessing(true);
     
     try {
@@ -166,7 +166,7 @@ export default function CheckInPage() {
       setIsScanning(false);
       
       if (!user) return;
-      const gymId = user.gym_id || 'dummy-gym-id';
+      const gymId = user.gymId || 'dummy-gym-id';
       
       const { data } = await supabase.from('members').select('display_id').eq('gym_id', gymId).limit(10);
       if (data && data.length > 0) {

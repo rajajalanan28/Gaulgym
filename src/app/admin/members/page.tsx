@@ -28,7 +28,7 @@ export default function MembersPage() {
   useEffect(() => {
     async function fetchMembers() {
       if (!user) return;
-      const gymId = user.gym_id || 'dummy-gym-id'; // Assume gym_id exists for admin, or use dummy
+      const gymId = user.gymId || 'dummy-gym-id'; // Assume gym_id exists for admin, or use dummy
 
       try {
         // 1. Ambil data members

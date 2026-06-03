@@ -16,7 +16,7 @@ export default function AdminDashboard() {
       // Dalam implementasi nyata, admin seharusnya punya gym_id di object user mereka.
       // Kita asumsikan user.gym_id sudah di-set saat login untuk staff.
       // Jika tidak ada, kita fallback dengan ID sembarangan untuk sementara (akan kosong).
-      const gymId = user?.gym_id || 'dummy-gym-id';
+      const gymId = user?.gymId || 'dummy-gym-id';
       
       try {
         const data = await getAdminStats(gymId);
