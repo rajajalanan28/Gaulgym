@@ -37,8 +37,8 @@ export function DashboardHeader() {
     <>
       <div className="relative flex justify-between items-center mb-[24px] md:mb-[48px]">
         <div className="flex items-center gap-4">
-        {/* Hamburger Menu (Hidden on mobile, since we use BottomNav) */}
-        <div className="relative hidden md:block" ref={menuRef}>
+        {/* Hamburger Menu */}
+        <div className="relative" ref={menuRef}>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Menu navigasi"

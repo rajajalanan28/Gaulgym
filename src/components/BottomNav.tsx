@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Tag, Users, UserCheck } from 'lucide-react';
+import { Home, Tag, Users, UserCheck, User, Globe } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 export function BottomNav() {
@@ -17,15 +17,19 @@ export function BottomNav() {
     { name: 'Paket', path: '/dashboard/packages', icon: <Tag size={20} /> },
     { name: 'Member', path: '/admin/members', icon: <Users size={20} /> },
     { name: 'Staff', path: '/staff', icon: <UserCheck size={20} /> },
+    { name: 'Profil', path: '/profile', icon: <User size={20} /> },
   ];
 
   const adminLinks = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: <Home size={20} /> },
     { name: 'Member', path: '/admin/members', icon: <Users size={20} /> },
+    { name: 'Profil', path: '/profile', icon: <User size={20} /> },
   ];
 
   const memberLinks = [
+    { name: 'Beranda', path: '/', icon: <Globe size={20} /> },
     { name: 'Dashboard', path: '/member/dashboard', icon: <Home size={20} /> },
+    { name: 'Profil', path: '/profile', icon: <User size={20} /> },
   ];
 
   const links = user.role === 'Owner' ? ownerLinks : user.role === 'Admin' ? adminLinks : memberLinks;
