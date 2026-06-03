@@ -1,10 +1,12 @@
 'use client';
 
-import { PublicNavbar } from '@/components/PublicNavbar';
-import { PublicFooter } from '@/components/PublicFooter';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
+
+const PublicNavbar = dynamic(() => import('@/components/PublicNavbar').then(m => ({ default: m.PublicNavbar })), { ssr: true });
+const DashboardHeader = dynamic(() => import('@/components/DashboardHeader').then(m => ({ default: m.DashboardHeader })), { ssr: false });
+const PublicFooter = dynamic(() => import('@/components/PublicFooter').then(m => ({ default: m.PublicFooter })), { ssr: true, loading: () => <div className="h-[200px]" /> });
 
 export default function PricingPage() {
   const { user } = useAuth();
@@ -42,9 +44,7 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
       {user ? (
-        <div className="px-6 pt-6">
-          <DashboardHeader />
-        </div>
+        <div className="px-6 pt-6"><DashboardHeader /></div>
       ) : (
         <PublicNavbar />
       )}
@@ -65,24 +65,16 @@ export default function PricingPage() {
               <div 
                 key={plan.id} 
                 className={`relative rounded-[12px] flex flex-col p-[24px] transition-colors ${
-                  plan.popular 
-                    ? 'bg-[var(--color-surface-2)] hairline-border-strong' 
-                    : 'bg-[var(--color-surface-1)] hairline-border'
+                  plan.popular ? 'bg-[var(--color-surface-2)] hairline-border-strong' : 'bg-[var(--color-surface-1)] hairline-border'
                 }`}
               >
                 <div className="mb-6">
-                  <h2 className="text-[22px] font-medium text-[var(--color-ink)] mb-2 tracking-[-0.01em]">
-                    {plan.name}
-                  </h2>
-                  <p className="text-[15px] text-[var(--color-ink-muted)] min-h-[44px] leading-[1.5]">
-                    {plan.description}
-                  </p>
+                  <h2 className="text-[22px] font-medium text-[var(--color-ink)] mb-2 tracking-[-0.01em]">{plan.name}</h2>
+                  <p className="text-[15px] text-[var(--color-ink-muted)] min-h-[44px] leading-[1.5]">{plan.description}</p>
                 </div>
                 
                 <div className="mb-8 pb-8 border-b border-[var(--color-hairline)]">
-                  <div className="flex items-end gap-1">
-                    <span className="text-[40px] font-semibold text-[var(--color-ink)] tracking-[-0.02em] leading-[1]">{plan.price}</span>
-                  </div>
+                  <span className="text-[40px] font-semibold text-[var(--color-ink)] tracking-[-0.02em] leading-[1]">{plan.price}</span>
                   <div className="text-[var(--color-ink-subtle)] text-[15px] font-medium mt-1">{plan.period}</div>
                 </div>
 

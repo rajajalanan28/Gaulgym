@@ -1,10 +1,15 @@
 'use client';
 
-import { PublicNavbar } from '@/components/PublicNavbar';
-import { PublicFooter } from '@/components/PublicFooter';
-import { MapPin, Phone, Mail } from 'lucide-react';
-import { DashboardHeader } from '@/components/DashboardHeader';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth-context';
+
+const PublicNavbar = dynamic(() => import('@/components/PublicNavbar').then(m => ({ default: m.PublicNavbar })), { ssr: true });
+const DashboardHeader = dynamic(() => import('@/components/DashboardHeader').then(m => ({ default: m.DashboardHeader })), { ssr: false });
+const PublicFooter = dynamic(() => import('@/components/PublicFooter').then(m => ({ default: m.PublicFooter })), { ssr: true, loading: () => <div className="h-[200px]" /> });
+
+const MapPin = dynamic(() => import('lucide-react').then(m => ({ default: m.MapPin })), { ssr: false });
+const Phone = dynamic(() => import('lucide-react').then(m => ({ default: m.Phone })), { ssr: false });
+const Mail = dynamic(() => import('lucide-react').then(m => ({ default: m.Mail })), { ssr: false });
 
 export default function ContactPage() {
   const { user } = useAuth();
@@ -12,9 +17,7 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
       {user ? (
-        <div className="px-6 pt-6">
-          <DashboardHeader />
-        </div>
+        <div className="px-6 pt-6"><DashboardHeader /></div>
       ) : (
         <PublicNavbar />
       )}
@@ -34,33 +37,21 @@ export default function ContactPage() {
             <div className="bg-[var(--color-surface-1)] hairline-border p-[32px] rounded-[12px]">
               <h3 className="text-[18px] font-medium text-[var(--color-ink)] mb-8 tracking-[-0.01em]">Informasi Kontak</h3>
               <div className="space-y-6 mb-12">
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center shrink-0 text-[var(--color-ink-subtle)]">
-                    <MapPin className="w-4 h-4" />
+                {[
+                  { Icon: MapPin, label: 'Alamat Utama', value: 'Jl. Sudirman No. 123, Jakarta Selatan' },
+                  { Icon: Phone, label: 'Telepon', value: '(021) 1234-5678' },
+                  { Icon: Mail, label: 'Email', value: 'hello@gaulgym.com' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-start gap-4">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center shrink-0 text-[var(--color-ink-subtle)]">
+                      <item.Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-[var(--color-ink)] mb-1 text-[15px]">{item.label}</p>
+                      <p className="text-[14px] text-[var(--color-ink-muted)]">{item.value}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-[var(--color-ink)] mb-1 text-[15px]">Alamat Utama</p>
-                    <p className="text-[14px] text-[var(--color-ink-muted)]">Jl. Sudirman No. 123, Jakarta Selatan</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center shrink-0 text-[var(--color-ink-subtle)]">
-                    <Phone className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-[var(--color-ink)] mb-1 text-[15px]">Telepon</p>
-                    <p className="text-[14px] text-[var(--color-ink-muted)]">(021) 1234-5678</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-3)] hairline-border flex items-center justify-center shrink-0 text-[var(--color-ink-subtle)]">
-                    <Mail className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-[var(--color-ink)] mb-1 text-[15px]">Email</p>
-                    <p className="text-[14px] text-[var(--color-ink-muted)]">hello@gaulgym.com</p>
-                  </div>
-                </div>
+                ))}
               </div>
               <h3 className="text-[18px] font-medium text-[var(--color-ink)] mb-4 tracking-[-0.01em]">Jam Operasional</h3>
               <div className="space-y-3 text-[14px]">
