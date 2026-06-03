@@ -2,13 +2,15 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { Menu, LogOut } from 'lucide-react';
+import { Menu, LogOut, ArrowLeft } from 'lucide-react';
 import { BottomNav } from './BottomNav';
+import { useRouter } from 'next/navigation';
 
 export function DashboardHeader() {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const dashboardUrl = user?.role === 'Owner' ? '/dashboard' : user?.role === 'Admin' ? '/admin/dashboard' : '/member/dashboard';
 
@@ -36,7 +38,18 @@ export function DashboardHeader() {
   return (
     <>
       <div className="relative flex justify-between items-center mb-[24px] md:mb-[48px]">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 md:gap-4">
+        
+        {/* Back Button */}
+        <button
+          onClick={() => router.back()}
+          aria-label="Kembali"
+          className="p-[8px] text-[var(--color-ink)] bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] hairline-border rounded-md transition-colors focus-ring flex items-center justify-center"
+          title="Kembali"
+        >
+          <ArrowLeft size={20} />
+        </button>
+
         {/* Hamburger Menu */}
         <div className="relative" ref={menuRef}>
           <button
@@ -60,7 +73,7 @@ export function DashboardHeader() {
           )}
         </div>
 
-        <h1 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-ink)] tracking-[-0.01em]">
+        <h1 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-ink)] tracking-[-0.01em] hidden sm:block">
           GAUL GYM
         </h1>
       </div>

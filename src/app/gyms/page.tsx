@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { DashboardHeader } from "@/components/DashboardHeader";
 
 interface Gym {
   id: string;
@@ -28,9 +30,12 @@ export default function GymsPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Daftar Gym</h1>
+    <ProtectedRoute allowedRoles={['Owner', 'Admin']}>
+      <div className="p-4 pb-28 md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)] text-white">
+        <DashboardHeader />
+        
+        <div className="flex justify-between items-center mb-6 mt-8">
+          <h1 className="text-2xl font-bold text-gray-100">Daftar Gym</h1>
         <button
           onClick={handleAddGym}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -80,5 +85,6 @@ export default function GymsPage() {
         </table>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
