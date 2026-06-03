@@ -303,7 +303,7 @@ export default function MembersPage() {
                   <tr>
                     <td colSpan={6} className="px-[16px] py-[48px] text-center">
                       <div className="text-[var(--color-ink-muted)] text-[14px]">
-                        {searchTerm ? "Pencarian tidak ditemukan" : "Tidak ada member di cabang ini"}
+                        {searchTerm ? "Pencarian tidak ditemukan" : "Belum ada member terdaftar"}
                       </div>
                     </td>
                   </tr>
