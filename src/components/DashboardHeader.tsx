@@ -64,11 +64,11 @@ export function DashboardHeader() {
 
           {menuOpen && (
             <div role="navigation" aria-label="Menu utama" className="absolute top-full left-0 mt-2 w-[200px] bg-[var(--color-surface-1)] hairline-border rounded-md shadow-2xl py-2 z-50">
-              <a href="/" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Beranda</a>
-              <a href="/about" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Tentang</a>
-              <a href="/features" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Fasilitas</a>
-              <a href="/pricing" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Paket</a>
-              <a href="/contact" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Kontak</a>
+              <a href="/beranda" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Beranda</a>
+              <a href="/tentang" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Tentang</a>
+              <a href="/fasilitas" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Fasilitas</a>
+              <a href="/paket" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Paket</a>
+              <a href="/kontak" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Kontak</a>
             </div>
           )}
         </div>
