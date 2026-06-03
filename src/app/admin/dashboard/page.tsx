@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
-import { getAdminStats } from '@/lib/supabase';
+import { getAdminStats, supabase } from '@/lib/supabase';
 
 export default function AdminDashboard() {
   const { user } = useAuth();
