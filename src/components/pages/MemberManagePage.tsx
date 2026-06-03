@@ -175,7 +175,16 @@ export default function MembersPage() {
           .eq('id', member.user_id);
           
         if (error) throw error;
-        alert(`${member.name} berhasil dipromosikan menjadi Admin! Silakan cek di menu Staff.`);
+
+        // Hapus dari tabel members karena dia sekarang staff, bukan member lagi
+        const { error: deleteError } = await supabase
+          .from('members')
+          .delete()
+          .eq('id', member.id);
+          
+        if (deleteError) throw deleteError;
+
+        alert(`${member.name} berhasil dipromosikan menjadi Admin! Silakan cek di menu Admin.`);
         fetchData();
       } catch (err: any) {
         console.error("Gagal mempromosikan admin:", err);

@@ -113,7 +113,7 @@ export default function StaffPage() {
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-[32px] gap-[16px]">
           <div>
-            <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Manajemen Staff</h1>
+            <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Manajemen Admin</h1>
             <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola akun Admin/Kasir untuk seluruh cabang gym Anda.</p>
           </div>
           <button
@@ -181,7 +181,7 @@ export default function StaffPage() {
                   <tr>
                     <td colSpan={6} className="px-[24px] py-[64px] text-center text-[var(--color-ink-muted)]">
                       <Shield size={48} className="mx-auto mb-4 opacity-20" />
-                      <p className="text-[15px] font-medium">Belum ada staff/admin</p>
+                      <p className="text-[15px] font-medium">Belum ada admin</p>
                       <p className="text-[13px] mt-1">Tambahkan admin pertama Anda untuk mengelola kasir gym.</p>
                     </td>
                   </tr>

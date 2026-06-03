@@ -47,7 +47,22 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ message: `Backfill success. Synced ${count} missing members.` });
+    // AUTO FIX ADMINS
+    const { data: ownerUser } = await supabaseAdmin.from('users').select('id').eq('role', 'Owner').limit(1).single();
+    let adminCount = 0;
+    if (ownerUser) {
+      const { data: admins } = await supabaseAdmin.from('users').select('*').eq('role', 'Admin');
+      if (admins) {
+        for (const admin of admins) {
+          if (admin.owner_id !== ownerUser.id) {
+            await supabaseAdmin.from('users').update({ owner_id: ownerUser.id }).eq('id', admin.id);
+            adminCount++;
+          }
+        }
+      }
+    }
+
+    return NextResponse.json({ message: `Backfill success. Synced ${count} missing members. Fixed ${adminCount} admins.` });
   } catch (err: any) {
     return NextResponse.json({ message: err.message }, { status: 500 });
   }

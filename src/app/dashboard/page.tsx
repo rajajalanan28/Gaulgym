@@ -101,9 +101,9 @@ export default function OwnerDashboard() {
                 onClick={() => router.push('/dashboard/reports')}
               />
               <MenuItem
-                icon={<UserCheck size={20} />}
-                title="Manajemen Staff"
-                subtitle="Kelola karyawan di semua gym"
+                icon={<UserPlus size={20} />}
+                title="Manajemen Admin"
+                subtitle="Kelola kasir di semua gym"
                 onClick={() => router.push('/owner/admin')}
               />
               <MenuItem
