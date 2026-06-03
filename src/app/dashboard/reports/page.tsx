@@ -463,18 +463,18 @@ export default function ReportsPage() {
         {/* Expense Modal */}
         {showExpenseModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-[var(--color-surface-1)] w-full max-w-md rounded-[24px] shadow-2xl border border-[var(--color-hairline)] overflow-hidden animate-fade-in">
-              <div className="p-[24px] border-b border-[var(--color-hairline)] flex justify-between items-center bg-[var(--color-surface-2)]">
+            <div className="bg-[var(--color-surface-1)] w-full max-w-md max-h-[90vh] flex flex-col rounded-[24px] shadow-2xl border border-[var(--color-hairline)] overflow-hidden animate-fade-in">
+              <div className="p-[24px] border-b border-[var(--color-hairline)] flex justify-between items-center bg-[var(--color-surface-2)] shrink-0">
                 <h3 className="text-[18px] font-semibold text-[var(--color-ink)] flex items-center gap-2">
                   <ArrowDownCircle className="text-red-500" size={20} />
                   Catat Pengeluaran
                 </h3>
-                <button onClick={() => setShowExpenseModal(false)} className="text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors">
+                <button onClick={() => setShowExpenseModal(false)} className="text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors shrink-0">
                   <X size={20} />
                 </button>
               </div>
               
-              <form onSubmit={handleExpenseSubmit} className="p-[24px] flex flex-col gap-[16px]">
+              <form onSubmit={handleExpenseSubmit} className="p-[24px] flex flex-col gap-[16px] overflow-y-auto">
                 <div>
                   <label className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)]">Nominal Pengeluaran (Rp)</label>
                   <input 
