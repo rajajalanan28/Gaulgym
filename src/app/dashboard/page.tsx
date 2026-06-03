@@ -13,6 +13,7 @@ const MapPin = dynamic(() => import('lucide-react').then(m => ({ default: m.MapP
 const Users = dynamic(() => import('lucide-react').then(m => ({ default: m.Users })), { ssr: false, loading: () => <span style={{width:20, height:20}} /> });
 const DollarSign = dynamic(() => import('lucide-react').then(m => ({ default: m.DollarSign })), { ssr: false, loading: () => <span style={{width:20, height:20}} /> });
 const UserCheck = dynamic(() => import('lucide-react').then(m => ({ default: m.UserCheck })), { ssr: false, loading: () => <span style={{width:20, height:20}} /> });
+const Tag = dynamic(() => import('lucide-react').then(m => ({ default: m.Tag })), { ssr: false, loading: () => <span style={{width:20, height:20}} /> });
 
 export default function OwnerDashboard() {
   const { user } = useAuth();
