@@ -138,3 +138,36 @@ export async function registerMemberAction(formData: FormData) {
     return { error: error.message || 'Terjadi kesalahan sistem' };
   }
 }
+
+export async function updateMemberPhotoAction(memberId: string, userId: string, photoBase64: string) {
+  try {
+    if (!memberId || !photoBase64) return { error: 'Data tidak lengkap' };
+    
+    let photoUrl = null;
+    const base64Data = photoBase64.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+    const filename = `${userId || memberId}-${Date.now()}.jpg`;
+
+    const { error: uploadError } = await supabaseAdmin
+      .storage
+      .from('member-photos')
+      .upload(filename, buffer, { contentType: 'image/jpeg', upsert: true });
+
+    if (!uploadError) {
+      const { data: publicUrlData } = supabaseAdmin.storage.from('member-photos').getPublicUrl(filename);
+      photoUrl = publicUrlData.publicUrl;
+      
+      const { error: updateError } = await supabaseAdmin
+        .from('members')
+        .update({ photo_url: photoUrl })
+        .eq('id', memberId);
+        
+      if (updateError) return { error: 'Gagal update database' };
+      return { success: true, photoUrl };
+    } else {
+      return { error: 'Gagal upload foto' };
+    }
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
-import { PlusCircle, X, Loader2, Shield } from "lucide-react";
+import { PlusCircle, X, Loader2, Shield, Camera, IdCard } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { updateMemberPhotoAction } from "@/app/actions/user";
 
 interface MemberData {
   id: string;
@@ -37,6 +38,73 @@ export default function MembersPage() {
   const [selectedPackageId, setSelectedPackageId] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Member Card Modal States
+  const [memberCardModal, setMemberCardModal] = useState<MemberData | null>(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setCameraActive(true);
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      alert("Gagal mengakses kamera. Pastikan browser memiliki izin.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      setCameraActive(false);
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext('2d');
+      if (context) {
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+        context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
+        const base64 = canvasRef.current.toDataURL('image/jpeg');
+        setPhotoBase64(base64);
+        stopCamera();
+      }
+    }
+  };
+
+  const savePhoto = async () => {
+    if (!memberCardModal || !photoBase64 || !user) return;
+    setIsSubmitting(true);
+    try {
+      const res = await updateMemberPhotoAction(memberCardModal.id, user.id, photoBase64);
+      if (res.error) throw new Error(res.error);
+      
+      alert('Foto member berhasil diperbarui!');
+      setMemberCardModal({ ...memberCardModal, photoUrl: res.photoUrl });
+      fetchData(); // Refresh the list
+    } catch (err: any) {
+      alert("Gagal update foto: " + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  useEffect(() => {
+    // When member card modal opens, try starting camera automatically if no photo
+    if (memberCardModal && !memberCardModal.photoUrl && !photoBase64) {
+      startCamera();
+    }
+    return () => stopCamera();
+  }, [memberCardModal]);
 
   useEffect(() => {
     fetchData();
@@ -296,6 +364,15 @@ export default function MembersPage() {
                             <PlusCircle size={16} />
                             <span>Perpanjang</span>
                           </button>
+
+                          <button 
+                            onClick={() => setMemberCardModal(member)}
+                            className="flex items-center gap-1 bg-blue-500/10 text-blue-500 hover:bg-blue-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                            title="Kartu Member"
+                          >
+                            <IdCard size={16} />
+                            <span>Kartu Member</span>
+                          </button>
                           
                           <button 
                             onClick={() => handlePromoteToAdmin(member)}
@@ -429,6 +506,117 @@ export default function MembersPage() {
                   {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <PlusCircle size={16} />}
                   Simpan Pembayaran
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Kartu Member */}
+        {memberCardModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <div className="bg-[var(--color-surface-1)] w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-white/10">
+              {/* Header */}
+              <div className="px-6 py-4 border-b border-white/5 flex justify-between items-center bg-[var(--color-surface-2)]">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <IdCard className="text-[var(--color-primary)]" />
+                  Kartu Member
+                </h2>
+                <button 
+                  onClick={() => {
+                    setMemberCardModal(null);
+                    setPhotoBase64(null);
+                  }}
+                  className="text-gray-400 hover:text-white transition-colors p-2 bg-white/5 rounded-full hover:bg-white/10"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="bg-gradient-to-br from-[var(--color-surface-2)] to-[var(--color-surface-1)] p-6 rounded-2xl border border-[var(--color-primary)]/20 shadow-inner mb-6 relative overflow-hidden">
+                  <div className="absolute -right-10 -top-10 w-40 h-40 bg-[var(--color-primary)]/10 rounded-full blur-2xl"></div>
+                  <div className="flex gap-6 items-center relative z-10">
+                    <div className="shrink-0 relative group">
+                      {photoBase64 || memberCardModal.photoUrl ? (
+                        <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-[var(--color-surface-1)] shadow-lg">
+                          <img src={photoBase64 || memberCardModal.photoUrl || ''} alt={memberCardModal.name} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-28 h-28 rounded-full bg-[var(--color-surface-3)] border-4 border-[var(--color-surface-1)] shadow-lg flex items-center justify-center text-4xl font-bold text-[var(--color-primary)]">
+                          {memberCardModal.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-1">{memberCardModal.name}</h3>
+                      <p className="text-gray-400 text-sm mb-3">{memberCardModal.email}</p>
+                      <div className="inline-block px-3 py-1 bg-[var(--color-primary)]/20 text-[var(--color-primary)] text-xs font-bold rounded-full uppercase tracking-wide border border-[var(--color-primary)]/30">
+                        {memberCardModal.membershipType || 'Member'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-[var(--color-surface-2)] rounded-2xl p-5 border border-white/5">
+                  <h4 className="text-sm font-semibold text-gray-300 mb-4 text-center">
+                    {photoBase64 || memberCardModal.photoUrl ? 'Update Foto Wajah' : 'Ambil Foto Wajah'}
+                  </h4>
+                  
+                  <div className="flex flex-col items-center gap-4">
+                    <canvas ref={canvasRef} className="hidden" />
+                    
+                    {!photoBase64 ? (
+                      <>
+                        <div className="w-48 h-48 bg-black rounded-full overflow-hidden border-2 border-[var(--color-primary)]/50 relative flex items-center justify-center">
+                          {cameraActive ? (
+                            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="text-center p-4">
+                              <Camera className="mx-auto mb-2 text-gray-500" size={32} />
+                              <span className="text-xs text-gray-500">Kamera Nonaktif</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {cameraActive ? (
+                          <button
+                            type="button"
+                            onClick={capturePhoto}
+                            className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-full text-sm font-semibold hover:bg-[var(--color-primary-hover)] transition shadow-lg flex items-center gap-2"
+                          >
+                            <Camera size={18} /> Jepret Foto
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={startCamera}
+                            className="px-6 py-2 border-2 border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded-full text-sm font-semibold flex items-center gap-2 transition"
+                          >
+                            <Camera size={18} /> Nyalakan Kamera
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex gap-3 mt-2">
+                        <button
+                          onClick={() => { setPhotoBase64(null); startCamera(); }}
+                          className="px-5 py-2.5 bg-gray-700 text-white rounded-xl text-sm font-semibold hover:bg-gray-600 transition"
+                        >
+                          Ulangi Foto
+                        </button>
+                        <button
+                          onClick={savePhoto}
+                          disabled={isSubmitting}
+                          className="px-5 py-2.5 bg-[var(--color-primary)] text-white rounded-xl text-sm font-semibold hover:bg-[var(--color-primary-hover)] transition shadow-lg flex items-center gap-2 disabled:opacity-50"
+                        >
+                          {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Shield size={16} />}
+                          Simpan Foto
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
