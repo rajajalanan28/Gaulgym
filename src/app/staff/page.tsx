@@ -59,10 +59,14 @@ export default function StaffPage() {
       // Since this is a demo/bypass, we directly insert into 'users' table.
       // (Note: Supabase Auth requires backend admin API for creating other users without logging out)
       
+      const finalEmail = newStaff.email.includes("@")
+        ? newStaff.email.trim().toLowerCase()
+        : `${newStaff.email.trim().toLowerCase()}@gaulgym.com`;
+        
       const { data, error } = await supabase
         .from('users')
         .insert({
-          email: newStaff.email,
+          email: finalEmail,
           name: newStaff.name,
           role: 'Admin',
           owner_id: user.id,
@@ -210,7 +214,7 @@ export default function StaffPage() {
               <div>
                 <label className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)]">Email</label>
                 <input
-                  type="email"
+                  type="text"
                   required
                   value={newStaff.email}
                   onChange={(e) => setNewStaff({...newStaff, email: e.target.value})}
