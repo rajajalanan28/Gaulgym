@@ -81,49 +81,68 @@ export default function MemberDashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-[24px]">
             {/* Kiri: Membership Card */}
             <div className="lg:col-span-2 space-y-[24px]">
-              <div className="bg-gradient-to-br from-[#1a1c23] to-[#121318] hairline-border rounded-[20px] p-[28px] relative overflow-hidden shadow-xl">
-                {/* Decorative background */}
-                <div className="absolute -right-10 -top-10 text-[var(--color-hairline-strong)] opacity-50">
-                  <Dumbbell size={180} />
+              <div className="relative rounded-[24px] p-[32px] overflow-hidden shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] hairline-border group min-h-[220px]">
+                {/* The generated image background */}
+                <div className="absolute inset-0 z-0">
+                  <img src="/images/member_card_bg.png" alt="Card Background" className="w-full h-full object-cover opacity-60 group-hover:scale-105 group-hover:opacity-80 transition-all duration-700 ease-out" />
+                  {/* Dark overlay to ensure text is readable */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#0f1115]/90 via-[#0f1115]/70 to-[var(--color-primary)]/20 mix-blend-multiply"></div>
+                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-transparent to-white/5"></div>
                 </div>
                 
-                <div className="relative z-10 flex flex-col h-full justify-between min-h-[160px]">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <CreditCard size={18} className="text-[var(--color-primary)]" />
-                      <span className="text-[13px] font-medium text-[var(--color-ink-subtle)] tracking-wider uppercase">Membership Aktif</span>
-                    </div>
-                    {loading ? (
-                      <div className="h-8 w-48 bg-[var(--color-hairline)] animate-pulse rounded mt-2"></div>
-                    ) : membership ? (
-                      <h2 className="text-[32px] font-bold text-white tracking-[-0.02em] leading-tight">{membership.package_name}</h2>
-                    ) : (
-                      <div>
-                        <h2 className="text-[24px] font-semibold text-white tracking-[-0.02em] leading-tight mt-1">Belum Ada Paket Aktif</h2>
-                        <p className="text-[13px] text-[var(--color-ink-subtle)] mt-2 italic max-w-[250px]">Silakan hubungi kasir/admin di lokasi gym untuk mendaftar atau memperpanjang paket Anda.</p>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap gap-x-12 gap-y-4">
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                  <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-[12px] text-[var(--color-ink-subtle)] mb-1">Berlaku Sampai</p>
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="w-[36px] h-[26px] rounded-md bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 flex items-center justify-center shadow-sm relative overflow-hidden">
+                          {/* Fake chip lines */}
+                          <div className="absolute w-[1px] h-full bg-black/20 left-1/3"></div>
+                          <div className="absolute w-[1px] h-full bg-black/20 right-1/3"></div>
+                          <div className="absolute w-full h-[1px] bg-black/20 top-1/2"></div>
+                        </div>
+                        <span className="text-[11px] font-bold text-[var(--color-primary)] tracking-[0.25em] uppercase drop-shadow-md">Parenggean Elite</span>
+                      </div>
+                      
                       {loading ? (
-                        <div className="h-5 w-24 bg-[var(--color-hairline)] animate-pulse rounded"></div>
+                        <div className="h-8 w-48 bg-white/10 animate-pulse rounded mt-2"></div>
                       ) : membership ? (
-                        <p className="text-[15px] font-medium text-white">{new Date(membership.end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                        <h2 className="text-[28px] sm:text-[36px] font-black text-white tracking-tight leading-none uppercase drop-shadow-lg">{membership.package_name}</h2>
                       ) : (
-                        <p className="text-[15px] font-medium text-[var(--color-ink-muted)]">-</p>
+                        <div>
+                          <h2 className="text-[24px] font-bold text-white tracking-tight leading-tight mt-1 drop-shadow-md">Belum Ada Paket</h2>
+                          <p className="text-[13px] text-white/70 mt-2 font-medium max-w-[280px] leading-relaxed">Silakan hubungi admin di lokasi gym untuk memperpanjang paket Anda.</p>
+                        </div>
                       )}
                     </div>
+                    
+                    {/* Gym Logo / Icon */}
+                    <div className="bg-black/30 backdrop-blur-md p-3 rounded-full border border-white/10 shadow-inner">
+                      <Dumbbell size={24} className="text-[var(--color-primary)] drop-shadow-[0_0_8px_var(--color-primary)]" />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-12 pt-6 flex justify-between items-end gap-4">
                     <div>
-                      <p className="text-[12px] text-[var(--color-ink-subtle)] mb-1">Status</p>
+                      <p className="text-[10px] text-white/50 uppercase tracking-[0.2em] mb-1.5 font-bold">Berlaku Sampai</p>
                       {loading ? (
-                        <div className="h-5 w-16 bg-[var(--color-hairline)] animate-pulse rounded"></div>
+                        <div className="h-5 w-24 bg-white/10 animate-pulse rounded"></div>
                       ) : membership ? (
-                        <span className="inline-block px-[10px] py-[2px] rounded-full text-[12px] font-semibold bg-green-500/20 text-green-400">Aktif</span>
+                        <p className="text-[16px] sm:text-[18px] font-mono font-medium text-white tracking-widest drop-shadow-md">
+                          {new Date(membership.end_date).toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, ' / ')}
+                        </p>
                       ) : (
-                        <span className="inline-block px-[10px] py-[2px] rounded-full text-[12px] font-semibold bg-red-500/20 text-red-400">Tidak Aktif</span>
+                        <p className="text-[16px] sm:text-[18px] font-mono font-medium text-white/30 tracking-widest">-- / -- / ----</p>
+                      )}
+                    </div>
+                    
+                    <div className="text-right">
+                      <p className="text-[10px] text-white/50 uppercase tracking-[0.2em] mb-1.5 font-bold">Status</p>
+                      {loading ? (
+                        <div className="h-6 w-16 bg-white/10 animate-pulse rounded-full ml-auto"></div>
+                      ) : membership ? (
+                        <span className="inline-block px-[14px] py-[6px] rounded-full text-[11px] font-black tracking-wider bg-[var(--color-primary)]/20 text-[var(--color-primary)] border border-[var(--color-primary)]/30 shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.3)] backdrop-blur-sm">AKTIF</span>
+                      ) : (
+                        <span className="inline-block px-[14px] py-[6px] rounded-full text-[11px] font-black tracking-wider bg-red-500/10 text-red-400 border border-red-500/20 backdrop-blur-sm">EXPIRED</span>
                       )}
                     </div>
                   </div>
