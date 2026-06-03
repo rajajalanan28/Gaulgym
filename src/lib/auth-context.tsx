@@ -24,6 +24,7 @@ interface AuthUser {
   name: string;
   role: 'Owner' | 'Admin' | 'Member';
   gymId?: string;
+  emailConfirmedAt?: string | null;
 }
 
 interface AuthContextType {
@@ -72,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setCachedUser(u);
   };
 
-  const fetchUserProfile = async (userId: string, retries = 3) => {
+  const fetchUserProfile = async (userId: string, emailConfirmedAt: string | null = null, retries = 3) => {
     try {
       const fetchPromise = supabase
         .from('users')
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error || !data) {
         if (error?.code === 'PGRST116' && retries > 0) {
           await new Promise(resolve => setTimeout(resolve, 1000));
-          return fetchUserProfile(userId, retries - 1);
+          return fetchUserProfile(userId, emailConfirmedAt, retries - 1);
         }
         throw error || new Error('User data not found');
       }
@@ -101,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: data.name,
           role: data.role as AuthUser['role'],
           gymId: data.gym_id,
+          emailConfirmedAt: emailConfirmedAt,
         });
       }
     } catch (error) {
@@ -115,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        fetchUserProfile(session.user.id);
+        fetchUserProfile(session.user.id, session.user.email_confirmed_at || null);
       } else {
         // No session = clear cache too
         setUserAndCache(null);
@@ -130,7 +132,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        await fetchUserProfile(session.user.id);
+        await fetchUserProfile(session.user.id, session.user.email_confirmed_at || null);
       } else {
         setUserAndCache(null);
         setLoading(false);
@@ -187,6 +189,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         name: userData.name,
         role: userData.role as AuthUser['role'],
         gymId: userData.gym_id,
+        emailConfirmedAt: authData.user.email_confirmed_at || null,
       };
       setUserAndCache(authUser);
 
@@ -233,6 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name,
           role: role as AuthUser['role'],
           gymId: gymId,
+          emailConfirmedAt: authData.user.email_confirmed_at || null,
         };
         setUserAndCache(authUser);
         return { success: true, user: authUser };
