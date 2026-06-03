@@ -33,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="dns-prefetch" href="https://xyzcompany.supabase.co" />
         <link rel="preconnect" href="https://xyzcompany.supabase.co" crossOrigin="anonymous" />
+        <link rel="preload" href="/logo.png" as="image" type="image/png" />
       </head>
       <body className="bg-[#050505] text-white font-sans antialiased selection:bg-orange-500/30">
         <AuthProvider>{children}</AuthProvider>

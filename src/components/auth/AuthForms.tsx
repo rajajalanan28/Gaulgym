@@ -156,11 +156,10 @@ function AuthFormsContent() {
           <img
             src="/logo.png"
             alt="Gaul Gym Logo"
-            style={{ width: '80px', height: '80px', objectFit: 'contain', margin: '0 auto 16px', borderRadius: '16px' }}
+            width={120}
+            height={120}
+            style={{ objectFit: 'contain', margin: '0 auto 16px', borderRadius: '16px' }}
           />
-          <h1 className="text-[24px] font-semibold tracking-[-0.02em] mb-2 text-[var(--color-ink)]">
-            GAUL GYM
-          </h1>
           <p className="text-[14px] text-[var(--color-ink-muted)]">
             {view === 'login'
               ? "Masuk untuk mulai latihan"
