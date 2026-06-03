@@ -169,26 +169,25 @@ export default function MembersPage() {
     
     if (confirm(`Yakin ingin mempromosikan ${member.name} menjadi Admin?`)) {
       try {
-        const { error } = await supabase
-          .from('users')
-          .update({ role: 'Admin', owner_id: user.id })
-          .eq('id', member.user_id);
-          
-        if (error) throw error;
+        const res = await fetch('/api/admin/promote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: member.user_id,
+            ownerId: user.id,
+            memberId: member.id
+          })
+        });
 
-        // Hapus dari tabel members karena dia sekarang staff, bukan member lagi
-        const { error: deleteError } = await supabase
-          .from('members')
-          .delete()
-          .eq('id', member.id);
-          
-        if (deleteError) throw deleteError;
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || 'Terjadi kesalahan');
 
         alert(`${member.name} berhasil dipromosikan menjadi Admin! Silakan cek di menu Admin.`);
         fetchData();
       } catch (err: any) {
         console.error("Gagal mempromosikan admin:", err);
-        alert("Gagal: " + (err.message || "Pastikan RLS database sudah diupdate."));
+        alert("Gagal: " + err.message);
       }
     }
   };
