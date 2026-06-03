@@ -29,21 +29,34 @@ export default function POSPage() {
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'QRIS'>('Cash');
   const [showSuccess, setShowSuccess] = useState(false);
+  const [activeGymId, setActiveGymId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.gymId) {
-      fetchProducts();
-    }
+    const init = async () => {
+      if (!user) return;
+      
+      let gId = user.gymId;
+      if (user.role === 'Owner') {
+        const { data } = await supabase.from('gyms').select('id').eq('owner_id', user.id).single();
+        if (data) gId = data.id;
+      }
+      
+      if (gId) {
+        setActiveGymId(gId);
+        fetchProducts(gId);
+      } else {
+        setLoading(false);
+      }
+    };
+    init();
   }, [user]);
 
-  const fetchProducts = async () => {
-    if (!user?.gymId) return;
-    
+  const fetchProducts = async (gId: string) => {
     try {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('gym_id', user.gymId)
+        .eq('gym_id', gId)
         .eq('is_active', true)
         .order('name');
         
@@ -91,7 +104,7 @@ export default function POSPage() {
   };
 
   const processPayment = async () => {
-    if (!user?.gymId || !user.id || cart.length === 0) return;
+    if (!activeGymId || !user?.id || cart.length === 0) return;
     
     setProcessing(true);
     try {
@@ -99,7 +112,7 @@ export default function POSPage() {
       const { data: trxData, error: trxError } = await supabase
         .from('sales_transactions')
         .insert({
-          gym_id: user.gymId,
+          gym_id: activeGymId,
           admin_id: user.id,
           total_amount: totalAmount,
           payment_method: paymentMethod
@@ -135,7 +148,7 @@ export default function POSPage() {
       // Success
       setCart([]);
       setShowSuccess(true);
-      await fetchProducts(); // Refresh products to get new stock
+      if (activeGymId) await fetchProducts(activeGymId); // Refresh products to get new stock
       setTimeout(() => setShowSuccess(false), 3000);
       
     } catch (error) {
