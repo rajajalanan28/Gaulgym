@@ -89,7 +89,7 @@ export default function MembersPage() {
       if (res.error) throw new Error(res.error);
       
       alert('Foto member berhasil diperbarui!');
-      setMemberCardModal({ ...memberCardModal, photoUrl: res.photoUrl });
+      setMemberCardModal({ ...memberCardModal, photoUrl: res.photoUrl || null });
       fetchData(); // Refresh the list
     } catch (err: any) {
       alert("Gagal update foto: " + err.message);
