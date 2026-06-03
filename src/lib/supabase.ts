@@ -142,3 +142,85 @@ export async function getAttendanceByDate(gymId: string, date: string) {
   if (error) throw error
   return data as DbAttendance[]
 }
+
+export async function getOwnerStats(ownerId: string) {
+  // Get all gyms
+  const gyms = await getGymsByOwner(ownerId);
+  const gymIds = gyms.map(g => g.id);
+
+  if (gymIds.length === 0) {
+    return { totalGyms: 0, totalMembers: 0, totalStaff: 0, totalRevenue: 0 };
+  }
+
+  // Get total members across all gyms
+  const { count: memberCount, error: memberError } = await supabase
+    .from('members')
+    .select('*', { count: 'exact', head: true })
+    .in('gym_id', gymIds);
+  
+  if (memberError) throw memberError;
+
+  // Get total staff
+  const { count: staffCount, error: staffError } = await supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true })
+    .eq('role', 'Admin')
+    .eq('owner_id', ownerId);
+    
+  if (staffError) throw staffError;
+
+  // Get revenue (sum of amounts in active subscriptions)
+  const { data: subs, error: subsError } = await supabase
+    .from('subscriptions')
+    .select('amount')
+    .in('gym_id', gymIds)
+    .eq('status', 'active');
+    
+  if (subsError) throw subsError;
+  const revenue = subs.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
+  return {
+    totalGyms: gyms.length,
+    totalMembers: memberCount || 0,
+    totalStaff: staffCount || 0,
+    totalRevenue: revenue,
+  };
+}
+
+export async function getAdminStats(gymId: string) {
+  const today = new Date().toISOString().split('T')[0];
+
+  const { count: memberCount, error: memberError } = await supabase
+    .from('members')
+    .select('*', { count: 'exact', head: true })
+    .eq('gym_id', gymId);
+    
+  if (memberError) throw memberError;
+
+  const { count: checkinCount, error: checkinError } = await supabase
+    .from('attendance')
+    .select('*', { count: 'exact', head: true })
+    .eq('gym_id', gymId)
+    .eq('date', today)
+    .eq('status', 'checked_in');
+
+  if (checkinError) throw checkinError;
+
+  // Let's assume new members in the last 30 days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const { count: newMemberCount, error: newMemberError } = await supabase
+    .from('members')
+    .select('*', { count: 'exact', head: true })
+    .eq('gym_id', gymId)
+    .gte('created_at', thirtyDaysAgo.toISOString());
+    
+  if (newMemberError) throw newMemberError;
+
+  return {
+    totalMembers: memberCount || 0,
+    checkinsToday: checkinCount || 0,
+    newMembers: newMemberCount || 0,
+  };
+}
+

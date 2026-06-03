@@ -1,84 +1,188 @@
 'use client';
 
-import { StatCard } from '@/components/StatCard';
-import { WelcomeCard } from '@/components/WelcomeCard';
-import { MenuItem } from '@/components/MenuItem';
+import { useState, useEffect } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
+import { supabase } from '@/lib/supabase';
+import { QrCode, History, CreditCard, Dumbbell } from 'lucide-react';
 
 export default function MemberDashboard() {
   const { user } = useAuth();
+  const [membership, setMembership] = useState<any>(null);
+  const [recentAttendance, setRecentAttendance] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadMemberData() {
+      if (!user?.id) return;
+      
+      try {
+        // 1. Get member profile to find their gym_id and member_id
+        const { data: memberProfile, error: memberError } = await supabase
+          .from('members')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+          
+        if (memberError && memberError.code !== 'PGRST116') throw memberError;
+
+        if (memberProfile) {
+          // 2. Get active subscription
+          const { data: subData } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('member_id', memberProfile.id)
+            .eq('status', 'active')
+            .order('end_date', { ascending: false })
+            .limit(1)
+            .single();
+            
+          if (subData) setMembership(subData);
+
+          // 3. Get recent attendance
+          const { data: attData } = await supabase
+            .from('attendance')
+            .select('*')
+            .eq('member_id', memberProfile.id)
+            .order('check_in', { ascending: false })
+            .limit(3);
+            
+          if (attData) setRecentAttendance(attData);
+        }
+      } catch (error) {
+        console.error("Failed to load member data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadMemberData();
+  }, [user]);
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles={['Member']}>
       <div className="min-h-screen bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white p-[32px] md:p-[48px]">
         <div className="max-w-[1200px] mx-auto">
-          {/* Header Section */}
           <DashboardHeader />
-
-          {/* Welcome Section */}
-          <div className="mb-[32px]">
-            <WelcomeCard
-              title={`Welcome back, ${user?.name || 'Owner'}!`}
-              subtitle="Here's an overview of your gym network"
-            />
+          
+          <div className="mb-[32px] flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Hai, {user?.name || 'Member'}! 👋</h1>
+              <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Siap untuk latihan hari ini?</p>
+            </div>
+            {/* Tombol QR Code Mobile */}
+            <button className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white px-[16px] py-[12px] rounded-[10px] font-medium transition-colors flex items-center gap-2 shadow-lg shadow-[var(--color-primary)]/20">
+              <QrCode size={20} />
+              <span>Tampilkan QR Code</span>
+            </button>
           </div>
 
-          {/* Stats Section */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px] mb-[48px]">
-            <StatCard
-              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>}
-              value="12"
-              label="Total Gyms"
-            />
-            <StatCard
-              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>}
-              value="2,845"
-              label="Members"
-            />
-            <StatCard
-              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>}
-              value="156"
-              label="Staff"
-            />
-            <StatCard
-              icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>}
-              value="$48,250"
-              label="Revenue"
-            />
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-[24px]">
+            {/* Kiri: Membership Card */}
+            <div className="lg:col-span-2 space-y-[24px]">
+              <div className="bg-gradient-to-br from-[#1a1c23] to-[#121318] hairline-border rounded-[20px] p-[28px] relative overflow-hidden shadow-xl">
+                {/* Decorative background */}
+                <div className="absolute -right-10 -top-10 text-[var(--color-hairline-strong)] opacity-50">
+                  <Dumbbell size={180} />
+                </div>
+                
+                <div className="relative z-10 flex flex-col h-full justify-between min-h-[160px]">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <CreditCard size={18} className="text-[var(--color-primary)]" />
+                      <span className="text-[13px] font-medium text-[var(--color-ink-subtle)] tracking-wider uppercase">Membership Aktif</span>
+                    </div>
+                    {loading ? (
+                      <div className="h-8 w-48 bg-[var(--color-hairline)] animate-pulse rounded mt-2"></div>
+                    ) : membership ? (
+                      <h2 className="text-[32px] font-bold text-white tracking-[-0.02em] leading-tight">{membership.package_name}</h2>
+                    ) : (
+                      <h2 className="text-[24px] font-semibold text-white tracking-[-0.02em] leading-tight mt-1">Belum Ada Paket Aktif</h2>
+                    )}
+                  </div>
+                  
+                  <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap gap-x-12 gap-y-4">
+                    <div>
+                      <p className="text-[12px] text-[var(--color-ink-subtle)] mb-1">Berlaku Sampai</p>
+                      {loading ? (
+                        <div className="h-5 w-24 bg-[var(--color-hairline)] animate-pulse rounded"></div>
+                      ) : membership ? (
+                        <p className="text-[15px] font-medium text-white">{new Date(membership.end_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                      ) : (
+                        <p className="text-[15px] font-medium text-[var(--color-ink-muted)]">-</p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-[12px] text-[var(--color-ink-subtle)] mb-1">Status</p>
+                      {loading ? (
+                        <div className="h-5 w-16 bg-[var(--color-hairline)] animate-pulse rounded"></div>
+                      ) : membership ? (
+                        <span className="inline-block px-[10px] py-[2px] rounded-full text-[12px] font-semibold bg-green-500/20 text-green-400">Aktif</span>
+                      ) : (
+                        <span className="inline-block px-[10px] py-[2px] rounded-full text-[12px] font-semibold bg-red-500/20 text-red-400">Tidak Aktif</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-          {/* Menu Navigation Section */}
-          <div>
-            <h2 className="text-[15px] font-medium text-[var(--color-ink)] mb-[16px]">
-              Quick Actions
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
-              <MenuItem
-                icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>}
-                title="Manage Gyms"
-                subtitle="View and edit your gym locations"
-                onClick={() => console.log('Navigate to gyms')}
-              />
-              <MenuItem
-                icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>}
-                title="Member Management"
-                subtitle="Manage all gym members"
-                onClick={() => console.log('Navigate to members')}
-              />
-              <MenuItem
-                icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>}
-                title="Financial Reports"
-                subtitle="View revenue and analytics"
-                onClick={() => console.log('Navigate to reports')}
-              />
-              <MenuItem
-                icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>}
-                title="Staff Management"
-                subtitle="Manage employees across gyms"
-                onClick={() => console.log('Navigate to staff')}
-              />
+              {/* Menu Tambahan */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-[16px]">
+                <button className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[16px] p-[20px] flex flex-col items-center justify-center gap-[12px] aspect-square">
+                  <span className="bg-[var(--color-surface-3)] p-[12px] rounded-full text-[var(--color-primary)]">
+                    <CreditCard size={24} />
+                  </span>
+                  <span className="text-[14px] font-medium">Beli Paket</span>
+                </button>
+                <button className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[16px] p-[20px] flex flex-col items-center justify-center gap-[12px] aspect-square">
+                  <span className="bg-[var(--color-surface-3)] p-[12px] rounded-full text-[var(--color-primary)]">
+                    <History size={24} />
+                  </span>
+                  <span className="text-[14px] font-medium">Riwayat</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Kanan: Riwayat Kedatangan */}
+            <div className="bg-[var(--color-surface-1)] hairline-border rounded-[20px] p-[24px]">
+              <div className="flex items-center gap-2 mb-[24px]">
+                <History size={18} className="text-[var(--color-ink-subtle)]" />
+                <h3 className="text-[16px] font-semibold text-[var(--color-ink)]">Kunjungan Terakhir</h3>
+              </div>
+              
+              <div className="space-y-[16px]">
+                {loading ? (
+                  Array(3).fill(0).map((_, i) => (
+                    <div key={i} className="flex gap-4 items-center">
+                      <div className="w-[10px] h-[10px] rounded-full bg-[var(--color-hairline)] animate-pulse"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 w-24 bg-[var(--color-hairline)] animate-pulse rounded"></div>
+                        <div className="h-3 w-16 bg-[var(--color-hairline)] animate-pulse rounded"></div>
+                      </div>
+                    </div>
+                  ))
+                ) : recentAttendance.length > 0 ? (
+                  recentAttendance.map((att, i) => (
+                    <div key={i} className="flex gap-4 relative">
+                      {i !== recentAttendance.length - 1 && (
+                        <div className="absolute left-[5px] top-[14px] bottom-[-16px] w-[2px] bg-[var(--color-hairline)]"></div>
+                      )}
+                      <div className="w-[12px] h-[12px] rounded-full bg-[var(--color-primary)] mt-[6px] relative z-10 ring-4 ring-[var(--color-surface-1)]"></div>
+                      <div>
+                        <p className="text-[14px] font-medium text-[var(--color-ink)]">
+                          {new Date(att.date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })}
+                        </p>
+                        <p className="text-[13px] text-[var(--color-ink-subtle)] mt-1">
+                          Check-in: {new Date(att.check_in).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-[14px] text-[var(--color-ink-muted)] text-center py-8">Belum ada riwayat kunjungan.</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
