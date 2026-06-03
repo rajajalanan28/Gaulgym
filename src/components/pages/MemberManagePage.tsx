@@ -5,7 +5,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
-import { PlusCircle, X, Loader2, Shield, Camera, IdCard } from "lucide-react";
+import { PlusCircle, X, Loader2, Shield, Camera, IdCard, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { updateMemberPhotoAction } from "@/app/actions/user";
 
@@ -266,6 +266,25 @@ export default function MembersPage() {
     }
   };
 
+  const handleWhatsApp = (member: MemberData) => {
+    if (!member.phone) {
+      alert("Member ini tidak memiliki nomor telepon.");
+      return;
+    }
+    const phone = member.phone || '';
+    let formattedPhone = phone.replace(/\D/g, '');
+    if (formattedPhone.startsWith('0')) {
+      formattedPhone = '62' + formattedPhone.substring(1);
+    }
+    
+    const isExpired = member.status === 'expired';
+    const text = isExpired 
+      ? `Halo ${member.name}, paket gym Anda di Gaul Gym sudah habis nih. Yuk perpanjang biar bisa latihan lagi!`
+      : `Halo ${member.name}, ini dari Gaul Gym.`;
+      
+    window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   const filteredMembers = members.filter(
     (member) =>
       member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -386,6 +405,17 @@ export default function MembersPage() {
                             <Shield size={16} />
                             <span>Jadikan Admin</span>
                           </button>
+
+                          {(member.status === 'expired' || member.status === 'inactive') && (
+                            <button 
+                              onClick={() => handleWhatsApp(member)}
+                              className="flex items-center gap-1 bg-green-500/10 text-green-500 hover:bg-green-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                              title="Kirim WA Jatuh Tempo"
+                            >
+                              <MessageCircle size={16} />
+                              <span>Kirim WA</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

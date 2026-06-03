@@ -1,18 +1,21 @@
 {
   "name": "Gaul Gym",
-  "short_name": "GaulGym",
-  "description": "Fasilitas kebugaran kelas dunia dengan peralatan premium dan pelatih tersertifikasi.",
+  "short_name": "Gaul Gym",
+  "description": "Sistem Manajemen Gaul Gym Terpadu",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#010102",
-  "theme_color": "#010102",
-  "orientation": "portrait-primary",
+  "background_color": "#000000",
+  "theme_color": "#FF5722",
   "icons": [
     {
-      "src": "/logo.png",
+      "src": "/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }
