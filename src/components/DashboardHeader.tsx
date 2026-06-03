@@ -73,9 +73,12 @@ export function DashboardHeader() {
           )}
         </div>
 
-        <h1 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-ink)] tracking-[-0.01em] hidden sm:block">
-          GAUL GYM
-        </h1>
+        <div className="hidden sm:flex items-center gap-2">
+          <img src="/images/logo gym-2.png" alt="Gaul Gym Logo" className="w-8 h-8 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+          <h1 className="text-[18px] md:text-[20px] font-semibold text-[var(--color-ink)] tracking-[-0.01em]">
+            GAUL GYM
+          </h1>
+        </div>
       </div>
 
       {/* Right side: Dashboard button + Logout */}

@@ -8,7 +8,8 @@ export function PublicFooter() {
         
         {/* Brand */}
         <div className="md:col-span-4">
-          <a href="/beranda" className="inline-block outline-none mb-4 focus-ring rounded-sm">
+          <a href="/beranda" className="inline-flex items-center gap-2 outline-none mb-4 focus-ring rounded-sm">
+            <img src="/images/logo gym-2.png" alt="Gaul Gym Logo" className="w-5 h-5 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             <h2 className="text-[15px] font-semibold tracking-tight text-[var(--color-ink)]">
               GAUL GYM
             </h2>

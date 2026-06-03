@@ -33,6 +33,7 @@ export function PublicNavbar() {
         
         {/* Logo */}
         <a href="/" className="flex items-center gap-2 group focus-ring rounded-sm" aria-label="Gaul Gym - Beranda">
+          <img src="/images/logo gym-2.png" alt="Gaul Gym Logo" className="w-6 h-6 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
           <span className="text-[var(--color-ink)] font-semibold tracking-tight text-[15px]">
             GAUL GYM
           </span>
