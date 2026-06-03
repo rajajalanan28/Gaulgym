@@ -14,7 +14,7 @@ interface Gym {
 }
 
 const mockGyms: Gym[] = [
-  { id: "1", name: "FitZone Central", address: "Jl. Sudirman No. 123, Jakarta", phone: "021-1234567", members: 250, status: "Active" },
+  { id: "1", name: "FitZone Central", address: "Parenggean, Provinsi Kalimantan Tengah", phone: "021-1234567", members: 250, status: "Active" },
   { id: "2", name: "PowerGym Bandung", address: "Jl. Braga No. 45, Bandung", phone: "022-7654321", members: 180, status: "Active" },
   { id: "3", name: "MuscleFactory Surabaya", address: "Jl. Pemuda No. 88, Surabaya", phone: "031-9876543", members: 320, status: "Active" },
   { id: "4", name: "Iron Haven Yogyakarta", address: "Jl. Malioboro No. 22, Yogyakarta", phone: "0274-554433", members: 95, status: "Inactive" },

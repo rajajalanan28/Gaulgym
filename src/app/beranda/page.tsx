@@ -35,7 +35,7 @@ export default function Home() {
             
             <div className="mb-8 inline-flex items-center gap-3 px-3 py-1 rounded-full hairline-border bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer text-[13px] font-medium text-[var(--color-ink-muted)]">
               <span className="w-2 h-2 rounded-full bg-[var(--color-primary)]"></span>
-              Pusat Kebugaran No. 1 di Jakarta
+              Pusat Kebugaran No. 1 di Parenggean, Provinsi Kalimantan Tengah
               <svg className="w-3.5 h-3.5 text-[var(--color-ink-subtle)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>

@@ -74,7 +74,7 @@ export default function ContactPage() {
               <h3 className="text-[18px] font-medium text-[var(--color-ink)] mb-8 tracking-[-0.01em]">Informasi Kontak</h3>
               <div className="space-y-6 mb-12">
                 {[
-                  { Icon: MapPin, label: 'Alamat Utama', value: 'Jl. Sudirman No. 123, Jakarta Selatan' },
+                  { Icon: MapPin, label: 'Alamat Utama', value: 'Parenggean, Provinsi Kalimantan Tengah' },
                   { Icon: Phone, label: 'Telepon', value: '(021) 1234-5678' },
                   { Icon: Mail, label: 'Email', value: 'hello@gaulgym.com' },
                 ].map((item) => (
