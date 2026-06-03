@@ -8,16 +8,16 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { userId, ownerId, memberId } = await request.json();
+    const { userId, ownerId, memberId, gymId } = await request.json();
 
-    if (!userId || !ownerId || !memberId) {
+    if (!userId || !ownerId || !memberId || !gymId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Update user role to Admin and assign owner_id
+    // Update user role to Admin and assign owner_id and gym_id
     const { error: updateError } = await supabaseAdmin
       .from('users')
-      .update({ role: 'Admin', owner_id: ownerId })
+      .update({ role: 'Admin', owner_id: ownerId, gym_id: gymId })
       .eq('id', userId);
 
     if (updateError) throw updateError;

@@ -245,7 +245,8 @@ export default function MembersPage() {
           body: JSON.stringify({
             userId: member.user_id,
             ownerId: user.id,
-            memberId: member.id
+            memberId: member.id,
+            gymId: activeGymId
           })
         });
 

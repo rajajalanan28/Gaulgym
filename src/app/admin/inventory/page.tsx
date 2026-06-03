@@ -45,6 +45,11 @@ export default function InventoryPage() {
         const { data } = await supabase.from('gyms').select('id').eq('owner_id', user.id).single();
         if (data) gId = data.id;
       }
+
+      if (!gId) {
+        const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
+        if (firstGym) gId = firstGym.id;
+      }
       
       if (gId) {
         setActiveGymId(gId);
