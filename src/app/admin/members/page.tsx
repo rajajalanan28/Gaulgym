@@ -71,19 +71,18 @@ export default function MembersPage() {
       // Map data ke UI
       if (membersData) {
         const mappedMembers: MemberData[] = membersData.map((m) => {
-          const activeSub = subsData?.find(s => s.member_id === m.id && s.status === 'active');
-          const expiredSub = subsData?.find(s => s.member_id === m.id && s.status === 'expired');
-          
-          const currentSub = activeSub || expiredSub;
+          const subs = subsData?.filter(s => s.member_id === m.id) || [];
+          const activeSubs = subs.filter((s: any) => s.status === 'active');
+          const expiredSub = subs.find((s: any) => s.status === 'expired');
 
           return {
             id: m.id,
             name: m.name || '-',
             email: m.email || '-',
             phone: m.phone || '-',
-            membershipType: currentSub?.package_name || '-',
+            membershipType: activeSubs.length > 0 ? activeSubs.map((s:any) => s.package_name).join(', ') : (expiredSub?.package_name || '-'),
             joinDate: new Date(m.created_at).toLocaleDateString('id-ID'),
-            status: activeSub ? 'active' : (expiredSub ? 'expired' : 'inactive'),
+            status: activeSubs.length > 0 ? 'active' : (expiredSub ? 'expired' : 'inactive'),
           };
         });
 
@@ -168,9 +167,17 @@ export default function MembersPage() {
       <div className="p-4 pb-28 md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)] relative">
         <DashboardHeader />
 
-        <div className="mb-[24px]">
-          <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Members</h1>
-          <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola data member dan perpanjang keanggotaan (Offline Kasir)</p>
+        <div className="mb-[24px] flex flex-col md:flex-row md:justify-between md:items-end gap-4">
+          <div>
+            <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Members</h1>
+            <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola data member dan perpanjang keanggotaan (Offline Kasir)</p>
+          </div>
+          <a
+            href="/admin/members/new"
+            className="inline-flex items-center justify-center bg-[var(--color-primary)] text-white font-medium px-4 py-2.5 rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors shadow-lg shadow-[var(--color-primary)]/20"
+          >
+            + Daftarkan Member
+          </a>
         </div>
 
         <div className="mb-[16px]">

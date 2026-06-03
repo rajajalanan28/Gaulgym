@@ -34,21 +34,45 @@ export default function ReportsPage() {
         }
 
         // Fetch all subscriptions/transactions
-        const { data, error } = await supabase
+        const { data: subsData, error: subsError } = await supabase
           .from('subscriptions')
           .select('*')
           .in('gym_id', gymIds)
           .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        
-        if (data) {
-          setTransactions(data);
+        if (subsError) throw subsError;
+
+        // Fetch sales transactions
+        const { data: salesData, error: salesError } = await supabase
+          .from('sales_transactions')
+          .select('*, users(name)')
+          .in('gym_id', gymIds)
+          .order('created_at', { ascending: false });
           
-          // Extract unique admins for filter
-          const uniqueAdmins = Array.from(new Set(data.filter(t => t.created_by_name).map(t => t.created_by_name)));
-          setAdmins(uniqueAdmins as string[]);
+        if (salesError) {
+          console.error('Error fetching sales:', salesError);
         }
+
+        // Format sales to match subscriptions structure for the table
+        const formattedSales = (salesData || []).map((s: any) => ({
+          id: s.id,
+          amount: s.total_amount,
+          package_name: `Penjualan POS (${s.payment_method})`,
+          member_id: '-',
+          created_by_name: s.users?.name || 'Admin',
+          created_at: s.created_at
+        }));
+
+        const mergedData = [...(subsData || []), ...formattedSales].sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        setTransactions(mergedData);
+        
+        // Extract unique admins for filter
+        const uniqueAdmins = Array.from(new Set(mergedData.filter(t => t.created_by_name).map(t => t.created_by_name)));
+        setAdmins(uniqueAdmins as string[]);
+        
       } catch (err) {
         console.error("Error loading reports:", err);
       } finally {

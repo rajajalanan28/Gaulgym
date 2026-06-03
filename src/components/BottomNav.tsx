@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Tag, Users, UserCheck, User, Globe } from 'lucide-react';
+import { Home, Tag, Users, UserCheck, User, Globe, ShoppingCart } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
 export function BottomNav() {
@@ -16,13 +16,14 @@ export function BottomNav() {
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Paket', path: '/dashboard/packages', icon: <Tag size={20} /> },
     { name: 'Member', path: '/admin/members', icon: <Users size={20} /> },
-    { name: 'Staff', path: '/staff', icon: <UserCheck size={20} /> },
+    { name: 'Kasir', path: '/admin/pos', icon: <ShoppingCart size={20} /> },
     { name: 'Profil', path: '/profile', icon: <User size={20} /> },
   ];
 
   const adminLinks = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: <Home size={20} /> },
     { name: 'Member', path: '/admin/members', icon: <Users size={20} /> },
+    { name: 'Kasir', path: '/admin/pos', icon: <ShoppingCart size={20} /> },
     { name: 'Profil', path: '/profile', icon: <User size={20} /> },
   ];
 

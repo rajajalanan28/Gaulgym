@@ -64,7 +64,7 @@ export default function AdminDashboard() {
         {/* Tambahan: Shortcut Button buat Check-in / Members */}
         <div>
           <h2 className="text-[15px] font-medium text-[var(--color-ink)] mb-[16px]">Menu Utama</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-[16px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px]">
             <button
               onClick={() => window.location.href = '/admin/checkin'}
               className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[12px] p-[20px] text-left flex flex-col gap-[8px] focus-ring"
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="m3 15 2 2 4-4"/></svg>
               </span>
               <span className="text-[16px] font-medium text-[var(--color-ink)] mt-[4px]">Scan Check-in</span>
-              <span className="text-[13px] text-[var(--color-ink-subtle)]">Scan QR code member yang datang</span>
+              <span className="text-[13px] text-[var(--color-ink-subtle)]">Scan QR code kedatangan</span>
             </button>
             
             <button
@@ -85,6 +85,28 @@ export default function AdminDashboard() {
               </span>
               <span className="text-[16px] font-medium text-[var(--color-ink)] mt-[4px]">Data Member</span>
               <span className="text-[13px] text-[var(--color-ink-subtle)]">Kelola dan daftar member gym</span>
+            </button>
+
+            <button
+              onClick={() => window.location.href = '/admin/pos'}
+              className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[12px] p-[20px] text-left flex flex-col gap-[8px] focus-ring"
+            >
+              <span className="text-green-500 bg-green-500/10 p-[8px] rounded-[8px] w-fit">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              </span>
+              <span className="text-[16px] font-medium text-[var(--color-ink)] mt-[4px]">Kasir (POS)</span>
+              <span className="text-[13px] text-[var(--color-ink-subtle)]">Jual minuman & suplemen</span>
+            </button>
+
+            <button
+              onClick={() => window.location.href = '/admin/inventory'}
+              className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[12px] p-[20px] text-left flex flex-col gap-[8px] focus-ring"
+            >
+              <span className="text-orange-500 bg-orange-500/10 p-[8px] rounded-[8px] w-fit">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              </span>
+              <span className="text-[16px] font-medium text-[var(--color-ink)] mt-[4px]">Data Barang</span>
+              <span className="text-[13px] text-[var(--color-ink-subtle)]">Daftar stok dan harga jualan</span>
             </button>
           </div>
         </div>
