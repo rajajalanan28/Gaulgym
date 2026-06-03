@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
 import { registerMemberAction } from '@/app/actions/user';
-import { UserPlus, Mail, Phone, User, CheckCircle } from 'lucide-react';
+import { UserPlus, Mail, Phone, User, CheckCircle, Camera, RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function NewMemberPage() {
@@ -15,9 +15,76 @@ export default function NewMemberPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
+  const [cameraActive, setCameraActive] = useState(false);
+
+  // Stop camera when component unmounts
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setCameraActive(true);
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      alert("Gagal mengakses kamera. Pastikan browser memiliki izin.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach(track => track.stop());
+      setCameraActive(false);
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      
+      // Target resolution 400x400
+      canvas.width = 400;
+      canvas.height = 400;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Crop center
+        const minDim = Math.min(video.videoWidth, video.videoHeight);
+        const startX = (video.videoWidth - minDim) / 2;
+        const startY = (video.videoHeight - minDim) / 2;
+        
+        ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, 400, 400);
+        // Compress to JPEG 70% quality
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+        setPhotoBase64(dataUrl);
+        stopCamera();
+      }
+    }
+  };
+
+  const retakePhoto = () => {
+    setPhotoBase64(null);
+    startCamera();
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user?.gymId) return;
+    
+    if (!photoBase64) {
+      setError("Silakan ambil foto wajah member terlebih dahulu!");
+      return;
+    }
     
     setLoading(true);
     setError(null);
@@ -25,6 +92,7 @@ export default function NewMemberPage() {
 
     const formData = new FormData(e.currentTarget);
     formData.append('gymId', user.gymId);
+    formData.append('photoBase64', photoBase64);
     
     const result = await registerMemberAction(formData);
     
@@ -74,6 +142,78 @@ export default function NewMemberPage() {
               )}
 
               <div className="space-y-6">
+                
+                {/* Webcam Section */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Foto Wajah Member</label>
+                  <div className="bg-[var(--color-surface-2)] border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center gap-4">
+                    
+                    {/* Hidden canvas for image processing */}
+                    <canvas ref={canvasRef} className="hidden" />
+
+                    {!photoBase64 ? (
+                      <>
+                        <div className="w-48 h-48 bg-black rounded-full overflow-hidden border-2 border-[var(--color-primary)]/50 relative flex items-center justify-center">
+                          {cameraActive ? (
+                            <video 
+                              ref={videoRef} 
+                              autoPlay 
+                              playsInline 
+                              muted 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="text-center p-4">
+                              <Camera className="mx-auto mb-2 text-gray-500" size={32} />
+                              <span className="text-xs text-gray-500">Kamera Nonaktif</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {cameraActive ? (
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={stopCamera}
+                              className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/30 transition"
+                            >
+                              Batal
+                            </button>
+                            <button
+                              type="button"
+                              onClick={capturePhoto}
+                              className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-primary-hover)] transition shadow-lg"
+                            >
+                              Jepret Foto
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={startCamera}
+                            className="px-6 py-2 border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded-lg text-sm font-medium flex items-center gap-2 transition"
+                          >
+                            <Camera size={16} /> Nyalakan Kamera
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-48 h-48 rounded-full overflow-hidden border-2 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)] relative">
+                          <img src={photoBase64} alt="Hasil foto" className="w-full h-full object-cover" />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={retakePhoto}
+                          className="px-4 py-2 border border-gray-600 text-gray-300 hover:bg-white/5 rounded-lg text-sm font-medium flex items-center gap-2 transition"
+                        >
+                          <RefreshCcw size={16} /> Foto Ulang
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Nama Lengkap</label>
                   <div className="relative">

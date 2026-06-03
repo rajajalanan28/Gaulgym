@@ -14,12 +14,15 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   }
 });
 
+import { v4 as uuidv4 } from 'uuid';
+
 export async function registerMemberAction(formData: FormData) {
   try {
     const email = formData.get('email') as string;
     const name = formData.get('name') as string;
     const phone = formData.get('phone') as string;
     const gymId = formData.get('gymId') as string;
+    const photoBase64 = formData.get('photoBase64') as string;
     
     if (!email || !name || !gymId) {
       return { error: 'Nama, Email, dan Gym ID wajib diisi' };
@@ -46,6 +49,7 @@ export async function registerMemberAction(formData: FormData) {
     
     // 2. Generate a random display ID for the member
     const displayId = 'GG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const qrCode = uuidv4();
 
     // 3. Insert into public.users table
     const { error: userError } = await supabaseAdmin
@@ -66,7 +70,34 @@ export async function registerMemberAction(formData: FormData) {
       return { error: 'Gagal membuat profil user' };
     }
 
-    // 4. Insert into public.members table
+    // 4. Handle Photo Upload
+    let photoUrl = null;
+    if (photoBase64) {
+      try {
+        const base64Data = photoBase64.replace(/^data:image\/\w+;base64,/, "");
+        const buffer = Buffer.from(base64Data, 'base64');
+        const filename = `${userId}-${Date.now()}.jpg`;
+
+        const { error: uploadError } = await supabaseAdmin
+          .storage
+          .from('member-photos')
+          .upload(filename, buffer, {
+            contentType: 'image/jpeg',
+            upsert: true
+          });
+
+        if (!uploadError) {
+          const { data: publicUrlData } = supabaseAdmin.storage.from('member-photos').getPublicUrl(filename);
+          photoUrl = publicUrlData.publicUrl;
+        } else {
+          console.error("Photo upload error:", uploadError);
+        }
+      } catch (err) {
+        console.error("Failed to process photo buffer:", err);
+      }
+    }
+
+    // 5. Insert into public.members table
     const { error: memberError } = await supabaseAdmin
       .from('members')
       .insert({
@@ -76,7 +107,9 @@ export async function registerMemberAction(formData: FormData) {
         name,
         email,
         phone,
-        join_date: new Date().toISOString().split('T')[0]
+        join_date: new Date().toISOString().split('T')[0],
+        photo_url: photoUrl,
+        qr_code: qrCode
       });
 
     if (memberError) {

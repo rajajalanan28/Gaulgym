@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Check, Camera, Loader2, Smartphone, PenLine, X } from "lucide-react";
+import { Check, Camera, Loader2, Smartphone, PenLine, X, AlertTriangle, User } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -11,6 +11,8 @@ interface CheckInData {
   memberName: string;
   checkInTime: Date;
   membershipType: string;
+  photoUrl?: string;
+  checkInCountToday: number;
 }
 
 interface ScanResult {
@@ -83,15 +85,15 @@ export default function CheckInPage() {
     setIsProcessing(true);
     
     try {
-      // 1. Cari Member
+      // 1. Cari Member by display_id OR qr_code
       const { data: members, error: memberErr } = await supabase
         .from('members')
         .select('*')
         .eq('gym_id', gymId)
-        .eq('display_id', memberIdQuery);
+        .or(`display_id.eq.${memberIdQuery},qr_code.eq.${memberIdQuery}`);
 
       if (memberErr || !members || members.length === 0) {
-        setLastScanResult({ success: false, message: "Member tidak ditemukan di gym ini." });
+        setLastScanResult({ success: false, message: "Member tidak ditemukan." });
         setShowConfirmation(true);
         return;
       }
@@ -114,8 +116,17 @@ export default function CheckInPage() {
         return;
       }
 
-      // 3. Catat di Attendance
+      // 3. Hitung jumlah check-in hari ini (Validasi)
       const today = new Date().toISOString().split('T')[0];
+      const { data: todayCheckins } = await supabase
+        .from('attendance')
+        .select('id')
+        .eq('member_id', member.id)
+        .eq('date', today);
+        
+      const checkInCount = todayCheckins ? todayCheckins.length : 0;
+
+      // 4. Catat di Attendance
       const now = new Date().toISOString();
       const { error: insertErr } = await supabase
         .from('attendance')
@@ -141,6 +152,8 @@ export default function CheckInPage() {
           memberName: member.name,
           checkInTime: new Date(now),
           membershipType: subData.package_name,
+          photoUrl: member.photo_url,
+          checkInCountToday: checkInCount + 1
         }
       });
       setShowConfirmation(true);
@@ -168,10 +181,10 @@ export default function CheckInPage() {
       if (!user) return;
       const gymId = user.gymId || 'dummy-gym-id';
       
-      const { data } = await supabase.from('members').select('display_id').eq('gym_id', gymId).limit(10);
+      const { data } = await supabase.from('members').select('qr_code').eq('gym_id', gymId).limit(10);
       if (data && data.length > 0) {
         const randomMember = data[Math.floor(Math.random() * data.length)];
-        processCheckin(randomMember.display_id);
+        processCheckin(randomMember.qr_code);
       } else {
         setLastScanResult({ success: false, message: "Tidak ada member di database untuk discan (Dummy Data)." });
         setShowConfirmation(true);
@@ -193,7 +206,7 @@ export default function CheckInPage() {
 
   return (
     <ProtectedRoute allowedRoles={['Admin', 'Owner']}>
-      <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)] p-6 md:p-[48px] selection:bg-[var(--color-primary-focus)] selection:text-white">
+      <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-ink)] p-6 md:p-[48px] selection:bg-[var(--color-primary-focus)] selection:text-white pb-28 md:pb-[48px]">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -270,7 +283,7 @@ export default function CheckInPage() {
               className="flex-1 max-w-[200px] py-[16px] px-[20px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-[16px] font-semibold transition-all flex items-center justify-center gap-2 shadow-[0_8px_20px_-8px_var(--color-primary)] hover:-translate-y-1"
             >
               {isScanning ? <Loader2 className="w-5 h-5 animate-spin" /> : <Smartphone className="w-5 h-5" />}
-              <span>{isScanning ? "Scanning" : "Scan QR"}</span>
+              <span>{isScanning ? "Scanning" : "Scan QR (Simulasi)"}</span>
             </button>
 
             <button
@@ -283,52 +296,92 @@ export default function CheckInPage() {
             </button>
           </div>
 
-          {/* Confirmation Card */}
+          {/* Confirmation Card with Photo Validation */}
           {showConfirmation && lastScanResult && (
-            <div className={`rounded-[24px] p-[32px] border animate-fade-in ${lastScanResult.success ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
-              <div className="text-center mb-[24px]">
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-[16px] text-white shadow-xl ${lastScanResult.success ? 'bg-gradient-to-br from-green-400 to-green-600 shadow-green-500/30' : 'bg-gradient-to-br from-red-400 to-red-600 shadow-red-500/30'}`}>
-                  {lastScanResult.success ? <Check className="w-8 h-8" /> : <X className="w-8 h-8" />}
+            <div className={`rounded-[24px] overflow-hidden border animate-fade-in ${lastScanResult.success ? 'bg-green-500/5 border-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.1)]' : 'bg-red-500/5 border-red-500/20 p-[32px]'}`}>
+              
+              {!lastScanResult.success ? (
+                <div className="text-center">
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-[16px] text-white shadow-xl bg-gradient-to-br from-red-400 to-red-600 shadow-red-500/30`}>
+                    <X className="w-8 h-8" />
+                  </div>
+                  <h2 className={`text-[24px] font-bold mb-2 tracking-[-0.02em] text-red-500`}>
+                    {lastScanResult.message}
+                  </h2>
+                  <button
+                    onClick={resetScanner}
+                    className="w-full mt-[24px] py-[14px] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3)] text-[var(--color-ink)] rounded-[12px] font-semibold transition-colors focus-ring"
+                  >
+                    Tutup
+                  </button>
                 </div>
-                <h2 className={`text-[24px] font-bold mb-2 tracking-[-0.02em] ${lastScanResult.success ? 'text-green-500' : 'text-red-500'}`}>
-                  {lastScanResult.message}
-                </h2>
-                {lastScanResult.success && lastScanResult.data && (
-                  <p className="text-[var(--color-ink-muted)] text-[15px]">
-                    {lastScanResult.data.checkInTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                )}
-              </div>
+              ) : (
+                <div className="p-[24px] md:p-[32px]">
+                  {/* Photo Profile for Validation */}
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-green-500 p-1 mb-4 relative shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+                      <div className="w-full h-full rounded-full overflow-hidden bg-[var(--color-surface-2)] flex items-center justify-center relative">
+                        {lastScanResult.data?.photoUrl ? (
+                          <img src={lastScanResult.data.photoUrl} alt="Member Face" className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={48} className="text-[var(--color-ink-muted)]" />
+                        )}
+                      </div>
+                      <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white border-4 border-[var(--color-canvas)]">
+                        <Check size={20} strokeWidth={3} />
+                      </div>
+                    </div>
+                    <h2 className="text-[24px] font-bold text-center text-green-500">
+                      Check-in Berhasil!
+                    </h2>
+                  </div>
 
-              {lastScanResult.success && lastScanResult.data && (
-                <div className="space-y-[24px]">
-                  <div className="bg-[var(--color-surface-1)] rounded-[16px] p-[24px] border border-[var(--color-hairline)]">
-                    <div className="grid grid-cols-2 gap-[20px]">
-                      <div>
-                        <p className="text-[var(--color-ink-subtle)] text-[13px] mb-1">ID Member</p>
-                        <p className="text-[16px] font-semibold text-[var(--color-ink)]">{lastScanResult.data.memberId}</p>
+                  {/* Anti-Cheat / Multiple Checkins Alert */}
+                  {lastScanResult.data!.checkInCountToday > 1 && (
+                    <div className="bg-orange-500/10 border border-orange-500/20 text-orange-400 p-3 rounded-xl flex items-start gap-3 mb-6">
+                      <AlertTriangle className="shrink-0 mt-0.5" size={18} />
+                      <div className="text-sm">
+                        <span className="font-bold block mb-1">Perhatian (Anti-Kecurangan):</span>
+                        Member ini sudah check-in sebanyak <strong className="text-orange-300">{lastScanResult.data!.checkInCountToday} kali</strong> hari ini. Pastikan wajah di foto sesuai dengan orang yang datang.
                       </div>
-                      <div>
-                        <p className="text-[var(--color-ink-subtle)] text-[13px] mb-1">Paket</p>
-                        <span className="inline-block px-[10px] py-[4px] rounded-full text-[12px] font-medium bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
-                          {lastScanResult.data.membershipType}
-                        </span>
-                      </div>
-                      <div className="col-span-2 pt-[16px] border-t border-[var(--color-hairline)]">
-                        <p className="text-[var(--color-ink-subtle)] text-[13px] mb-1">Nama Member</p>
-                        <p className="text-[20px] font-bold text-[var(--color-ink)] tracking-[-0.01em]">{lastScanResult.data.memberName}</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-[24px]">
+                    <div className="bg-[var(--color-surface-1)] rounded-[16px] p-[24px] border border-[var(--color-hairline)]">
+                      <div className="grid grid-cols-2 gap-[20px]">
+                        <div>
+                          <p className="text-[var(--color-ink-subtle)] text-[13px] mb-1">Nama Member</p>
+                          <p className="text-[18px] font-bold text-[var(--color-ink)] tracking-[-0.01em]">{lastScanResult.data!.memberName}</p>
+                        </div>
+                        <div>
+                          <p className="text-[var(--color-ink-subtle)] text-[13px] mb-1">Paket</p>
+                          <span className="inline-block px-[10px] py-[4px] rounded-full text-[12px] font-medium bg-[var(--color-primary)]/10 text-[var(--color-primary)]">
+                            {lastScanResult.data!.membershipType}
+                          </span>
+                        </div>
+                        <div className="pt-[16px] border-t border-[var(--color-hairline)]">
+                          <p className="text-[var(--color-ink-subtle)] text-[13px] mb-1">ID Member</p>
+                          <p className="text-[15px] font-semibold text-[var(--color-ink)]">{lastScanResult.data!.memberId}</p>
+                        </div>
+                        <div className="pt-[16px] border-t border-[var(--color-hairline)]">
+                          <p className="text-[var(--color-ink-subtle)] text-[13px] mb-1">Waktu Check-in</p>
+                          <p className="text-[15px] font-semibold text-[var(--color-ink)]">
+                            {lastScanResult.data!.checkInTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  <button
+                    onClick={resetScanner}
+                    className="w-full mt-[24px] py-[14px] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3)] text-[var(--color-ink)] rounded-[12px] font-semibold transition-colors focus-ring"
+                  >
+                    Tutup Validasi
+                  </button>
                 </div>
               )}
-
-              <button
-                onClick={resetScanner}
-                className="w-full mt-[24px] py-[14px] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3)] text-[var(--color-ink)] rounded-[12px] font-semibold transition-colors focus-ring"
-              >
-                Tutup
-              </button>
             </div>
           )}
 
@@ -354,7 +407,8 @@ export default function CheckInPage() {
                       className="flex items-center justify-between bg-[var(--color-surface-2)] rounded-[12px] p-[16px] hover:bg-[var(--color-surface-3)] transition-colors border border-[var(--color-hairline)]"
                     >
                       <div className="flex items-center gap-[16px]">
-                        <div className="w-[42px] h-[42px] bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-full flex items-center justify-center">
+                        <div className="w-[42px] h-[42px] bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-full flex items-center justify-center overflow-hidden">
+                          {/* If photo is available, ideally we'd show it here, but we don't fetch photo_url for recent checkins yet. So we show initials. */}
                           <span className="text-[var(--color-primary)] font-bold text-[16px]">
                             {checkin.member_name.charAt(0).toUpperCase()}
                           </span>
@@ -387,7 +441,7 @@ export default function CheckInPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-[var(--color-surface-1)] w-full max-w-md rounded-[24px] p-[32px] border border-[var(--color-hairline)] shadow-2xl">
             <h3 className="text-[20px] font-bold text-[var(--color-ink)] mb-[8px] tracking-[-0.01em]">Input Manual Check-in</h3>
-            <p className="text-[14px] text-[var(--color-ink-muted)] mb-[24px]">Masukkan ID Member (contoh: MBR-123)</p>
+            <p className="text-[14px] text-[var(--color-ink-muted)] mb-[24px]">Masukkan ID Member / Scan ID QR (contoh: MBR-123 atau UUID)</p>
             
             <form onSubmit={handleManualEntrySubmit}>
               <input
