@@ -5,13 +5,15 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { ShoppingCart, Plus, Minus, Trash2, Receipt, CreditCard, Banknote, CheckCircle } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, Receipt, CreditCard, Banknote, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface Product {
   id: string;
   name: string;
   price: number;
+  stock: number;
+  image_url: string | null;
 }
 
 interface CartItem extends Product {
@@ -55,9 +57,12 @@ export default function POSPage() {
   };
 
   const addToCart = (product: Product) => {
+    if (product.stock <= 0) return;
+
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id);
       if (existing) {
+        if (existing.quantity >= product.stock) return prev; // Cannot exceed stock
         return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
       }
       return [...prev, { ...product, quantity: 1 }];
@@ -68,6 +73,7 @@ export default function POSPage() {
     setCart(prev => prev.map(item => {
       if (item.id === id) {
         const newQty = item.quantity + delta;
+        if (newQty > item.stock) return item; // Cannot exceed stock
         return newQty > 0 ? { ...item, quantity: newQty } : item;
       }
       return item;
@@ -116,10 +122,20 @@ export default function POSPage() {
         .insert(itemsToInsert);
         
       if (itemsError) throw itemsError;
+
+      // 3. Deduct Stock
+      for (const item of cart) {
+        const newStock = item.stock - item.quantity;
+        await supabase
+          .from('products')
+          .update({ stock: newStock > 0 ? newStock : 0 })
+          .eq('id', item.id);
+      }
       
       // Success
       setCart([]);
       setShowSuccess(true);
+      await fetchProducts(); // Refresh products to get new stock
       setTimeout(() => setShowSuccess(false), 3000);
       
     } catch (error) {
@@ -148,137 +164,151 @@ export default function POSPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Menu Barang Kiri */}
           <div className="lg:col-span-2 space-y-6">
-            {loading ? (
-              <div className="flex justify-center p-12">
-                <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            ) : products.length === 0 ? (
-              <div className="text-center p-12 bg-[var(--color-surface-1)] border border-white/5 rounded-2xl">
-                <p className="text-gray-400">Belum ada barang jualan yang aktif.</p>
-                {user?.role === 'Owner' && (
-                  <button onClick={() => router.push('/admin/inventory')} className="mt-4 text-[var(--color-primary)] hover:underline">
-                    Tambah di Data Barang
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                {products.map(product => (
-                  <button
-                    key={product.id}
-                    onClick={() => addToCart(product)}
-                    className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] border border-white/5 hover:border-[var(--color-primary)]/50 rounded-2xl p-4 text-left transition-all shadow-lg focus-ring group"
-                  >
-                    <div className="font-semibold text-gray-100 mb-2 line-clamp-2 min-h-[40px] group-hover:text-[var(--color-primary)] transition-colors">
-                      {product.name}
-                    </div>
-                    <div className="text-green-400 font-bold">
-                      {formatRp(product.price)}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Keranjang Kanan */}
-          <div className="lg:col-span-1">
-            <div className="bg-[var(--color-surface-1)] border border-white/5 rounded-3xl p-6 shadow-2xl sticky top-[24px]">
-              <h2 className="text-xl font-bold flex items-center justify-between mb-6 pb-4 border-b border-white/10">
-                Keranjang
-                <span className="bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-3 py-1 rounded-full text-sm">
-                  {cart.reduce((sum, item) => sum + item.quantity, 0)} item
-                </span>
-              </h2>
-
-              {cart.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <ShoppingCart size={48} className="mx-auto mb-4 opacity-20" />
-                  <p>Keranjang masih kosong</p>
+            <div className="bg-[var(--color-surface-1)] border border-white/5 rounded-2xl p-6 min-h-[600px]">
+              <h2 className="text-lg font-semibold mb-6">Pilih Barang</h2>
+              
+              {loading ? (
+                <div className="flex justify-center p-12">
+                  <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : products.length === 0 ? (
+                <div className="text-center p-12">
+                  <p className="text-gray-400">Belum ada barang yang aktif.</p>
                 </div>
               ) : (
-                <>
-                  <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar mb-6">
-                    {cart.map(item => (
-                      <div key={item.id} className="flex flex-col gap-2 p-3 bg-[var(--color-surface-2)] rounded-xl">
-                        <div className="flex justify-between items-start">
-                          <span className="font-medium text-gray-200 line-clamp-1 flex-1">{item.name}</span>
-                          <button onClick={() => removeFromCart(item.id)} className="text-gray-500 hover:text-red-400 ml-2">
-                            <Trash2 size={16} />
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {products.map((item) => {
+                    const isOutOfStock = item.stock <= 0;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => addToCart(item)}
+                        disabled={isOutOfStock}
+                        className={`bg-[var(--color-surface-2)] border ${isOutOfStock ? 'border-red-500/50 opacity-50 cursor-not-allowed' : 'border-white/5 hover:border-[var(--color-primary)] hover:bg-white/5 cursor-pointer'} rounded-xl text-left overflow-hidden transition-all group relative flex flex-col`}
+                      >
+                        <div className="h-32 w-full bg-[var(--color-surface-1)] flex items-center justify-center overflow-hidden">
+                          {item.image_url ? (
+                            <img src={item.image_url} alt={item.name} className={`w-full h-full object-cover group-hover:scale-105 transition-transform ${isOutOfStock ? 'grayscale' : ''}`} />
+                          ) : (
+                            <ImageIcon className="text-gray-600" size={32} />
+                          )}
+                        </div>
+                        <div className="p-4 flex-1 flex flex-col">
+                          <h3 className="font-medium text-sm text-gray-200 line-clamp-2 leading-tight mb-2 flex-1">{item.name}</h3>
+                          <p className="text-[var(--color-primary)] font-bold text-sm">{formatRp(item.price)}</p>
+                        </div>
+                        <div className="absolute top-2 right-2 px-2 py-1 bg-black/60 backdrop-blur rounded text-[10px] font-bold">
+                          {isOutOfStock ? (
+                            <span className="text-red-400">Habis</span>
+                          ) : (
+                            <span className="text-green-400">Sisa {item.stock}</span>
+                          )}
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Keranjang Belanja Kanan */}
+          <div className="lg:col-span-1">
+            <div className="bg-[var(--color-surface-1)] border border-white/5 rounded-2xl p-6 sticky top-8 shadow-2xl flex flex-col h-[calc(100vh-120px)] max-h-[800px]">
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <Receipt size={20} className="text-[var(--color-primary)]" />
+                Keranjang Belanja
+              </h2>
+              
+              {/* List Keranjang */}
+              <div className="flex-1 overflow-y-auto pr-2 space-y-4 min-h-[200px] mb-4">
+                {cart.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center text-gray-500 space-y-2">
+                    <ShoppingCart size={48} className="opacity-20" />
+                    <p className="text-sm">Belum ada barang dipilih</p>
+                  </div>
+                ) : (
+                  cart.map((item) => (
+                    <div key={item.id} className="bg-[var(--color-surface-2)] p-3 rounded-xl flex items-center gap-3 group">
+                      <div className="w-12 h-12 rounded bg-[var(--color-surface-1)] overflow-hidden shrink-0 flex items-center justify-center">
+                        {item.image_url ? (
+                          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon className="text-gray-600" size={16} />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium text-gray-200 truncate" title={item.name}>{item.name}</h4>
+                        <p className="text-xs text-[var(--color-primary)]">{formatRp(item.price)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center bg-[var(--color-surface-1)] rounded-lg">
+                          <button 
+                            onClick={() => updateQuantity(item.id, -1)}
+                            className="p-1 hover:text-[var(--color-primary)] transition-colors"
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <span className="w-6 text-center text-sm font-medium">{item.quantity}</span>
+                          <button 
+                            onClick={() => updateQuantity(item.id, 1)}
+                            disabled={item.quantity >= item.stock}
+                            className="p-1 hover:text-[var(--color-primary)] transition-colors disabled:opacity-30"
+                          >
+                            <Plus size={14} />
                           </button>
                         </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-green-400 text-sm font-semibold">{formatRp(item.price * item.quantity)}</span>
-                          <div className="flex items-center gap-3 bg-[var(--color-canvas)] rounded-lg p-1">
-                            <button onClick={() => updateQuantity(item.id, -1)} className="p-1 text-gray-400 hover:text-white rounded-md">
-                              <Minus size={14} />
-                            </button>
-                            <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, 1)} className="p-1 text-gray-400 hover:text-white rounded-md">
-                              <Plus size={14} />
-                            </button>
-                          </div>
-                        </div>
+                        <button 
+                          onClick={() => removeFromCart(item.id)}
+                          className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
-                    ))}
-                  </div>
-
-                  <div className="border-t border-white/10 pt-4 mb-6">
-                    <div className="flex justify-between items-end mb-4">
-                      <span className="text-gray-400">Total Pembayaran</span>
-                      <span className="text-2xl font-bold text-green-400">{formatRp(totalAmount)}</span>
                     </div>
-                    
-                    <div className="grid grid-cols-2 gap-3 mb-6">
-                      <button
-                        onClick={() => setPaymentMethod('Cash')}
-                        className={`py-3 rounded-xl flex items-center justify-center gap-2 font-medium border transition-all ${
-                          paymentMethod === 'Cash' 
-                            ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.3)]' 
-                            : 'bg-transparent border-white/10 text-gray-400 hover:bg-white/5'
-                        }`}
-                      >
-                        <Banknote size={18} /> Cash
-                      </button>
-                      <button
-                        onClick={() => setPaymentMethod('QRIS')}
-                        className={`py-3 rounded-xl flex items-center justify-center gap-2 font-medium border transition-all ${
-                          paymentMethod === 'QRIS' 
-                            ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-[0_0_15px_rgba(var(--color-primary-rgb),0.3)]' 
-                            : 'bg-transparent border-white/10 text-gray-400 hover:bg-white/5'
-                        }`}
-                      >
-                        <CreditCard size={18} /> QRIS
-                      </button>
-                    </div>
+                  ))
+                )}
+              </div>
 
+              {/* Total & Checkout */}
+              <div className="pt-4 border-t border-white/10 space-y-4 shrink-0">
+                <div className="flex justify-between items-end">
+                  <span className="text-gray-400">Total Pembayaran</span>
+                  <span className="text-2xl font-bold text-green-400">{formatRp(totalAmount)}</span>
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">Metode Pembayaran</label>
+                  <div className="flex gap-2">
                     <button
-                      onClick={processPayment}
-                      disabled={processing || showSuccess}
-                      className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${
-                        showSuccess 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-white text-black hover:bg-gray-200 disabled:opacity-50'
-                      }`}
+                      onClick={() => setPaymentMethod('Cash')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors border ${paymentMethod === 'Cash' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'border-white/10 text-gray-400 hover:bg-white/5'}`}
                     >
-                      {processing ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
-                          Memproses...
-                        </>
-                      ) : showSuccess ? (
-                        <>
-                          <CheckCircle size={20} /> Berhasil!
-                        </>
-                      ) : (
-                        <>
-                          <Receipt size={20} /> Bayar Sekarang
-                        </>
-                      )}
+                      <Banknote size={16} /> Cash
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod('QRIS')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors border ${paymentMethod === 'QRIS' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'border-white/10 text-gray-400 hover:bg-white/5'}`}
+                    >
+                      <CreditCard size={16} /> QRIS
                     </button>
                   </div>
-                </>
-              )}
+                </div>
+
+                <button
+                  onClick={processPayment}
+                  disabled={cart.length === 0 || processing}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white py-3.5 rounded-xl font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {processing ? 'Memproses...' : 'Selesaikan Pembayaran'}
+                </button>
+                
+                {showSuccess && (
+                  <div className="flex items-center justify-center gap-2 text-green-400 bg-green-500/10 py-2 rounded-lg text-sm font-medium animate-fade-in">
+                    <CheckCircle size={16} /> Transaksi Berhasil!
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
