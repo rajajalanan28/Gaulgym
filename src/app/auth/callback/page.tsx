@@ -55,12 +55,14 @@ export default function AuthCallbackPage() {
 
           if (targetGymId) {
             const displayId = 'GG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            const photoUrl = user.user_metadata?.avatar_url || null;
             await supabase.from('members').insert({
               user_id: user.id,
               gym_id: targetGymId,
               name,
               email: user.email,
               display_id: displayId,
+              photo_url: photoUrl,
               join_date: new Date().toISOString().split('T')[0]
             });
           }
