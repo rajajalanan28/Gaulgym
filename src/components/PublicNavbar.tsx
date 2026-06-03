@@ -1,6 +1,5 @@
 'use client';
 
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 
@@ -23,7 +22,9 @@ export function PublicNavbar() {
 
   // Not logged in: show only logo + Masuk/Daftar, NO nav links
   return (
-    <nav 
+    <nav
+      role="navigation"
+      aria-label="Navigasi utama"
       className={`fixed top-0 left-0 right-0 z-50 h-[56px] transition-all duration-300 ${
         scrolled ? 'bg-[var(--color-canvas)] hairline-border border-x-0 border-t-0' : 'bg-transparent'
       }`}
@@ -31,7 +32,7 @@ export function PublicNavbar() {
       <div className="max-w-[1280px] mx-auto h-full px-6 flex items-center justify-between">
         
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2 group focus-ring rounded-sm">
+        <a href="/" className="flex items-center gap-2 group focus-ring rounded-sm" aria-label="Gaul Gym - Beranda">
           <span className="text-[var(--color-ink)] font-semibold tracking-tight text-[15px]">
             GAUL GYM
           </span>

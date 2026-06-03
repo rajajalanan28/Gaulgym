@@ -1,0 +1,17 @@
+{
+  "name": "Gaul Gym",
+  "short_name": "GaulGym",
+  "description": "Fasilitas kebugaran kelas dunia dengan peralatan premium dan pelatih tersertifikasi.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#010102",
+  "theme_color": "#010102",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth-context';
 
@@ -11,8 +12,36 @@ const MapPin = dynamic(() => import('lucide-react').then(m => ({ default: m.MapP
 const Phone = dynamic(() => import('lucide-react').then(m => ({ default: m.Phone })), { ssr: false });
 const Mail = dynamic(() => import('lucide-react').then(m => ({ default: m.Mail })), { ssr: false });
 
+interface FormErrors {
+  name?: string;
+  email?: string;
+  message?: string;
+}
+
 export default function ContactPage() {
   const { user } = useAuth();
+  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  const validate = (): boolean => {
+    const errs: FormErrors = {};
+    if (!form.name || form.name.trim().length < 2) errs.name = 'Nama minimal 2 karakter.';
+    if (!form.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Email tidak valid.';
+    if (!form.message || form.message.trim().length < 10) errs.message = 'Pesan minimal 10 karakter.';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validate()) {
+      setSubmitted(true);
+      setForm({ name: '', email: '', message: '' });
+      setErrors({});
+      setTimeout(() => setSubmitted(false), 4000);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
@@ -32,6 +61,13 @@ export default function ContactPage() {
               Punya pertanyaan atau butuh bantuan? Tim elit kami siap membantu Anda kapan saja.
             </p>
           </div>
+
+          {/* Success Toast */}
+          {submitted && (
+            <div className="mb-8 p-4 rounded-[12px] text-center text-[15px] font-medium" style={{ background: 'rgba(94, 106, 210, 0.15)', color: 'var(--color-primary-hover)', border: '1px solid rgba(94, 106, 210, 0.3)' }}>
+              ✓ Pesan Anda berhasil dikirim! Kami akan segera menghubungi Anda.
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-[var(--color-surface-1)] hairline-border p-[32px] rounded-[12px]">
@@ -68,20 +104,50 @@ export default function ContactPage() {
 
             <div className="bg-[var(--color-surface-1)] hairline-border p-[32px] rounded-[12px]">
               <h3 className="text-[18px] font-medium text-[var(--color-ink)] mb-6 tracking-[-0.01em]">Kirim Pesan</h3>
-              <form className="flex flex-col gap-4">
+              <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
                 <div>
-                  <label className="block text-[13px] font-medium text-[var(--color-ink-subtle)] mb-2">Nama Lengkap</label>
-                  <input type="text" placeholder="Masukkan nama Anda" className="w-full bg-[var(--color-surface-1)] text-[var(--color-ink)] px-[12px] py-[8px] rounded-md hairline-border focus-ring placeholder:text-[var(--color-ink-tertiary)] text-[14px] transition-shadow" />
+                  <label htmlFor="contact-name" className="block text-[13px] font-medium text-[var(--color-ink-subtle)] mb-2">Nama Lengkap</label>
+                  <input
+                    id="contact-name"
+                    type="text"
+                    placeholder="Masukkan nama Anda"
+                    value={form.name}
+                    onChange={e => { setForm({ ...form, name: e.target.value }); if (errors.name) setErrors({ ...errors, name: undefined }); }}
+                    className="w-full bg-[var(--color-surface-1)] text-[var(--color-ink)] px-[12px] py-[8px] rounded-md hairline-border focus-ring placeholder:text-[var(--color-ink-subtle)] text-[14px] transition-shadow"
+                    aria-invalid={!!errors.name}
+                    aria-describedby={errors.name ? 'name-error' : undefined}
+                  />
+                  {errors.name && <p id="name-error" className="text-[12px] mt-1" style={{ color: '#ef4444' }}>{errors.name}</p>}
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-[var(--color-ink-subtle)] mb-2">Alamat Email</label>
-                  <input type="email" placeholder="nama@email.com" className="w-full bg-[var(--color-surface-1)] text-[var(--color-ink)] px-[12px] py-[8px] rounded-md hairline-border focus-ring placeholder:text-[var(--color-ink-tertiary)] text-[14px] transition-shadow" />
+                  <label htmlFor="contact-email" className="block text-[13px] font-medium text-[var(--color-ink-subtle)] mb-2">Alamat Email</label>
+                  <input
+                    id="contact-email"
+                    type="email"
+                    placeholder="nama@email.com"
+                    value={form.email}
+                    onChange={e => { setForm({ ...form, email: e.target.value }); if (errors.email) setErrors({ ...errors, email: undefined }); }}
+                    className="w-full bg-[var(--color-surface-1)] text-[var(--color-ink)] px-[12px] py-[8px] rounded-md hairline-border focus-ring placeholder:text-[var(--color-ink-subtle)] text-[14px] transition-shadow"
+                    aria-invalid={!!errors.email}
+                    aria-describedby={errors.email ? 'email-error' : undefined}
+                  />
+                  {errors.email && <p id="email-error" className="text-[12px] mt-1" style={{ color: '#ef4444' }}>{errors.email}</p>}
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-[var(--color-ink-subtle)] mb-2">Pesan Anda</label>
-                  <textarea placeholder="Tuliskan pesan atau pertanyaan..." rows={5} className="w-full bg-[var(--color-surface-1)] text-[var(--color-ink)] px-[12px] py-[8px] rounded-md hairline-border focus-ring placeholder:text-[var(--color-ink-tertiary)] text-[14px] transition-shadow resize-y"></textarea>
+                  <label htmlFor="contact-message" className="block text-[13px] font-medium text-[var(--color-ink-subtle)] mb-2">Pesan Anda</label>
+                  <textarea
+                    id="contact-message"
+                    placeholder="Tuliskan pesan atau pertanyaan..."
+                    rows={5}
+                    value={form.message}
+                    onChange={e => { setForm({ ...form, message: e.target.value }); if (errors.message) setErrors({ ...errors, message: undefined }); }}
+                    className="w-full bg-[var(--color-surface-1)] text-[var(--color-ink)] px-[12px] py-[8px] rounded-md hairline-border focus-ring placeholder:text-[var(--color-ink-subtle)] text-[14px] transition-shadow resize-y"
+                    aria-invalid={!!errors.message}
+                    aria-describedby={errors.message ? 'message-error' : undefined}
+                  />
+                  {errors.message && <p id="message-error" className="text-[12px] mt-1" style={{ color: '#ef4444' }}>{errors.message}</p>}
                 </div>
-                <button type="button" className="w-full mt-4 py-[8px] px-[14px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-focus)] rounded-md text-white font-medium text-[14px] transition-colors focus-ring">
+                <button type="submit" className="w-full mt-4 py-[8px] px-[14px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-focus)] rounded-md text-white font-medium text-[14px] transition-colors focus-ring">
                   Kirim Pesan
                 </button>
               </form>
