@@ -64,6 +64,8 @@ export interface DbSubscription {
   amount: number
   payment_status: string
   auto_renew: boolean
+  created_by?: string
+  created_by_name?: string
   created_at: string
 }
 

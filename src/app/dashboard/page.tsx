@@ -87,6 +87,12 @@ export default function OwnerDashboard() {
                 onClick={() => window.location.href = '/gyms'}
               />
               <MenuItem
+                icon={<Tag size={20} />}
+                title="Manajemen Harga"
+                subtitle="Atur paket membership"
+                onClick={() => window.location.href = '/dashboard/packages'}
+              />
+              <MenuItem
                 icon={<Users size={20} />}
                 title="Manajemen Member"
                 subtitle="Kelola seluruh member gym"
@@ -96,7 +102,7 @@ export default function OwnerDashboard() {
                 icon={<DollarSign size={20} />}
                 title="Laporan Keuangan"
                 subtitle="Lihat pendapatan dan analitik"
-                onClick={() => console.log('Navigate to reports')}
+                onClick={() => window.location.href = '/dashboard/reports'}
               />
               <MenuItem
                 icon={<UserCheck size={20} />}
