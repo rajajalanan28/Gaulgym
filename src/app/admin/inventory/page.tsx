@@ -35,20 +35,33 @@ export default function InventoryPage() {
   const [editingStockId, setEditingStockId] = useState<string | null>(null);
   const [editStockValue, setEditStockValue] = useState<string>('');
 
+  const [activeGymId, setActiveGymId] = useState<string | null>(null);
+
   useEffect(() => {
-    if (user?.gymId) {
-      fetchProducts();
-    }
+    const init = async () => {
+      if (!user) return;
+      let gId = user.gymId;
+      if (user.role === 'Owner') {
+        const { data } = await supabase.from('gyms').select('id').eq('owner_id', user.id).single();
+        if (data) gId = data.id;
+      }
+      
+      if (gId) {
+        setActiveGymId(gId);
+        fetchProducts(gId);
+      } else {
+        setLoading(false);
+      }
+    };
+    init();
   }, [user]);
 
-  const fetchProducts = async () => {
-    if (!user?.gymId) return;
-    
+  const fetchProducts = async (gId: string) => {
     try {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('gym_id', user.gymId)
+        .eq('gym_id', gId)
         .order('name');
         
       if (error) throw error;
@@ -109,7 +122,7 @@ export default function InventoryPage() {
       const { error } = await supabase
         .from('products')
         .insert({
-          gym_id: user.gymId,
+          gym_id: activeGymId,
           name: newProductName,
           price: parseInt(newProductPrice.replace(/\D/g, '')),
           stock: parseInt(newProductStock.replace(/\D/g, '')) || 0,
@@ -126,7 +139,7 @@ export default function InventoryPage() {
       setNewProductImage(null);
       setImagePreview(null);
       setShowForm(false);
-      await fetchProducts();
+      if (activeGymId) await fetchProducts(activeGymId);
     } catch (error: any) {
       console.error('Error adding product:', error);
       alert(error.message || 'Gagal menambah barang');
@@ -145,7 +158,7 @@ export default function InventoryPage() {
         .eq('id', id);
         
       if (error) throw error;
-      await fetchProducts();
+      if (activeGymId) await fetchProducts(activeGymId);
     } catch (error) {
       console.error('Error updating product status:', error);
     }
@@ -163,11 +176,12 @@ export default function InventoryPage() {
         .from('products')
         .update({ stock: parseInt(editStockValue) || 0 })
         .eq('id', id);
+        
       if (error) throw error;
       setEditingStockId(null);
-      await fetchProducts();
-    } catch (err) {
-      console.error("Error updating stock:", err);
+      if (activeGymId) await fetchProducts(activeGymId);
+    } catch (error) {
+      console.error("Error updating stock:", error);
       alert("Gagal update stok");
     }
   };
