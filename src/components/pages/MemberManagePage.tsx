@@ -28,6 +28,7 @@ export default function MembersPage() {
   const [packages, setPackages] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [activeGymId, setActiveGymId] = useState<string>('');
 
   // Modal states
   const [selectedMember, setSelectedMember] = useState<MemberData | null>(null);
@@ -41,7 +42,22 @@ export default function MembersPage() {
 
   async function fetchData() {
     if (!user) return;
-    const gymId = user.gymId || 'dummy-gym-id';
+    
+    let gymId = user.gymId;
+    if (user.role === 'Owner' && !gymId) {
+      const { data: gym } = await supabase.from('gyms').select('id').eq('owner_id', user.id).single();
+      if (gym) gymId = gym.id;
+    }
+    
+    // Fallback if still null, although we just implemented auto-assignment to first gym
+    if (!gymId) {
+      const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
+      if (firstGym) gymId = firstGym.id;
+    }
+
+    if (!gymId) gymId = 'dummy-gym-id';
+    
+    setActiveGymId(gymId);
 
     try {
       // 1. Ambil data members
@@ -120,7 +136,7 @@ export default function MembersPage() {
         .from('subscriptions')
         .insert({
           member_id: selectedMember.id,
-          gym_id: user.gymId || 'dummy-gym-id',
+          gym_id: activeGymId || 'dummy-gym-id',
           package_id: selectedPkg.id,
           package_name: selectedPkg.name,
           start_date: startDate.toISOString(),
