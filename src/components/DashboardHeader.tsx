@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { Menu } from 'lucide-react';
-import { VerifyEmailBanner } from '@/components/auth/VerifyEmailBanner';
 
 export function DashboardHeader() {
   const { user, logout } = useAuth();
@@ -35,7 +34,6 @@ export function DashboardHeader() {
 
   return (
     <>
-      <VerifyEmailBanner />
       <div className="relative flex justify-between items-center mb-[48px]">
         <div className="flex items-center gap-4">
         {/* Hamburger Menu */}
