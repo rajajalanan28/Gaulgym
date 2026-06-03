@@ -197,7 +197,7 @@ export default function MembersPage() {
             <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola data member dan perpanjang keanggotaan (Offline Kasir)</p>
           </div>
           <a
-            href="/admin/members/new"
+            href={user?.role === 'Owner' ? "/owner/member/new" : "/admin/member/new"}
             className="inline-flex items-center justify-center bg-[var(--color-primary)] text-white font-medium px-4 py-2.5 rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors shadow-lg shadow-[var(--color-primary)]/20"
           >
             + Daftarkan Member

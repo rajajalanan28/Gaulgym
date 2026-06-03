@@ -77,7 +77,7 @@ export default function AdminDashboard() {
             </button>
             
             <button
-              onClick={() => window.location.href = '/admin/members'}
+              onClick={() => window.location.href = '/admin/member'}
               className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[12px] p-[20px] text-left flex flex-col gap-[8px] focus-ring"
             >
               <span className="text-[var(--color-primary)] bg-[var(--color-primary)]/10 p-[8px] rounded-[8px] w-fit">

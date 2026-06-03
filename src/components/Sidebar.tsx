@@ -7,14 +7,15 @@ import { LayoutDashboard, Building2, Users, Package, LineChart, CheckSquare, Cli
 const OWNER_MENU = [
   { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
   { href: '/gyms', label: 'Kelola Gym', icon: <Building2 size={20} /> },
-  { href: '/staff', label: 'Kelola Staff', icon: <Users size={20} /> },
+  { href: '/owner/admin', label: 'Kelola Admin', icon: <Users size={20} /> },
+  { href: '/owner/member', label: 'Member', icon: <Users size={20} /> },
   { href: '/packages', label: 'Paket Membership', icon: <Package size={20} /> },
   { href: '/reports', label: 'Laporan', icon: <LineChart size={20} /> },
 ];
 
 const ADMIN_MENU = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-  { href: '/admin/members', label: 'Member', icon: <Users size={20} /> },
+  { href: '/admin/member', label: 'Member', icon: <Users size={20} /> },
   { href: '/admin/checkin', label: 'Check-in', icon: <CheckSquare size={20} /> },
   { href: '/admin/history', label: 'Riwayat', icon: <ClipboardList size={20} /> },
 ];

@@ -15,14 +15,14 @@ export function BottomNav() {
   const ownerLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },
     { name: 'Paket', path: '/dashboard/packages', icon: <Tag size={20} /> },
-    { name: 'Member', path: '/admin/members', icon: <Users size={20} /> },
+    { name: 'Member', path: '/owner/member', icon: <Users size={20} /> },
     { name: 'Kasir', path: '/admin/pos', icon: <ShoppingCart size={20} /> },
     { name: 'Profil', path: '/profile', icon: <User size={20} /> },
   ];
 
   const adminLinks = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: <Home size={20} /> },
-    { name: 'Member', path: '/admin/members', icon: <Users size={20} /> },
+    { name: 'Member', path: '/admin/member', icon: <Users size={20} /> },
     { name: 'Kasir', path: '/admin/pos', icon: <ShoppingCart size={20} /> },
     { name: 'Profil', path: '/profile', icon: <User size={20} /> },
   ];

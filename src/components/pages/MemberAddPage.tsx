@@ -103,7 +103,7 @@ export default function NewMemberPage() {
     } else if (result.success) {
       setSuccess(true);
       setTimeout(() => {
-        router.push('/admin/members');
+        router.push(user?.role === 'Owner' ? '/owner/member' : '/admin/member');
       }, 2000);
     }
   };
