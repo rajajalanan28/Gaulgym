@@ -5,7 +5,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
-import { PlusCircle, X, Loader2 } from "lucide-react";
+import { PlusCircle, X, Loader2, Shield } from "lucide-react";
 
 interface MemberData {
   id: string;
