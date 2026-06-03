@@ -190,6 +190,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         userData = recoveredData;
       }
 
+      // Backfill ke tabel members jika belum ada
+      if (userData?.role === 'Member') {
+         const { data: memberData } = await supabase.from('members').select('id').eq('user_id', authData.user.id).single();
+         if (!memberData) {
+           const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
+           const targetGymId = firstGym ? firstGym.id : null;
+           
+           if (targetGymId) {
+             const displayId = 'GG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+             await supabase.from('members').insert({
+               user_id: authData.user.id,
+               gym_id: targetGymId,
+               name: userData.name || 'User',
+               email: userData.email,
+               display_id: displayId,
+               join_date: new Date().toISOString().split('T')[0]
+             });
+           }
+         }
+      }
+
       const authUser: AuthUser = {
         id: userData.id,
         email: userData.email,

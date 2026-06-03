@@ -55,20 +55,41 @@ export default function AuthCallbackPage() {
 
           if (targetGymId) {
             const displayId = 'GG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-            const photoUrl = user.user_metadata?.avatar_url || null;
             await supabase.from('members').insert({
               user_id: user.id,
               gym_id: targetGymId,
               name,
               email: user.email,
               display_id: displayId,
-              photo_url: photoUrl,
               join_date: new Date().toISOString().split('T')[0]
             });
           }
           userRole = 'Member';
         } else if (existingUser) {
           userRole = existingUser.role;
+          
+          // PASTIKAN USER SUDAH ADA DI TABEL MEMBERS JUGA
+          // Jika belum ada, otomatis tambahkan. Ini untuk handle user lama yg udah daftar sebelum fitur ini ada.
+          if (userRole === 'Member') {
+             const { data: memberData } = await supabase.from('members').select('id').eq('user_id', user.id).single();
+             if (!memberData) {
+               const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
+               const targetGymId = firstGym ? firstGym.id : null;
+               
+               if (targetGymId) {
+                 const displayId = 'GG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+                 const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+                 await supabase.from('members').insert({
+                   user_id: user.id,
+                   gym_id: targetGymId,
+                   name,
+                   email: user.email,
+                   display_id: displayId,
+                   join_date: new Date().toISOString().split('T')[0]
+                 });
+               }
+             }
+          }
         } else if (fetchError) {
           throw fetchError;
         }
