@@ -16,6 +16,7 @@ interface MemberData {
   joinDate: string;
   status: "active" | "inactive" | "expired";
   photoUrl: string | null;
+  user_id: string | null;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -85,6 +86,7 @@ export default function MembersPage() {
             joinDate: new Date(m.created_at).toLocaleDateString('id-ID'),
             status: activeSubs.length > 0 ? 'active' : (expiredSub ? 'expired' : 'inactive'),
             photoUrl: m.photo_url || null,
+            user_id: m.user_id || null,
           };
         });
 
@@ -139,6 +141,30 @@ export default function MembersPage() {
       alert("Terjadi kesalahan saat memperpanjang paket.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handlePromoteToAdmin = async (member: MemberData) => {
+    if (!user) return;
+    if (!member.user_id) {
+      alert("Member ini belum mendaftar akun/login di web (dibuat manual oleh kasir), jadi belum bisa dijadikan Admin.");
+      return;
+    }
+    
+    if (confirm(`Yakin ingin mempromosikan ${member.name} menjadi Admin?`)) {
+      try {
+        const { error } = await supabase
+          .from('users')
+          .update({ role: 'Admin', owner_id: user.id })
+          .eq('id', member.user_id);
+          
+        if (error) throw error;
+        alert(`${member.name} berhasil dipromosikan menjadi Admin! Silakan cek di menu Staff.`);
+        fetchData();
+      } catch (err: any) {
+        console.error("Gagal mempromosikan admin:", err);
+        alert("Gagal: " + (err.message || "Pastikan RLS database sudah diupdate."));
+      }
     }
   };
 
@@ -236,13 +262,24 @@ export default function MembersPage() {
                         </span>
                       </td>
                       <td className="px-[16px] py-[16px]">
-                        <button 
-                          onClick={() => setSelectedMember(member)}
-                          className="flex items-center gap-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
-                        >
-                          <PlusCircle size={16} />
-                          <span>Perpanjang</span>
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => setSelectedMember(member)}
+                            className="flex items-center gap-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                          >
+                            <PlusCircle size={16} />
+                            <span>Perpanjang</span>
+                          </button>
+                          
+                          <button 
+                            onClick={() => handlePromoteToAdmin(member)}
+                            className="flex items-center gap-1 bg-purple-500/10 text-purple-600 hover:bg-purple-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                            title="Jadikan Admin"
+                          >
+                            <Shield size={16} />
+                            <span>Jadikan Admin</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
