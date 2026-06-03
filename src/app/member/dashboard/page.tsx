@@ -98,7 +98,10 @@ export default function MemberDashboard() {
                     ) : membership ? (
                       <h2 className="text-[32px] font-bold text-white tracking-[-0.02em] leading-tight">{membership.package_name}</h2>
                     ) : (
-                      <h2 className="text-[24px] font-semibold text-white tracking-[-0.02em] leading-tight mt-1">Belum Ada Paket Aktif</h2>
+                      <div>
+                        <h2 className="text-[24px] font-semibold text-white tracking-[-0.02em] leading-tight mt-1">Belum Ada Paket Aktif</h2>
+                        <p className="text-[13px] text-[var(--color-ink-subtle)] mt-2 italic max-w-[250px]">Silakan hubungi kasir/admin di lokasi gym untuk mendaftar atau memperpanjang paket Anda.</p>
+                      </div>
                     )}
                   </div>
                   
@@ -131,15 +134,9 @@ export default function MemberDashboard() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-[16px]">
                 <button className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[16px] p-[20px] flex flex-col items-center justify-center gap-[12px] aspect-square">
                   <span className="bg-[var(--color-surface-3)] p-[12px] rounded-full text-[var(--color-primary)]">
-                    <CreditCard size={24} />
-                  </span>
-                  <span className="text-[14px] font-medium">Beli Paket</span>
-                </button>
-                <button className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[16px] p-[20px] flex flex-col items-center justify-center gap-[12px] aspect-square">
-                  <span className="bg-[var(--color-surface-3)] p-[12px] rounded-full text-[var(--color-primary)]">
                     <History size={24} />
                   </span>
-                  <span className="text-[14px] font-medium">Riwayat</span>
+                  <span className="text-[14px] font-medium">Riwayat Paket</span>
                 </button>
               </div>
             </div>

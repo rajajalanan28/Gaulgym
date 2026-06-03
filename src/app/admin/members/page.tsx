@@ -5,6 +5,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
+import { PlusCircle, X, Loader2 } from "lucide-react";
 
 interface MemberData {
   id: string;
@@ -22,63 +23,127 @@ export default function MembersPage() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [members, setMembers] = useState<MemberData[]>([]);
+  const [packages, setPackages] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
+  // Modal states
+  const [selectedMember, setSelectedMember] = useState<MemberData | null>(null);
+  const [selectedPackageId, setSelectedPackageId] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
-    async function fetchMembers() {
-      if (!user) return;
-      const gymId = user.gymId || 'dummy-gym-id'; // Assume gym_id exists for admin, or use dummy
-
-      try {
-        // 1. Ambil data members
-        const { data: membersData, error: memError } = await supabase
-          .from('members')
-          .select('*')
-          .eq('gym_id', gymId);
-          
-        if (memError) throw memError;
-
-        // 2. Ambil data subscriptions
-        const { data: subsData, error: subError } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('gym_id', gymId)
-          .in('status', ['active', 'expired']);
-          
-        if (subError) throw subError;
-
-        // Map data ke UI
-        if (membersData) {
-          const mappedMembers: MemberData[] = membersData.map((m) => {
-            // Cari sub active terbaru, kalau gaada cari expired
-            const activeSub = subsData?.find(s => s.member_id === m.id && s.status === 'active');
-            const expiredSub = subsData?.find(s => s.member_id === m.id && s.status === 'expired');
-            
-            const currentSub = activeSub || expiredSub;
-
-            return {
-              id: m.id,
-              name: m.name || '-',
-              email: m.email || '-',
-              phone: m.phone || '-',
-              membershipType: currentSub?.package_name || '-',
-              joinDate: new Date(m.created_at).toLocaleDateString('id-ID'),
-              status: activeSub ? 'active' : (expiredSub ? 'expired' : 'inactive'),
-            };
-          });
-
-          setMembers(mappedMembers);
-        }
-      } catch (err) {
-        console.error("Gagal mengambil data member:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    fetchMembers();
+    fetchData();
   }, [user]);
+
+  async function fetchData() {
+    if (!user) return;
+    const gymId = user.gymId || 'dummy-gym-id';
+
+    try {
+      // 1. Ambil data members
+      const { data: membersData, error: memError } = await supabase
+        .from('members')
+        .select('*')
+        .eq('gym_id', gymId);
+        
+      if (memError) throw memError;
+
+      // 2. Ambil data subscriptions
+      const { data: subsData, error: subError } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('gym_id', gymId)
+        .in('status', ['active', 'expired']);
+        
+      if (subError) throw subError;
+
+      // 3. Ambil data packages
+      const { data: pkgData, error: pkgError } = await supabase
+        .from('packages')
+        .select('*')
+        .eq('gym_id', gymId);
+
+      if (pkgError) throw pkgError;
+      if (pkgData) setPackages(pkgData);
+
+      // Map data ke UI
+      if (membersData) {
+        const mappedMembers: MemberData[] = membersData.map((m) => {
+          const activeSub = subsData?.find(s => s.member_id === m.id && s.status === 'active');
+          const expiredSub = subsData?.find(s => s.member_id === m.id && s.status === 'expired');
+          
+          const currentSub = activeSub || expiredSub;
+
+          return {
+            id: m.id,
+            name: m.name || '-',
+            email: m.email || '-',
+            phone: m.phone || '-',
+            membershipType: currentSub?.package_name || '-',
+            joinDate: new Date(m.created_at).toLocaleDateString('id-ID'),
+            status: activeSub ? 'active' : (expiredSub ? 'expired' : 'inactive'),
+          };
+        });
+
+        setMembers(mappedMembers);
+      }
+    } catch (err) {
+      console.error("Gagal mengambil data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handlePerpanjang = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedMember || !selectedPackageId || !user) return;
+
+    setIsSubmitting(true);
+    try {
+      const selectedPkg = packages.find(p => p.id === selectedPackageId);
+      if (!selectedPkg) throw new Error("Paket tidak valid");
+
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + selectedPkg.duration_days);
+
+      // Set old active subscriptions to expired (optional, better safe than sorry)
+      await supabase
+        .from('subscriptions')
+        .update({ status: 'expired' })
+        .eq('member_id', selectedMember.id)
+        .eq('status', 'active');
+
+      // Insert new subscription
+      const { error } = await supabase
+        .from('subscriptions')
+        .insert({
+          member_id: selectedMember.id,
+          gym_id: user.gymId || 'dummy-gym-id',
+          package_id: selectedPkg.id,
+          package_name: selectedPkg.name,
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+          status: 'active',
+          payment_method: paymentMethod
+        });
+
+      if (error) throw error;
+
+      // Close modal & Refresh Data
+      setSelectedMember(null);
+      setSelectedPackageId("");
+      fetchData();
+      
+    } catch (err) {
+      console.error("Gagal memperpanjang paket:", err);
+      alert("Terjadi kesalahan saat memperpanjang paket.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const filteredMembers = members.filter(
     (member) =>
@@ -100,12 +165,12 @@ export default function MembersPage() {
 
   return (
     <ProtectedRoute allowedRoles={['Admin', 'Owner']}>
-      <div className="p-4 pb-28 md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)]">
+      <div className="p-4 pb-28 md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)] relative">
         <DashboardHeader />
 
         <div className="mb-[24px]">
           <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Members</h1>
-          <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola data member dan informasi keanggotaan</p>
+          <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola data member dan perpanjang keanggotaan (Offline Kasir)</p>
         </div>
 
         <div className="mb-[16px]">
@@ -120,10 +185,10 @@ export default function MembersPage() {
 
         <div className="bg-[var(--color-surface-1)] hairline-border rounded-[12px] overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[800px]">
               <thead>
                 <tr className="border-b border-[var(--color-hairline)] bg-[var(--color-surface-2)]">
-                  {['Nama', 'Email', 'Telepon', 'Paket', 'Bergabung', 'Status'].map(h => (
+                  {['Nama', 'Email', 'Telepon', 'Paket Aktif', 'Status', 'Aksi'].map(h => (
                     <th key={h} className="px-[16px] py-[14px] text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
@@ -146,7 +211,6 @@ export default function MembersPage() {
                       <td className="px-[16px] py-[16px] text-[14px] text-[var(--color-ink-muted)]">{member.email}</td>
                       <td className="px-[16px] py-[16px] text-[14px] text-[var(--color-ink-muted)]">{member.phone}</td>
                       <td className="px-[16px] py-[16px] text-[14px] text-[var(--color-ink-muted)]">{member.membershipType}</td>
-                      <td className="px-[16px] py-[16px] text-[14px] text-[var(--color-ink-muted)]">{member.joinDate}</td>
                       <td className="px-[16px] py-[16px]">
                         <span
                           className="px-[10px] py-[4px] rounded-full text-[12px] font-semibold"
@@ -154,6 +218,15 @@ export default function MembersPage() {
                         >
                           {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                         </span>
+                      </td>
+                      <td className="px-[16px] py-[16px]">
+                        <button 
+                          onClick={() => setSelectedMember(member)}
+                          className="flex items-center gap-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                        >
+                          <PlusCircle size={16} />
+                          <span>Perpanjang</span>
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -195,7 +268,94 @@ export default function MembersPage() {
             </div>
           )}
         </div>
+
+        {/* Modal Perpanjang Paket */}
+        {selectedMember && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-[var(--color-surface-1)] hairline-border w-full max-w-md rounded-[20px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              {/* Header Modal */}
+              <div className="px-[24px] py-[20px] border-b border-[var(--color-hairline)] flex justify-between items-center bg-[var(--color-surface-2)]">
+                <h2 className="text-[18px] font-bold text-[var(--color-ink)]">Perpanjang Paket</h2>
+                <button 
+                  onClick={() => setSelectedMember(null)}
+                  className="text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Body Modal */}
+              <div className="p-[24px] overflow-y-auto">
+                <div className="mb-6">
+                  <p className="text-[13px] text-[var(--color-ink-subtle)] uppercase tracking-wider font-semibold mb-1">Member</p>
+                  <p className="text-[18px] font-bold text-[var(--color-ink)]">{selectedMember.name}</p>
+                  <p className="text-[14px] text-[var(--color-ink-muted)]">{selectedMember.email}</p>
+                </div>
+
+                <form id="form-perpanjang" onSubmit={handlePerpanjang} className="space-y-[20px]">
+                  <div>
+                    <label className="block text-[13px] font-medium mb-[8px] text-[var(--color-ink)]">Pilih Paket</label>
+                    <select 
+                      required
+                      value={selectedPackageId}
+                      onChange={(e) => setSelectedPackageId(e.target.value)}
+                      className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px] appearance-none"
+                    >
+                      <option value="">-- Pilih Paket --</option>
+                      {packages.map(pkg => (
+                        <option key={pkg.id} value={pkg.id}>
+                          {pkg.name} - Rp {pkg.price.toLocaleString('id-ID')}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[13px] font-medium mb-[8px] text-[var(--color-ink)]">Metode Pembayaran (Offline)</label>
+                    <div className="grid grid-cols-2 gap-[12px]">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('Cash')}
+                        className={`py-[10px] rounded-[10px] text-[14px] font-semibold border transition-colors ${paymentMethod === 'Cash' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'border-[var(--color-hairline)] bg-[var(--color-surface-2)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]'}`}
+                      >
+                        Tunai / Cash
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('QRIS')}
+                        className={`py-[10px] rounded-[10px] text-[14px] font-semibold border transition-colors ${paymentMethod === 'QRIS' ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]' : 'border-[var(--color-hairline)] bg-[var(--color-surface-2)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink)]'}`}
+                      >
+                        QRIS / Transfer
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              {/* Footer Modal */}
+              <div className="px-[24px] py-[20px] border-t border-[var(--color-hairline)] bg-[var(--color-surface-2)] flex justify-end gap-3 mt-auto">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMember(null)}
+                  className="px-[16px] py-[10px] rounded-[10px] font-medium text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors text-[14px]"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  form="form-perpanjang"
+                  disabled={isSubmitting || !selectedPackageId}
+                  className="px-[24px] py-[10px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[10px] font-semibold transition-colors flex items-center gap-2 text-[14px] disabled:opacity-50"
+                >
+                  {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <PlusCircle size={16} />}
+                  Simpan Pembayaran
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   );
 }
+
