@@ -15,6 +15,7 @@ interface MemberData {
   membershipType: string;
   joinDate: string;
   status: "active" | "inactive" | "expired";
+  photoUrl: string | null;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -83,6 +84,7 @@ export default function MembersPage() {
             membershipType: activeSubs.length > 0 ? activeSubs.map((s:any) => s.package_name).join(', ') : (expiredSub?.package_name || '-'),
             joinDate: new Date(m.created_at).toLocaleDateString('id-ID'),
             status: activeSubs.length > 0 ? 'active' : (expiredSub ? 'expired' : 'inactive'),
+            photoUrl: m.photo_url || null,
           };
         });
 
@@ -209,7 +211,18 @@ export default function MembersPage() {
                   paginatedMembers.map((member) => (
                     <tr key={member.id} className="border-b border-[var(--color-hairline)] hover:bg-[var(--color-surface-2)] transition-colors">
                       <td className="px-[16px] py-[16px]">
-                        <span className="text-[14px] font-medium text-[var(--color-ink)]">{member.name}</span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--color-surface-3)] shrink-0">
+                            {member.photoUrl ? (
+                              <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-[var(--color-ink-subtle)] font-bold text-[12px]">
+                                {member.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-[14px] font-medium text-[var(--color-ink)]">{member.name}</span>
+                        </div>
                       </td>
                       <td className="px-[16px] py-[16px] text-[14px] text-[var(--color-ink-muted)]">{member.email}</td>
                       <td className="px-[16px] py-[16px] text-[14px] text-[var(--color-ink-muted)]">{member.phone}</td>

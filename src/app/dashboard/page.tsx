@@ -113,6 +113,18 @@ export default function OwnerDashboard() {
                 subtitle="Kelola karyawan di semua gym"
                 onClick={() => router.push('/staff')}
               />
+              <MenuItem
+                icon={<span className="text-green-500"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span>}
+                title="Kasir (POS)"
+                subtitle="Jual minuman & suplemen"
+                onClick={() => router.push('/admin/pos')}
+              />
+              <MenuItem
+                icon={<span className="text-[var(--color-primary)]"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="m3 15 2 2 4-4"/></svg></span>}
+                title="Scan Check-in"
+                subtitle="Scan QR code kedatangan"
+                onClick={() => router.push('/admin/checkin')}
+              />
             </div>
           </div>
         </div>
