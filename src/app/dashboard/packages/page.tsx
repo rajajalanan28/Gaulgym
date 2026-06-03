@@ -175,7 +175,7 @@ export default function PackagesManagementPage() {
 
   return (
     <ProtectedRoute allowedRoles={['Owner']}>
-      <div className="p-6 md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
+      <div className="p-4 pb-28 md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
         <DashboardHeader />
 
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-[32px] gap-[16px]">

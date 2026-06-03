@@ -41,7 +41,7 @@ export default function AdminDashboard() {
 
   return (
     <ProtectedRoute allowedRoles={['Admin', 'Owner']}>
-      <div className="p-[32px] md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
+      <div className="p-4 pb-28 md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
         <DashboardHeader />
         
         <div className="mb-[32px]">

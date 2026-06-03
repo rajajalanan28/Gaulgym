@@ -100,7 +100,7 @@ export default function MembersPage() {
 
   return (
     <ProtectedRoute allowedRoles={['Admin', 'Owner']}>
-      <div className="p-6 md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)]">
+      <div className="p-4 pb-28 md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)]">
         <DashboardHeader />
 
         <div className="mb-[24px]">

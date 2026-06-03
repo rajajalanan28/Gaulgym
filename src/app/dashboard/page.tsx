@@ -44,7 +44,7 @@ export default function OwnerDashboard() {
 
   return (
     <ProtectedRoute allowedRoles={['Owner']}>
-      <div className="min-h-screen bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white p-[32px] md:p-[48px]">
+      <div className="min-h-screen bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white p-4 pb-28 md:p-[48px]">
         <div className="max-w-[1200px] mx-auto">
           {/* Header Section */}
           <DashboardHeader />
