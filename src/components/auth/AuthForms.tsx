@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { useSearchParams, usePathname } from "next/navigation";
+import Image from "next/image";
 import { Suspense } from "react";
 
 interface TimeoutResult {
@@ -152,12 +153,13 @@ function AuthFormsContent() {
       <div className="relative w-full max-w-md p-[32px] md:p-[48px] rounded-[16px] bg-[var(--color-surface-1)] hairline-border shadow-2xl">
 
         {/* Logo + Header */}
-        <div className="text-center mb-8">
-          <img
+        <div className="text-center mb-8 flex flex-col items-center">
+          <Image
             src="/logo.png"
             alt="Gaul Gym Logo"
             width={120}
             height={120}
+            priority
             style={{ objectFit: 'contain', margin: '0 auto 16px', borderRadius: '16px' }}
           />
           <p className="text-[14px] text-[var(--color-ink-muted)]">
