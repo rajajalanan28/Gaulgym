@@ -21,10 +21,15 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-canvas)]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-500 font-medium">Memuat data...</p>
+          <div className="w-12 h-12 rounded-full" style={{
+            border: '4px solid var(--color-hairline)',
+            borderTopColor: 'var(--color-primary)',
+            animation: 'spin 0.8s linear infinite',
+          }} />
+          <p className="text-[var(--color-ink-muted)] font-medium text-[14px]">Memuat data...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
     );
@@ -32,10 +37,15 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-canvas)]">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-500 font-medium">Mengarahkan ke halaman login...</p>
+          <div className="w-12 h-12 rounded-full" style={{
+            border: '4px solid var(--color-hairline)',
+            borderTopColor: 'var(--color-primary)',
+            animation: 'spin 0.8s linear infinite',
+          }} />
+          <p className="text-[var(--color-ink-muted)] font-medium text-[14px]">Mengarahkan ke halaman login...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
     );
@@ -44,11 +54,12 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
   // Check roles if specified
   if (allowedRoles && user.role && !allowedRoles.includes(user.role)) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--color-canvas)]">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-red-500 mb-2">Akses Ditolak</h2>
-          <p className="text-gray-600 mb-4">Anda tidak memiliki izin untuk mengakses halaman ini.</p>
-          <a href="/dashboard" className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600">
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔒</div>
+          <h2 className="text-[22px] font-semibold text-red-400 mb-2 tracking-[-0.01em]">Akses Ditolak</h2>
+          <p className="text-[var(--color-ink-muted)] mb-6 text-[15px]">Anda tidak memiliki izin untuk mengakses halaman ini.</p>
+          <a href="/dashboard" className="px-[16px] py-[8px] bg-[var(--color-primary)] text-white rounded-md text-[14px] font-medium hover:bg-[var(--color-primary-hover)] transition-colors">
             Kembali ke Dashboard
           </a>
         </div>

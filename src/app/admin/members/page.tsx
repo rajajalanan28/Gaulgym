@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { DashboardHeader } from "@/components/DashboardHeader";
 
 interface Member {
   id: number;
@@ -20,9 +22,12 @@ const mockMembers: Member[] = [
   { id: 5, name: "David Brown", email: "david.b@email.com", phone: "(555) 567-8901", membershipType: "Standard", joinDate: "2023-12-01", status: "inactive" },
 ];
 
+const ITEMS_PER_PAGE = 10;
+
 export default function MembersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [members] = useState<Member[]>(mockMembers);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const filteredMembers = members.filter(
     (member) =>
@@ -31,98 +36,105 @@ export default function MembersPage() {
       member.phone.includes(searchTerm)
   );
 
-  const getStatusColor = (status: Member["status"]) => {
+  const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
+  const paginatedMembers = filteredMembers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const getStatusStyle = (status: Member["status"]) => {
     switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "inactive":
-        return "bg-yellow-100 text-yellow-800";
-      case "expired":
-        return "bg-red-100 text-red-800";
+      case "active": return { background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80' };
+      case "inactive": return { background: 'rgba(234, 179, 8, 0.15)', color: '#facc15' };
+      case "expired": return { background: 'rgba(239, 68, 68, 0.15)', color: '#f87171' };
     }
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Members</h1>
-        <p className="text-gray-500 mt-1">Manage gym members and their information</p>
-      </div>
+    <ProtectedRoute allowedRoles={['Admin', 'Owner']}>
+      <div className="p-6 md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)]">
+        <DashboardHeader />
 
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Search by name, email, or phone..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full max-w-md px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+        <div className="mb-[24px]">
+          <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Members</h1>
+          <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola data member dan informasi keanggotaan</p>
+        </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Phone
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Membership
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Join Date
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Status
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredMembers.length > 0 ? (
-              filteredMembers.map((member) => (
-                <tr key={member.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{member.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{member.email}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{member.phone}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{member.membershipType}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{member.joinDate}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
-                        member.status
-                      )}`}
-                    >
-                      {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
-                    </span>
-                  </td>
+        <div className="mb-[16px]">
+          <input
+            type="text"
+            placeholder="Cari nama, email, atau telepon..."
+            value={searchTerm}
+            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+            className="w-full max-w-md px-[12px] py-[8px] rounded-md bg-[var(--color-surface-1)] text-[var(--color-ink)] hairline-border focus-ring placeholder:text-[var(--color-ink-subtle)] text-[14px]"
+          />
+        </div>
+
+        <div className="bg-[var(--color-surface-1)] hairline-border rounded-[12px] overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[var(--color-hairline)]">
+                  {['Nama', 'Email', 'Telepon', 'Paket', 'Bergabung', 'Status'].map(h => (
+                    <th key={h} className="px-[16px] py-[12px] text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">{h}</th>
+                  ))}
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                  No members found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {paginatedMembers.length > 0 ? (
+                  paginatedMembers.map((member) => (
+                    <tr key={member.id} className="border-b border-[var(--color-hairline)] hover:bg-[var(--color-surface-2)] transition-colors">
+                      <td className="px-[16px] py-[12px]">
+                        <span className="text-[14px] font-medium text-[var(--color-ink)]">{member.name}</span>
+                      </td>
+                      <td className="px-[16px] py-[12px] text-[14px] text-[var(--color-ink-muted)]">{member.email}</td>
+                      <td className="px-[16px] py-[12px] text-[14px] text-[var(--color-ink-muted)]">{member.phone}</td>
+                      <td className="px-[16px] py-[12px] text-[14px] text-[var(--color-ink-muted)]">{member.membershipType}</td>
+                      <td className="px-[16px] py-[12px] text-[14px] text-[var(--color-ink-muted)]">{member.joinDate}</td>
+                      <td className="px-[16px] py-[12px]">
+                        <span
+                          className="px-[8px] py-[3px] rounded-full text-[12px] font-medium"
+                          style={getStatusStyle(member.status)}
+                        >
+                          {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-[16px] py-[32px] text-center text-[var(--color-ink-muted)] text-[14px]">
+                      Tidak ada member ditemukan
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-[16px] py-[12px] border-t border-[var(--color-hairline)]">
+              <span className="text-[13px] text-[var(--color-ink-subtle)]">
+                Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredMembers.length)} dari {filteredMembers.length}
+              </span>
+              <div className="flex gap-[8px]">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-[10px] py-[4px] text-[13px] rounded-md bg-[var(--color-surface-2)] text-[var(--color-ink)] hairline-border disabled:opacity-40 hover:bg-[var(--color-surface-3)] transition-colors"
+                >
+                  ←
+                </button>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-[10px] py-[4px] text-[13px] rounded-md bg-[var(--color-surface-2)] text-[var(--color-ink)] hairline-border disabled:opacity-40 hover:bg-[var(--color-surface-3)] transition-colors"
+                >
+                  →
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }
