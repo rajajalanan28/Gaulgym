@@ -108,12 +108,8 @@ export default function MembersPage() {
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + selectedPkg.duration_days);
 
-      // Set old active subscriptions to expired (optional, better safe than sorry)
-      await supabase
-        .from('subscriptions')
-        .update({ status: 'expired' })
-        .eq('member_id', selectedMember.id)
-        .eq('status', 'active');
+      // Biarkan subscription lama tetap aktif karena 1 member bisa punya beberapa layanan (misal: Bulanan + PT)
+      // Tidak ada update status expired di sini.
 
       // Insert new subscription
       const { error } = await supabase
