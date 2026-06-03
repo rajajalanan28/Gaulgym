@@ -30,7 +30,8 @@ interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
-  register: (name: string, email: string, password: string, role: string, gymId?: string) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
+  loginWithGoogle: () => Promise<void>;
+  register: (name: string, email: string, password: string, role?: string, gymId?: string) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -200,9 +201,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (name: string, email: string, password: string, role: string, gymId?: string) => {
+  const loginWithGoogle = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+  };
+
+  const register = async (name: string, email: string, password: string, role: string = 'Member', gymId?: string) => {
     try {
       setLoading(true);
+
+      const finalRole = 'Member'; // Force to Member regardless of input
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -210,7 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         options: {
           data: {
             name,
-            role,
+            role: finalRole,
             gym_id: gymId,
           },
         },
@@ -223,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: authData.user.id,
           email,
           name,
-          role,
+          role: finalRole,
           gym_id: gymId,
           is_active: true,
         });
@@ -234,7 +246,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: authData.user.id,
           email,
           name,
-          role: role as AuthUser['role'],
+          role: finalRole as AuthUser['role'],
           gymId: gymId,
           emailConfirmedAt: authData.user.email_confirmed_at || null,
         };
@@ -260,7 +272,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, loginWithGoogle, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
