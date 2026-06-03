@@ -20,8 +20,9 @@ export default function NewMemberPage() {
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
 
-  // Stop camera when component unmounts
+  // Start camera on mount, stop when component unmounts
   useEffect(() => {
+    startCamera();
     return () => {
       stopCamera();
     };

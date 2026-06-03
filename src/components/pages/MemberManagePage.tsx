@@ -185,8 +185,8 @@ export default function MembersPage() {
         
         if (!res.ok) throw new Error(data.error || 'Terjadi kesalahan');
 
-        alert(`${member.name} berhasil dipromosikan menjadi Admin! Anda akan dialihkan ke halaman Admin.`);
-        router.push('/owner/admin');
+        alert(`${member.name} berhasil dipromosikan menjadi Admin!`);
+        fetchData(); // This will refresh the member list and remove the promoted member
       } catch (err: any) {
         console.error("Gagal mempromosikan admin:", err);
         alert("Gagal: " + err.message);
