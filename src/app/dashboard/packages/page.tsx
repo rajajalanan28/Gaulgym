@@ -48,7 +48,7 @@ export default function PackagesManagementPage() {
     price: 150000,
     price_display: '150 Ribu',
     featuresText: '', // Will be split by newline
-    color: 'blue',
+    color: 'green',
     is_active: true,
     sort_order: 1
   });
@@ -90,7 +90,7 @@ export default function PackagesManagementPage() {
       price: 150000,
       price_display: '150 Ribu',
       featuresText: 'Akses Semua Alat\nBebas Jam Kunjungan',
-      color: 'blue',
+      color: 'green',
       is_active: true,
       sort_order: packages.length + 1
     });
@@ -297,13 +297,6 @@ export default function PackagesManagementPage() {
                 <div className="md:col-span-2">
                   <label className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)]">Fitur (Pisahkan dengan Enter)</label>
                   <textarea rows={4} value={formData.featuresText} onChange={e => setFormData({...formData, featuresText: e.target.value})} className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px]" placeholder="Akses semua alat&#10;Bebas jam kunjung" />
-                </div>
-                
-                <div>
-                  <label className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)]">Warna Tema Card</label>
-                  <select value={formData.color} onChange={e => setFormData({...formData, color: e.target.value})} className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px] outline-none">
-                    {colorOptions.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                  </select>
                 </div>
                 
                 <div>

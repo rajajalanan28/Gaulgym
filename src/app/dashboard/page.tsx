@@ -58,9 +58,8 @@ export default function OwnerDashboard() {
           </div>
 
           {/* Stats Section */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px] mb-[48px]">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-[16px] mb-[48px]">
             {[
-              { icon: <MapPin size={20} />, value: loading ? '...' : stats.totalGyms.toString(), label: 'Total Gym' },
               { icon: <Users size={20} />, value: loading ? '...' : stats.totalMembers.toLocaleString('id-ID'), label: 'Total Member' },
               { icon: <UserCheck size={20} />, value: loading ? '...' : stats.totalStaff.toLocaleString('id-ID'), label: 'Total Staff' },
               { icon: <DollarSign size={20} />, value: loading ? '...' : formatCurrency(stats.totalRevenue), label: 'Pendapatan' },
@@ -83,12 +82,6 @@ export default function OwnerDashboard() {
               Aksi Cepat
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-[16px]">
-              <MenuItem
-                icon={<MapPin size={20} />}
-                title="Kelola Gym"
-                subtitle="Lihat dan edit lokasi gym Anda"
-                onClick={() => router.push('/gyms')}
-              />
               <MenuItem
                 icon={<Tag size={20} />}
                 title="Manajemen Harga"

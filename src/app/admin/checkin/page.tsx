@@ -5,6 +5,7 @@ import { Check, Camera, Loader2, Smartphone, PenLine, X, AlertTriangle, User } f
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { Html5Qrcode } from "html5-qrcode";
 
 interface CheckInData {
   memberId: string;
@@ -64,22 +65,7 @@ export default function CheckInPage() {
     loadRecentCheckins();
   }, [loadRecentCheckins]);
 
-  // Simulate QR scan line animation
-  useEffect(() => {
-    if (!isScanning) return;
-
-    const animationFrame = requestAnimationFrame(function animate() {
-      setScanLinePosition((prev) => {
-        if (prev >= 100) return 0;
-        return prev + 1;
-      });
-      requestAnimationFrame(animate);
-    });
-
-    return () => cancelAnimationFrame(animationFrame);
-  }, [isScanning]);
-
-  const processCheckin = async (memberIdQuery: string) => {
+  const processCheckin = useCallback(async (memberIdQuery: string) => {
     if (!user) return;
     const gymId = user.gymId || 'dummy-gym-id';
     setIsProcessing(true);
@@ -167,30 +153,47 @@ export default function CheckInPage() {
       setShowManualModal(false);
       setManualInput("");
     }
-  };
+  }, [user, loadRecentCheckins]);
+  useEffect(() => {
+    let html5QrCode: Html5Qrcode | null = null;
+
+    if (isScanning) {
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          if (html5QrCode) {
+            html5QrCode.stop().then(() => {
+              setIsScanning(false);
+              processCheckin(decodedText);
+            }).catch(console.error);
+          }
+        },
+        (errorMessage) => {
+          // ignore frame errors
+        }
+      ).catch(err => {
+        console.error("Camera error:", err);
+        setIsScanning(false);
+        setLastScanResult({ success: false, message: "Kamera tidak diizinkan atau tidak ditemukan." });
+        setShowConfirmation(true);
+      });
+    }
+
+    return () => {
+      if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop().catch(console.error);
+      }
+    };
+  }, [isScanning, processCheckin]);
+
 
   const handleScan = useCallback(() => {
     setIsScanning(true);
     setLastScanResult(null);
     setShowConfirmation(false);
-
-    // Simulate scan delay then pick a random member id from db
-    setTimeout(async () => {
-      setIsScanning(false);
-      
-      if (!user) return;
-      const gymId = user.gymId || 'dummy-gym-id';
-      
-      const { data } = await supabase.from('members').select('qr_code').eq('gym_id', gymId).limit(10);
-      if (data && data.length > 0) {
-        const randomMember = data[Math.floor(Math.random() * data.length)];
-        processCheckin(randomMember.qr_code);
-      } else {
-        setLastScanResult({ success: false, message: "Tidak ada member di database untuk discan (Dummy Data)." });
-        setShowConfirmation(true);
-      }
-    }, 2500);
-  }, [user, processCheckin]);
+  }, []);
 
   const handleManualEntrySubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -230,17 +233,9 @@ export default function CheckInPage() {
               <div className="absolute bottom-4 right-4 w-12 h-12 border-b-4 border-r-4 border-[var(--color-primary)] rounded-br-lg opacity-80" />
 
               {/* Scan area */}
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-black">
                 {isScanning ? (
-                  <>
-                    <div
-                      className="absolute left-4 right-4 h-1 bg-gradient-to-r from-transparent via-[var(--color-primary)] to-transparent opacity-80 shadow-[0_0_8px_var(--color-primary)]"
-                      style={{ top: `${scanLinePosition}%` }}
-                    />
-                    <div className="text-[var(--color-primary)] text-lg font-medium animate-pulse flex items-center gap-2 bg-[var(--color-surface-1)]/80 px-4 py-2 rounded-full backdrop-blur-sm">
-                      <Loader2 className="w-5 h-5 animate-spin" /> Scanning...
-                    </div>
-                  </>
+                  <div id="reader" className="w-full h-full"></div>
                 ) : showConfirmation && lastScanResult ? (
                   <div className={lastScanResult.success ? "text-green-500" : "text-red-500"}>
                     {lastScanResult.success ? <Check className="w-24 h-24 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]" /> : <X className="w-24 h-24 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />}
@@ -282,8 +277,8 @@ export default function CheckInPage() {
               disabled={isScanning || isProcessing}
               className="flex-1 max-w-[200px] py-[16px] px-[20px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-[16px] font-semibold transition-all flex items-center justify-center gap-2 shadow-[0_8px_20px_-8px_var(--color-primary)] hover:-translate-y-1"
             >
-              {isScanning ? <Loader2 className="w-5 h-5 animate-spin" /> : <Smartphone className="w-5 h-5" />}
-              <span>{isScanning ? "Scanning" : "Scan QR (Simulasi)"}</span>
+              {isScanning ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
+              <span>{isScanning ? "Memindai..." : "Scan QR Code"}</span>
             </button>
 
             <button
