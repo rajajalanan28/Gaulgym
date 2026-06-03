@@ -36,16 +36,34 @@ export default function AuthCallbackPage() {
 
         if (fetchError && fetchError.code === 'PGRST116') {
           // User belum ada (Berdasarkan Google Sign In pertama kali)
+          // Find default gym
+          const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
+          const targetGymId = firstGym ? firstGym.id : null;
+
           // Buatkan profilnya otomatis dengan role 'Member'
+          const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
           const { error: insertError } = await supabase.from('users').insert({
             id: user.id,
             email: user.email,
-            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            name,
             role: 'Member',
+            gym_id: targetGymId,
             is_active: true,
           });
 
           if (insertError) throw insertError;
+
+          if (targetGymId) {
+            const displayId = 'GG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            await supabase.from('members').insert({
+              user_id: user.id,
+              gym_id: targetGymId,
+              name,
+              email: user.email,
+              display_id: displayId,
+              join_date: new Date().toISOString().split('T')[0]
+            });
+          }
           userRole = 'Member';
         } else if (existingUser) {
           userRole = existingUser.role;

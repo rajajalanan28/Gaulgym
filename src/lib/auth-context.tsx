@@ -237,16 +237,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authError) throw authError;
 
       if (authData.user) {
+        // Find default gym if gymId not provided
+        let targetGymId = gymId;
+        if (!targetGymId) {
+          const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
+          if (firstGym) targetGymId = firstGym.id;
+        }
+
         const { error: profileError } = await supabase.from('users').insert({
           id: authData.user.id,
           email,
           name,
           role: finalRole,
-          gym_id: gymId,
+          gym_id: targetGymId,
           is_active: true,
         });
 
         if (profileError) throw profileError;
+
+        // Auto-insert to members table if targetGymId exists
+        if (targetGymId) {
+          const displayId = 'GG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+          await supabase.from('members').insert({
+            user_id: authData.user.id,
+            gym_id: targetGymId,
+            name,
+            email,
+            display_id: displayId,
+            join_date: new Date().toISOString().split('T')[0]
+          });
+        }
 
         const authUser: AuthUser = {
           id: authData.user.id,
