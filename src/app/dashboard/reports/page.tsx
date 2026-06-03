@@ -18,6 +18,14 @@ const EXPENSE_CATEGORIES = [
   "Lain-lain"
 ];
 
+const getLocalDateString = () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 export default function ReportsPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
@@ -42,7 +50,7 @@ export default function ReportsPage() {
     amount: '',
     category: EXPENSE_CATEGORIES[0],
     description: '',
-    date: new Date().toISOString().split('T')[0]
+    date: getLocalDateString()
   });
 
   const loadData = async () => {
@@ -272,7 +280,10 @@ export default function ReportsPage() {
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() => setShowExpenseModal(true)}
+              onClick={() => {
+                setExpenseForm(prev => ({ ...prev, date: getLocalDateString() }));
+                setShowExpenseModal(true);
+              }}
               className="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-[12px] font-medium transition-colors shadow-sm"
             >
               <Plus size={16} />
