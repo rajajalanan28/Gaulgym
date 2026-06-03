@@ -168,7 +168,7 @@ function AuthFormsContent() {
                 width={130}
                 height={130}
                 priority
-                style={{ objectFit: 'contain', borderRadius: '24px', position: 'relative', zIndex: 10, dropShadow: '0px 10px 20px rgba(0,0,0,0.5)' }}
+                style={{ objectFit: 'contain', borderRadius: '24px', position: 'relative', zIndex: 10, filter: 'drop-shadow(0px 10px 20px rgba(0,0,0,0.5))' }}
               />
             </div>
             <p className="text-[15px] text-[var(--color-ink-muted)] mt-[8px]">
