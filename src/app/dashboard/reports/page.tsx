@@ -209,7 +209,7 @@ export default function ReportsPage() {
                     cursor={{ fill: 'var(--color-surface-2)' }}
                     contentStyle={{ backgroundColor: 'var(--color-surface-1)', borderColor: 'var(--color-hairline)', borderRadius: '12px' }}
                     itemStyle={{ color: 'var(--color-ink)', fontWeight: 500 }}
-                    formatter={(value: number) => formatCurrency(value)}
+                    formatter={(value: any) => formatCurrency(Number(value))}
                   />
                   <Bar dataKey="Pendapatan" fill="var(--color-primary)" radius={[6, 6, 0, 0]} maxBarSize={50} />
                 </BarChart>
