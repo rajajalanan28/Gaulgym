@@ -7,11 +7,24 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function GET() {
   try {
-    const { data: firstGym } = await supabaseAdmin.from('gyms').select('id').limit(1).single();
-    const targetGymId = firstGym ? firstGym.id : null;
+    let { data: firstGym } = await supabaseAdmin.from('gyms').select('id').limit(1).single();
+    let targetGymId = firstGym ? firstGym.id : null;
 
     if (!targetGymId) {
-      return NextResponse.json({ message: 'No gym found' }, { status: 400 });
+      // Find an owner
+      const { data: ownerUser } = await supabaseAdmin.from('users').select('id').eq('role', 'Owner').limit(1).single();
+      
+      // Create the missing gym
+      const { data: newGym, error: gymError } = await supabaseAdmin.from('gyms').insert({
+        name: 'Gaul Gym',
+        owner_id: ownerUser ? ownerUser.id : null,
+        address: 'Jl. Utama',
+        opening_time: '06:00',
+        closing_time: '22:00'
+      }).select('id').single();
+
+      if (gymError) throw gymError;
+      targetGymId = newGym.id;
     }
 
     const { data: users, error: fetchError } = await supabaseAdmin.from('users').select('*').eq('role', 'Member');
