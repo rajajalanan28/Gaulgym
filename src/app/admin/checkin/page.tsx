@@ -272,23 +272,35 @@ export default function CheckInPage() {
 
           {/* Action Buttons */}
           <div className="flex gap-[16px] justify-center mb-[40px]">
-            <button
-              onClick={handleScan}
-              disabled={isScanning || isProcessing}
-              className="flex-1 max-w-[200px] py-[16px] px-[20px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-[16px] font-semibold transition-all flex items-center justify-center gap-2 shadow-[0_8px_20px_-8px_var(--color-primary)] hover:-translate-y-1"
-            >
-              {isScanning ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
-              <span>{isScanning ? "Memindai..." : "Scan QR Code"}</span>
-            </button>
+            {isScanning ? (
+              <button
+                onClick={() => setIsScanning(false)}
+                className="flex-1 max-w-[200px] py-[16px] px-[20px] bg-red-500 hover:bg-red-600 text-white rounded-[16px] font-semibold transition-all flex items-center justify-center gap-2 shadow-[0_8px_20px_-8px_rgba(239,68,68,0.5)] hover:-translate-y-1"
+              >
+                <X className="w-5 h-5" />
+                <span>Batal Scan</span>
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleScan}
+                  disabled={isProcessing}
+                  className="flex-1 max-w-[200px] py-[16px] px-[20px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-[16px] font-semibold transition-all flex items-center justify-center gap-2 shadow-[0_8px_20px_-8px_var(--color-primary)] hover:-translate-y-1"
+                >
+                  <Camera className="w-5 h-5" />
+                  <span>Scan QR Code</span>
+                </button>
 
-            <button
-              onClick={() => setShowManualModal(true)}
-              disabled={isScanning || isProcessing}
-              className="flex-1 max-w-[200px] py-[16px] px-[20px] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3)] text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed rounded-[16px] font-semibold transition-all flex items-center justify-center gap-2 border border-[var(--color-hairline)]"
-            >
-              <PenLine className="w-5 h-5" />
-              <span>Input Manual</span>
-            </button>
+                <button
+                  onClick={() => setShowManualModal(true)}
+                  disabled={isProcessing}
+                  className="flex-1 max-w-[200px] py-[16px] px-[20px] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3)] text-[var(--color-ink)] disabled:opacity-50 disabled:cursor-not-allowed rounded-[16px] font-semibold transition-all flex items-center justify-center gap-2 border border-[var(--color-hairline)]"
+                >
+                  <PenLine className="w-5 h-5" />
+                  <span>Input Manual</span>
+                </button>
+              </>
+            )}
           </div>
 
           {/* Confirmation Card with Photo Validation */}
