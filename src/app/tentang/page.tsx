@@ -3,9 +3,9 @@
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth-context';
 
-const PublicNavbar = dynamic(() => import('@/components/PublicNavbar').then(m => ({ default: m.PublicNavbar })), { ssr: true });
-const DashboardHeader = dynamic(() => import('@/components/DashboardHeader').then(m => ({ default: m.DashboardHeader })), { ssr: false });
-const PublicFooter = dynamic(() => import('@/components/PublicFooter').then(m => ({ default: m.PublicFooter })), { ssr: true, loading: () => <div className="h-[200px]" /> });
+import { PublicNavbar } from '@/components/PublicNavbar';
+import { DashboardHeader } from '@/components/DashboardHeader';
+import { PublicFooter } from '@/components/PublicFooter';
 
 export default function AboutPage() {
   const { user } = useAuth();

@@ -16,7 +16,7 @@ export function PublicNavbar() {
   }, []);
 
   // If user is logged in, don't render - DashboardHeader handles it
-  if (user || loading) {
+  if (user && !loading) {
     return null;
   }
 
@@ -39,20 +39,26 @@ export function PublicNavbar() {
           </span>
         </a>
 
-        {/* Actions - only Masuk/Daftar */}
+        {/* Actions */}
         <div className="flex items-center gap-3">
-          <a 
-            href="/login"
-            className="text-[13px] font-medium text-[var(--color-ink)] px-[14px] py-[6px] rounded-md transition-colors hover:text-[var(--color-ink-muted)] focus-ring"
-          >
-            Masuk
-          </a>
-          <a 
-            href="/daftar"
-            className="text-[13px] font-medium bg-[var(--color-primary)] text-white px-[14px] py-[6px] rounded-md transition-colors hover:bg-[var(--color-primary-hover)] focus-ring"
-          >
-            Daftar
-          </a>
+          {loading ? (
+            <div className="w-[120px] h-[36px] bg-[var(--color-surface-2)] animate-pulse rounded-md"></div>
+          ) : (
+            <>
+              <a 
+                href="/login"
+                className="text-[13px] font-medium text-[var(--color-ink)] px-[14px] py-[6px] rounded-md transition-colors hover:text-[var(--color-ink-muted)] focus-ring"
+              >
+                Masuk
+              </a>
+              <a 
+                href="/register"
+                className="text-[13px] font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] px-[16px] py-[6px] rounded-md transition-colors focus-ring shadow-sm"
+              >
+                Daftar
+              </a>
+            </>
+          )}
         </div>
 
       </div>

@@ -7,7 +7,7 @@ import { ArrowRight } from 'lucide-react';
 
 // Lazy load components not needed for first paint
 const PublicNavbar = dynamic(() => import('@/components/PublicNavbar').then(m => ({ default: m.PublicNavbar })), { ssr: true });
-const DashboardHeader = dynamic(() => import('@/components/DashboardHeader').then(m => ({ default: m.DashboardHeader })), { ssr: false });
+import { DashboardHeader } from '@/components/DashboardHeader';
 const PublicFooter = dynamic(() => import('@/components/PublicFooter').then(m => ({ default: m.PublicFooter })), { ssr: true, loading: () => <div className="h-[200px]" /> });
 
 // Lazy load icons (lucide-react is heavy)
