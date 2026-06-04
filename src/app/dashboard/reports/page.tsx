@@ -57,8 +57,8 @@ export default function ReportsPage() {
     if (!user) return;
     try {
       setLoading(true);
-      const gyms = await getGymsByOwner(user.id);
-      if (gyms.length === 0) {
+      const { data: gyms, error: gymsError } = await getGymsByOwner(user.id);
+      if (gymsError || !gyms || gyms.length === 0) {
         setLoading(false);
         return;
       }
