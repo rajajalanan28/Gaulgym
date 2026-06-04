@@ -205,6 +205,59 @@ export async function getOwnerStats(ownerId: string) {
   }
 }
 
+export async function getOwnerRevenueChart(ownerId: string) {
+  try {
+    const { data: gyms, error: gymsError } = await supabase.from('gyms').select('id').eq('owner_id', ownerId);
+    if (gymsError || !gyms || gyms.length === 0) return { data: [], error: null };
+
+    const gymIds = gyms.map((g) => g.id);
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const startDate = sevenDaysAgo.toISOString().split('T')[0];
+
+    const { data: transactions, error } = await supabase
+      .from('sales_transactions')
+      .select('amount, created_at, type')
+      .in('gym_id', gymIds)
+      .gte('created_at', startDate);
+
+    if (error) throw error;
+
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const groupedData: Record<string, number> = {};
+
+    // Initialize last 7 days with 0
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dayName = days[d.getDay()];
+      groupedData[dayName] = 0;
+    }
+
+    if (transactions) {
+      transactions.forEach(t => {
+        if (t.type === 'income') {
+          const d = new Date(t.created_at);
+          const dayName = days[d.getDay()];
+          if (groupedData[dayName] !== undefined) {
+            groupedData[dayName] += (t.amount || 0);
+          }
+        }
+      });
+    }
+
+    const chartData = Object.keys(groupedData).map(key => ({
+      name: key,
+      Pendapatan: groupedData[key]
+    }));
+
+    return { data: chartData, error: null };
+  } catch (error) {
+    return { data: [], error };
+  }
+}
+
 export async function getAdminStats(gymId: string) {
   try {
     const today = new Date().toISOString().split('T')[0];
