@@ -68,6 +68,7 @@ export function DashboardHeader() {
               <a href="/tentang" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Tentang</a>
               <a href="/fasilitas" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Fasilitas</a>
               <a href="/paket" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Paket</a>
+              <a href="/kalkulator-bmi" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Kalkulator BMI</a>
               <a href="/kontak" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Kontak</a>
             </div>
           )}
