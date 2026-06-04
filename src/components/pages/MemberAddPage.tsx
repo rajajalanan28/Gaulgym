@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import { registerMemberAction } from '@/app/actions/user';
 import { UserPlus, Mail, Phone, User, CheckCircle, Camera, RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 
 export default function NewMemberPage() {
   const { user } = useAuth();
@@ -39,7 +40,7 @@ export default function NewMemberPage() {
       }, 50);
     } catch (err) {
       console.error("Error accessing camera:", err);
-      alert("Gagal mengakses kamera. Pastikan browser memiliki izin.");
+      toast.error("Gagal mengakses kamera. Pastikan browser memiliki izin.");
     }
   };
 

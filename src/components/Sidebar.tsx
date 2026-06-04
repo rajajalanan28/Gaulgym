@@ -26,33 +26,33 @@ export function Sidebar() {
   const menu = user?.role === 'Owner' ? OWNER_MENU : ADMIN_MENU;
 
   return (
-    <aside style={{ width: '260px', minHeight: '100vh', backgroundColor: colors.surface, padding: spacing.lg }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-        <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, #FF5722, #FF8A50)', borderRadius: borderRadius.md, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+    <aside className="w-64 min-h-screen bg-[var(--color-surface-1)] p-6 hidden md:flex flex-col border-r border-[var(--color-hairline)] shrink-0">
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-12 h-12 bg-gradient-to-br from-[#5e6ad2] to-[#828fff] rounded-lg flex items-center justify-center text-white shadow-lg">
           <Dumbbell size={24} />
         </div>
         <div>
-          <div style={{ fontWeight: 'bold', fontSize: '18px' }}>GAUL GYM</div>
-          <div style={{ fontSize: '12px', color: colors.textSecondary, textTransform: 'capitalize' }}>{user?.role}</div>
+          <div className="font-bold text-lg text-[var(--color-ink)]">GAUL GYM</div>
+          <div className="text-xs text-[var(--color-ink-subtle)] capitalize">{user?.role}</div>
         </div>
       </div>
       
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <nav className="flex flex-col gap-2">
         {menu.map((item) => (
-          <Link key={item.href} href={item.href} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderRadius: borderRadius.md, color: colors.textPrimary, textDecoration: 'none', transition: 'background 0.2s' }}>
-            <span style={{ fontSize: '20px' }}>{item.icon}</span>
-            <span>{item.label}</span>
+          <Link key={item.href} href={item.href} className="flex items-center gap-3 px-4 py-3 rounded-lg text-[var(--color-ink-muted)] hover:text-white hover:bg-[var(--color-surface-2)] transition-colors">
+            <span className="text-xl">{item.icon}</span>
+            <span className="font-medium">{item.label}</span>
           </Link>
         ))}
       </nav>
 
-      <div style={{ marginTop: 'auto', paddingTop: '24px' }}>
-        <div style={{ padding: '16px', backgroundColor: colors.surfaceVariant, borderRadius: borderRadius.md, marginBottom: '12px' }}>
-          <p style={{ color: colors.textSecondary, fontSize: '12px', marginBottom: '4px' }}>Logged in as</p>
-          <div style={{ fontWeight: 600 }}>{user?.name}</div>
-          <div style={{ fontSize: '12px', color: colors.textSecondary }}>{user?.email}</div>
+      <div className="mt-auto pt-6 border-t border-[var(--color-hairline)]">
+        <div className="p-4 bg-[var(--color-surface-2)] rounded-lg mb-3">
+          <p className="text-[var(--color-ink-subtle)] text-xs mb-1">Logged in as</p>
+          <div className="font-semibold text-sm text-[var(--color-ink)] truncate">{user?.name}</div>
+          <div className="text-xs text-[var(--color-ink-muted)] truncate">{user?.email}</div>
         </div>
-        <button onClick={logout} style={{ width: '100%', padding: '12px', backgroundColor: 'transparent', border: `1px solid ${colors.error}`, borderRadius: borderRadius.md, color: colors.error, cursor: 'pointer' }}>
+        <button onClick={logout} className="w-full py-3 px-4 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors font-medium">
           Logout
         </button>
       </div>

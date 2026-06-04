@@ -6,6 +6,7 @@ import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Suspense } from "react";
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from "lucide-react";
+import toast from 'react-hot-toast';
 
 interface TimeoutResult {
   success: boolean;
@@ -61,7 +62,6 @@ function AuthFormsContent() {
   const [showRegPw, setShowRegPw] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   // Register validation
@@ -84,7 +84,6 @@ function AuthFormsContent() {
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setErrorMsg("");
 
     const finalEmail = loginEmail.includes("@")
       ? loginEmail.trim().toLowerCase()
@@ -104,17 +103,18 @@ function AuthFormsContent() {
       if (timeoutId) clearTimeout(timeoutId);
 
       if (!result.success) {
-        setErrorMsg(result.error || "Gagal masuk. Periksa kembali.");
+        toast.error(result.error || "Gagal masuk. Periksa kembali.");
         setIsLoading(false);
       } else {
+        toast.success("Berhasil masuk!");
         const role = result.user?.role;
-        if (role === 'Owner') window.location.href = '/dashboard';
-        else if (role === 'Admin') window.location.href = '/admin/dashboard';
-        else window.location.href = '/member/dashboard';
+        if (role === 'Owner') router.replace('/dashboard');
+        else if (role === 'Admin') router.replace('/admin/dashboard');
+        else router.replace('/member/dashboard');
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Gagal masuk (Koneksi bermasalah)";
-      setErrorMsg(errorMessage);
+      toast.error(errorMessage);
       setIsLoading(false);
     }
   };
@@ -124,7 +124,6 @@ function AuthFormsContent() {
     if (!validateRegister()) return;
 
     setIsLoading(true);
-    setErrorMsg("");
 
     const email = `${regData.username.trim().toLowerCase()}@gaulgym.com`;
 
@@ -142,17 +141,18 @@ function AuthFormsContent() {
       if (timeoutId) clearTimeout(timeoutId);
 
       if (!result.success) {
-        setErrorMsg(result.error || "Pendaftaran gagal. Silakan coba lagi.");
+        toast.error(result.error || "Pendaftaran gagal. Silakan coba lagi.");
         setIsLoading(false);
       } else {
+        toast.success("Pendaftaran berhasil!");
         const role = result.user?.role;
-        if (role === 'Owner') window.location.href = '/dashboard';
-        else if (role === 'Admin') window.location.href = '/admin/dashboard';
-        else window.location.href = '/member/dashboard';
+        if (role === 'Owner') router.replace('/dashboard');
+        else if (role === 'Admin') router.replace('/admin/dashboard');
+        else router.replace('/member/dashboard');
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Pendaftaran gagal (Koneksi bermasalah)";
-      setErrorMsg(errorMessage);
+      toast.error(errorMessage);
       setIsLoading(false);
     }
   };
@@ -195,13 +195,7 @@ function AuthFormsContent() {
             </p>
           </div>
 
-          {/* Error Message */}
-          {errorMsg && (
-            <div className="mb-[24px] p-[12px] rounded-[10px] text-[13px] font-medium flex items-center gap-[10px] bg-red-500/10 text-red-400 border border-red-500/20 animate-shake">
-              <svg className="w-[18px] h-[18px] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              {errorMsg}
-            </div>
-          )}
+          {/* Error Message Removed for Toasts */}
 
           <div className={`transition-all duration-300 ease-in-out ${view === 'login' ? 'opacity-100 translate-x-0' : 'opacity-100 translate-x-0'}`}>
             {view === 'login' ? (
@@ -289,7 +283,7 @@ function AuthFormsContent() {
                     Belum punya akun?{" "}
                     <button
                       type="button"
-                      onClick={() => { setView('register'); setErrorMsg(""); setFormErrors({}); }}
+                      onClick={() => { setView('register'); setFormErrors({}); }}
                       className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors focus:outline-none focus:underline"
                     >
                       Daftar Sekarang
@@ -396,7 +390,7 @@ function AuthFormsContent() {
                     Sudah punya akun?{" "}
                     <button
                       type="button"
-                      onClick={() => { setView('login'); setErrorMsg(""); setFormErrors({}); }}
+                      onClick={() => { setView('login'); setFormErrors({}); }}
                       className="font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors focus:outline-none focus:underline"
                     >
                       Masuk
