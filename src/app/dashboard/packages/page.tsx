@@ -57,8 +57,9 @@ export default function PackagesManagementPage() {
     if (!user) return;
     try {
       setLoading(true);
-      const gyms = await getGymsByOwner(user.id);
-      if (gyms.length === 0) return;
+      const { data: gyms, error: gymsError } = await getGymsByOwner(user.id);
+      if (gymsError) throw gymsError;
+      if (!gyms || gyms.length === 0) return;
       const primaryGymId = gyms[0].id;
       setGymId(primaryGymId);
 

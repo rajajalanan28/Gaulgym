@@ -5,6 +5,11 @@ ADD COLUMN stock INTEGER NOT NULL DEFAULT 0;
 
 -- Buat bucket storage untuk product-images jika memungkinkan lewat SQL
 -- Note: Supabase Storage buckets biasanya dibuat lewat Dashboard, tapi kita coba insert metadata
+-- L-13: ON CONFLICT DO NOTHING means this INSERT is idempotent — if the
+-- 'product-images' bucket already exists, this statement silently does nothing.
+-- Be aware that if you change bucket settings (e.g. toggling `public`), this
+-- statement will NOT update the existing bucket. You would need to manually
+-- update the bucket via the Supabase Dashboard or an explicit UPDATE statement.
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('product-images', 'product-images', true)
 ON CONFLICT (id) DO NOTHING;

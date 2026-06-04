@@ -50,6 +50,21 @@ export async function POST(request: Request) {
       );
     }
 
+    // H-17: Validate that the requesting owner actually owns the target gym
+    const { data: ownedGym } = await supabaseAdmin
+      .from('gyms')
+      .select('id')
+      .eq('id', gymId)
+      .eq('owner_id', user.id)
+      .single();
+
+    if (!ownedGym) {
+      return NextResponse.json(
+        { error: 'Forbidden: You do not own this gym' },
+        { status: 403 }
+      );
+    }
+
     // Check if the gym already has products
     const { data: existingProducts, error: checkError } = await supabaseAdmin
       .from('products')

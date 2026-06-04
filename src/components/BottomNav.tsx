@@ -10,7 +10,9 @@ export function BottomNav() {
   const { user } = useAuth();
 
   // Hanya tampilkan Bottom Nav jika user sudah login (berada di dashboard)
-  if (!user) return null;
+  // Hide on auth pages to prevent brief flash
+  const isAuthPage = pathname === '/login' || pathname === '/register';
+  if (!user || isAuthPage) return null;
 
   const ownerLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home size={20} /> },

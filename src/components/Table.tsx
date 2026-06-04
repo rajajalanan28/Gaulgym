@@ -42,7 +42,7 @@ export function Table<T>({ columns, data, onRowClick }: TableProps<T>) {
         <tbody>
           {data.map((row, i) => (
             <tr 
-              key={i} 
+              key={(row as any).id ?? i} 
               onClick={() => onRowClick?.(row)}
               style={{ 
                 borderBottom: `1px solid ${colors.surfaceVariant}`,

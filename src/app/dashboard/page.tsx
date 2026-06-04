@@ -19,15 +19,16 @@ const Tag = dynamic(() => import('lucide-react').then(m => ({ default: m.Tag }))
 export default function OwnerDashboard() {
   const { user } = useAuth();
   const router = useRouter();
-  const [stats, setStats] = useState({ totalGyms: 0, totalMembers: 0, totalStaff: 0, totalRevenue: 0 });
+  const [stats, setStats] = useState({ totalGyms: 0, totalMembers: 0, totalAdmin: 0, totalRevenue: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadStats() {
       if (user?.id) {
         try {
-          const data = await getOwnerStats(user.id);
-          setStats(data);
+          const { data: statsData, error: statsError } = await getOwnerStats(user.id);
+          if (statsError) throw statsError;
+          if (statsData) setStats(statsData);
         } catch (error) {
           console.error("Failed to fetch owner stats:", error);
         } finally {
@@ -61,7 +62,7 @@ export default function OwnerDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-[16px] mb-[48px]">
             {[
               { icon: <Users size={20} />, value: loading ? '...' : stats.totalMembers.toLocaleString('id-ID'), label: 'Total Member' },
-              { icon: <UserCheck size={20} />, value: loading ? '...' : stats.totalStaff.toLocaleString('id-ID'), label: 'Total Staff' },
+              { icon: <UserCheck size={20} />, value: loading ? '...' : stats.totalAdmin.toLocaleString('id-ID'), label: 'Total Admin' },
               { icon: <DollarSign size={20} />, value: loading ? '...' : formatCurrency(stats.totalRevenue), label: 'Pendapatan' },
             ].map((stat, i) => (
               <div key={i} className="bg-[var(--color-surface-1)] hairline-border rounded-[12px] p-[20px]">

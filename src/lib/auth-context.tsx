@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { supabase } from './supabase';
 
 const CACHE_KEY = 'gaulgym_user';
@@ -18,7 +18,8 @@ interface PostgrestError {
   message?: string;
 }
 
-interface AuthUser {
+// M-9: Single canonical AuthUser definition, exported for reuse
+export interface AuthUser {
   id: string;
   email: string;
   name: string;
@@ -54,12 +55,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(!getCachedUser());
 
   // Wrapper that also updates cache
-  const setUserAndCache = (u: AuthUser | null) => {
+  const setUserAndCache = useCallback((u: AuthUser | null) => {
     setUser(u);
     setCachedUser(u);
-  };
+  }, []);
 
-  const fetchUserProfile = async (userId: string, emailConfirmedAt: string | null = null, retries = 3) => {
+  // H-5: Use useCallback to prevent stale closures on fetchUserProfile
+  const fetchUserProfile = useCallback(async (userId: string, emailConfirmedAt: string | null = null, retries = 3) => {
     try {
       const fetchPromise = supabase
         .from('users')
@@ -103,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [setUserAndCache]);
 
   useEffect(() => {
     // Check existing session
@@ -134,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchUserProfile]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -146,6 +148,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (authError || !authData?.user) throw new Error(authError?.message || 'Login gagal atau user tidak ditemukan');
+
+      // S-8: Check email verification status and warn if not verified
+      if (!authData.user.email_confirmed_at) {
+        console.warn('User email is not verified yet. Allowing login but flagging.');
+      }
 
       const { data: initialUserData, error: userError } = await supabase
         .from('users')
@@ -160,24 +167,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: 'Akun tidak ditemukan. Hubungi admin untuk aktivasi.' };
       }
 
-      // Backfill ke tabel members jika belum ada
+      // H-15/M-16: Do NOT auto-assign members to arbitrary first gym.
+      // If a Member has no members record, log a warning but don't auto-assign to random gym.
       if (userData?.role === 'Member') {
          const { data: memberData } = await supabase.from('members').select('id').eq('user_id', authData.user.id).single();
          if (!memberData) {
-           const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
-           const targetGymId = firstGym ? firstGym.id : null;
-           
-           if (targetGymId) {
-             const displayId = 'GG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-             await supabase.from('members').insert({
-               user_id: authData.user.id,
-               gym_id: targetGymId,
-               name: userData.name || 'User',
-               email: userData.email,
-               display_id: displayId,
-               join_date: new Date().toISOString().split('T')[0]
-             });
-           }
+           console.warn('Member has no members record. They need to be assigned to a gym by an admin.');
+           // Do not auto-assign to arbitrary gym - this is a data integrity issue
          }
       }
 
@@ -191,7 +187,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       setUserAndCache(authUser);
 
-      return { success: true, user: authUser };
+      // S-8: Return warning about email verification
+      const warnings: string[] = [];
+      if (!authData.user.email_confirmed_at) {
+        warnings.push('Email Anda belum terverifikasi. Silakan periksa inbox email Anda.');
+      }
+
+      return { success: true, user: authUser, ...(warnings.length > 0 ? { warning: warnings.join(' ') } : {}) };
     } catch (error: unknown) {
       setLoading(false);
       return { success: false, error: error instanceof Error ? error.message : 'Login failed' };
@@ -207,11 +209,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  // M-2: Allow the role parameter to be used if provided, with validation
   const register = async (name: string, email: string, password: string, role: string = 'Member', gymId?: string) => {
     try {
       setLoading(true);
 
-      const finalRole = 'Member'; // Force to Member regardless of input
+      // M-2: Validate the role - only allow 'Member' for self-registration
+      // 'Owner' and 'Admin' roles should only be set through admin APIs
+      const allowedRoles = ['Member'];
+      const finalRole = allowedRoles.includes(role) ? role : 'Member';
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -228,12 +234,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Find default gym if gymId not provided
-        let targetGymId = gymId;
-        if (!targetGymId) {
-          const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
-          if (firstGym) targetGymId = firstGym.id;
-        }
+        // H-15: Don't auto-assign to arbitrary first gym if gymId is not provided
+        const targetGymId = gymId || undefined;
 
         const { error: profileError } = await supabase.from('users').insert({
           id: authData.user.id,
@@ -246,9 +248,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (profileError) throw profileError;
 
-        // Auto-insert to members table if targetGymId exists
+        // Only insert into members table if a specific gym was provided
         if (targetGymId) {
-          const displayId = 'GG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+          const randomBytes = new Uint8Array(4);
+          crypto.getRandomValues(randomBytes);
+          const displayId = 'GG-' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 6).toUpperCase();
           await supabase.from('members').insert({
             user_id: authData.user.id,
             gym_id: targetGymId,
@@ -264,7 +268,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email,
           name,
           role: finalRole as AuthUser['role'],
-          gymId: gymId,
+          gymId: targetGymId,
           emailConfirmedAt: authData.user.email_confirmed_at || null,
         };
         setUserAndCache(authUser);

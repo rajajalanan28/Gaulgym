@@ -1,7 +1,6 @@
 'use client';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { colors, borderRadius, spacing } from '@/lib/design-tokens';
 import { LayoutDashboard, Building2, Users, Package, LineChart, CheckSquare, ClipboardList, Dumbbell } from 'lucide-react';
 
 const OWNER_MENU = [

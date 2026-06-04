@@ -142,13 +142,13 @@ export default function POSPage() {
       if (itemsError) throw itemsError;
 
       // 3. Deduct Stock
-      for (const item of cart) {
+      await Promise.all(cart.map(item => {
         const newStock = item.stock - item.quantity;
-        await supabase
+        return supabase
           .from('products')
           .update({ stock: newStock > 0 ? newStock : 0 })
           .eq('id', item.id);
-      }
+      }));
       
       // Success
       setCart([]);

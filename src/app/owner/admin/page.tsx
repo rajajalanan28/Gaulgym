@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { UserPlus, Shield, MoreVertical } from "lucide-react";
 
-interface StaffMember {
+interface AdminMember {
   id: string;
   name: string;
   email: string;
@@ -16,18 +16,18 @@ interface StaffMember {
   created_at: string;
 }
 
-export default function StaffPage() {
+export default function AdminPage() {
   const { user } = useAuth();
-  const [staffList, setStaffList] = useState<StaffMember[]>([]);
+  const [adminList, setAdminList] = useState<AdminMember[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Modal State
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newStaff, setNewStaff] = useState({ name: '', email: '', password: '' });
+  const [newAdmin, setNewAdmin] = useState({ name: '', email: '', password: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    async function fetchStaff() {
+    async function fetchAdmin() {
       if (!user) return;
       try {
         const { data, error } = await supabase
@@ -38,68 +38,67 @@ export default function StaffPage() {
           .order('created_at', { ascending: false });
           
         if (error) throw error;
-        if (data) setStaffList(data);
+        if (data) setAdminList(data);
       } catch (err) {
-        console.error("Gagal memuat staff:", err);
+        console.error("Gagal memuat admin:", err);
       } finally {
         setLoading(false);
       }
     }
     
-    fetchStaff();
+    fetchAdmin();
   }, [user]);
 
-  const handleAddStaff = async (e: React.FormEvent) => {
+  const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
     setIsSubmitting(true);
     
     try {
       // In real scenario, we should use Supabase Auth to create user.
-      // Since this is a demo/bypass, we directly insert into 'users' table.
-      // (Note: Supabase Auth requires backend admin API for creating other users without logging out)
+      // Now we use the API route that calls supabase admin API.
+      const sessionResponse = await supabase.auth.getSession();
+      const token = sessionResponse.data.session?.access_token;
       
-      const finalEmail = newStaff.email.includes("@")
-        ? newStaff.email.trim().toLowerCase()
-        : `${newStaff.email.trim().toLowerCase()}@gaulgym.com`;
-        
-      const { data, error } = await supabase
-        .from('users')
-        .insert({
-          email: finalEmail,
-          name: newStaff.name,
-          role: 'Admin',
-          owner_id: user.id,
-          is_active: true
+      const response = await fetch('/api/owner/create-admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          email: newAdmin.email,
+          name: newAdmin.name,
+          password: newAdmin.password
         })
-        .select()
-        .single();
-        
-      if (error) throw error;
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Gagal menambah admin');
       
-      if (data) {
-        setStaffList([data, ...staffList]);
+      if (result.data) {
+        setAdminList([result.data, ...adminList]);
         setShowAddModal(false);
-        setNewStaff({ name: '', email: '', password: '' });
+        setNewAdmin({ name: '', email: '', password: '' });
       }
     } catch (err: any) {
-      alert(err.message || "Gagal menambah staff");
+      alert(err.message || "Gagal menambah admin");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const toggleStaffStatus = async (staffId: string, currentStatus: boolean) => {
+  const toggleAdminStatus = async (adminId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
         .from('users')
         .update({ is_active: !currentStatus })
-        .eq('id', staffId);
+        .eq('id', adminId);
         
       if (error) throw error;
       
-      setStaffList(staffList.map(s => 
-        s.id === staffId ? { ...s, is_active: !currentStatus } : s
+      setAdminList(adminList.map(s => 
+        s.id === adminId ? { ...s, is_active: !currentStatus } : s
       ));
     } catch (err) {
       console.error("Gagal mengubah status:", err);
@@ -142,32 +141,32 @@ export default function StaffPage() {
                       <td colSpan={6} className="px-[24px] py-[16px]"><div className="h-5 bg-[var(--color-hairline)] animate-pulse rounded w-full"></div></td>
                     </tr>
                   ))
-                ) : staffList.length > 0 ? (
-                  staffList.map((staff) => (
-                    <tr key={staff.id} className="border-b border-[var(--color-hairline)] hover:bg-[var(--color-surface-2)] transition-colors">
+                ) : adminList.length > 0 ? (
+                  adminList.map((admin) => (
+                    <tr key={admin.id} className="border-b border-[var(--color-hairline)] hover:bg-[var(--color-surface-2)] transition-colors">
                       <td className="px-[24px] py-[16px]">
                         <div className="flex items-center gap-[12px]">
                           <div className="w-[40px] h-[40px] rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold text-[16px]">
-                            {staff.name.charAt(0)}
+                            {admin.name.charAt(0)}
                           </div>
-                          <span className="text-[15px] font-semibold text-[var(--color-ink)]">{staff.name}</span>
+                          <span className="text-[15px] font-semibold text-[var(--color-ink)]">{admin.name}</span>
                         </div>
                       </td>
-                      <td className="px-[24px] py-[16px] text-[14px] text-[var(--color-ink-muted)]">{staff.email}</td>
+                      <td className="px-[24px] py-[16px] text-[14px] text-[var(--color-ink-muted)]">{admin.email}</td>
                       <td className="px-[24px] py-[16px]">
                         <span className="flex items-center gap-[6px] text-[13px] font-medium text-blue-400 bg-blue-500/10 px-[10px] py-[4px] rounded-full w-fit">
-                          <Shield size={14} /> {staff.role}
+                          <Shield size={14} /> {admin.role}
                         </span>
                       </td>
                       <td className="px-[24px] py-[16px] text-[14px] text-[var(--color-ink-muted)]">
-                        {new Date(staff.created_at).toLocaleDateString('id-ID')}
+                        {new Date(admin.created_at).toLocaleDateString('id-ID')}
                       </td>
                       <td className="px-[24px] py-[16px]">
                         <button 
-                          onClick={() => toggleStaffStatus(staff.id, staff.is_active)}
-                          className={`px-[12px] py-[6px] rounded-full text-[12px] font-semibold transition-colors ${staff.is_active ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : 'bg-red-500/10 text-red-500 hover:bg-red-500/20'}`}
+                          onClick={() => toggleAdminStatus(admin.id, admin.is_active)}
+                          className={`px-[12px] py-[6px] rounded-full text-[12px] font-semibold transition-colors ${admin.is_active ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : 'bg-red-500/10 text-red-500 hover:bg-red-500/20'}`}
                         >
-                          {staff.is_active ? 'Aktif' : 'Nonaktif'}
+                          {admin.is_active ? 'Aktif' : 'Nonaktif'}
                         </button>
                       </td>
                       <td className="px-[24px] py-[16px]">
@@ -192,21 +191,21 @@ export default function StaffPage() {
         </div>
       </div>
 
-      {/* Add Staff Modal */}
+      {/* Add Admin Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-[var(--color-surface-1)] w-full max-w-md rounded-[24px] p-[32px] border border-[var(--color-hairline)] shadow-2xl">
             <h3 className="text-[20px] font-bold text-[var(--color-ink)] mb-[8px] tracking-[-0.01em]">Tambah Admin Baru</h3>
             <p className="text-[14px] text-[var(--color-ink-muted)] mb-[24px]">Buat akun kasir/admin untuk mengelola gym.</p>
             
-            <form onSubmit={handleAddStaff} className="space-y-[16px]">
+            <form onSubmit={handleAddAdmin} className="space-y-[16px]">
               <div>
                 <label className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)]">Nama Lengkap</label>
                 <input
                   type="text"
                   required
-                  value={newStaff.name}
-                  onChange={(e) => setNewStaff({...newStaff, name: e.target.value})}
+                  value={newAdmin.name}
+                  onChange={(e) => setNewAdmin({...newAdmin, name: e.target.value})}
                   className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px]"
                   placeholder="Budi Santoso"
                 />
@@ -216,8 +215,8 @@ export default function StaffPage() {
                 <input
                   type="text"
                   required
-                  value={newStaff.email}
-                  onChange={(e) => setNewStaff({...newStaff, email: e.target.value})}
+                  value={newAdmin.email}
+                  onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})}
                   className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px]"
                   placeholder="budi@gaulgym.com"
                 />
@@ -228,8 +227,8 @@ export default function StaffPage() {
                   type="password"
                   required
                   minLength={6}
-                  value={newStaff.password}
-                  onChange={(e) => setNewStaff({...newStaff, password: e.target.value})}
+                  value={newAdmin.password}
+                  onChange={(e) => setNewAdmin({...newAdmin, password: e.target.value})}
                   className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px]"
                   placeholder="Minimal 6 karakter"
                 />

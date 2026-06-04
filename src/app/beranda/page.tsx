@@ -3,17 +3,12 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Dumbbell, Activity, ShowerHead } from 'lucide-react';
+import { DashboardHeader } from '@/components/DashboardHeader';
 
 // Lazy load components not needed for first paint
 const PublicNavbar = dynamic(() => import('@/components/PublicNavbar').then(m => ({ default: m.PublicNavbar })), { ssr: true });
-import { DashboardHeader } from '@/components/DashboardHeader';
 const PublicFooter = dynamic(() => import('@/components/PublicFooter').then(m => ({ default: m.PublicFooter })), { ssr: true, loading: () => <div className="h-[200px]" /> });
-
-// Lazy load icons (lucide-react is heavy)
-const Dumbbell = dynamic(() => import('lucide-react').then(m => ({ default: m.Dumbbell })), { ssr: false });
-const Activity = dynamic(() => import('lucide-react').then(m => ({ default: m.Activity })), { ssr: false });
-const ShowerHead = dynamic(() => import('lucide-react').then(m => ({ default: m.ShowerHead })), { ssr: false });
 
 export default function Home() {
   const { user } = useAuth();
@@ -33,16 +28,17 @@ export default function Home() {
         <section className="relative flex flex-col items-center justify-center px-6 pt-16 pb-24">
           <div className="relative z-10 max-w-[1000px] mx-auto text-center flex flex-col items-center">
             
-            <div className="mb-8 inline-flex items-center gap-3 px-3 py-1 rounded-full hairline-border bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer text-[13px] font-medium text-[var(--color-ink-muted)]">
+            <div className="mb-8 inline-flex items-center gap-3 px-3 py-1 rounded-full hairline-border bg-[var(--color-surface-1)] text-[13px] font-medium text-[var(--color-ink-muted)]">
               <span className="w-2 h-2 rounded-full bg-[var(--color-primary)]"></span>
               Pusat Kebugaran No. 1 di Parenggean, Provinsi Kalimantan Tengah
+
               <svg className="w-3.5 h-3.5 text-[var(--color-ink-subtle)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
 
-            <h1 className="text-[56px] md:text-[80px] font-semibold text-[var(--color-ink)] tracking-[-0.035em] leading-[1.05] mb-8 max-w-[900px]">
-              Kebugaran profesional, <br />
+            <h1 className="text-[40px] sm:text-[56px] md:text-[80px] font-semibold text-[var(--color-ink)] tracking-[-0.035em] leading-[1.1] mb-8 max-w-[900px] break-words">
+              Kebugaran profesional, <br className="hidden sm:block" />
               <span className="text-[var(--color-ink-muted)]">tanpa kompromi.</span>
             </h1>
             

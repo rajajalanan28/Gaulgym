@@ -52,7 +52,9 @@ export default function AuthCallbackPage() {
                const targetGymId = firstGym ? firstGym.id : null;
                
                if (targetGymId) {
-                 const displayId = 'GG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+                 const randomBytes = new Uint8Array(4);
+                 crypto.getRandomValues(randomBytes);
+                 const displayId = 'GG-' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 6).toUpperCase();
                  const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
                  await supabase.from('members').insert({
                    user_id: user.id,

@@ -14,7 +14,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function loadStats() {
       // Dalam implementasi nyata, admin seharusnya punya gym_id di object user mereka.
-      // Kita asumsikan user.gym_id sudah di-set saat login untuk staff.
+      // Kita asumsikan user.gym_id sudah di-set saat login untuk Admin.
       // Jika tidak ada, kita fallback dengan ID sembarangan untuk sementara (akan kosong).
       let gymId = user?.gymId;
       
@@ -26,8 +26,9 @@ export default function AdminDashboard() {
       if (!gymId) gymId = 'dummy-gym-id';
       
       try {
-        const data = await getAdminStats(gymId);
-        setStats(data);
+        const { data: statsData, error: statsError } = await getAdminStats(gymId);
+        if (statsError) throw statsError;
+        if (statsData) setStats(statsData);
       } catch (error) {
         console.error("Failed to fetch admin stats:", error);
       } finally {
@@ -41,9 +42,9 @@ export default function AdminDashboard() {
   }, [user]);
 
   const statCards = [
-    { title: 'Check-in Hari Ini', value: loading ? '...' : stats.checkinsToday.toString(), change: '+0', positive: true },
-    { title: 'Member Aktif', value: loading ? '...' : stats.totalMembers.toString(), change: '+0', positive: true },
-    { title: 'Member Baru (30 Hari)', value: loading ? '...' : stats.newMembers.toString(), change: '+0', positive: true },
+    { title: 'Check-in Hari Ini', value: loading ? '...' : stats.checkinsToday.toString() },
+    { title: 'Member Aktif', value: loading ? '...' : stats.totalMembers.toString() },
+    { title: 'Member Baru (30 Hari)', value: loading ? '...' : stats.newMembers.toString() },
   ];
 
   return (

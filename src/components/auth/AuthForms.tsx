@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, AuthUser } from "@/lib/auth-context";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Suspense } from "react";
@@ -12,13 +12,6 @@ interface TimeoutResult {
   success: boolean;
   error?: string;
   user?: AuthUser;
-}
-
-interface AuthUser {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
 }
 
 interface FormErrors {
@@ -68,8 +61,8 @@ function AuthFormsContent() {
   const validateRegister = (): boolean => {
     const errs: FormErrors = {};
     if (!regData.name || regData.name.trim().length < 2) errs.name = 'Nama minimal 2 karakter.';
-    if (!regData.username || regData.username.trim().length < 3) errs.username = 'Username minimal 3 karakter.';
-    else if (!/^[a-zA-Z0-9_]+$/.test(regData.username)) errs.username = 'Username hanya boleh huruf, angka, dan underscore.';
+    if (!regData.username || regData.username.trim().length < 3) errs.username = 'Email tidak valid.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(regData.username)) errs.username = 'Format email tidak valid.';
     
     if (!regData.password || regData.password.length < 12) errs.password = 'Kata sandi minimal 12 karakter.';
     else if (!/[A-Z]/.test(regData.password)) errs.password = 'Kata sandi harus mengandung huruf besar.';
@@ -85,14 +78,12 @@ function AuthFormsContent() {
     e.preventDefault();
     setIsLoading(true);
 
-    const finalEmail = loginEmail.includes("@")
-      ? loginEmail.trim().toLowerCase()
-      : `${loginEmail.trim().toLowerCase()}@gaulgym.com`;
+    const finalEmail = loginEmail.trim().toLowerCase();
 
     try {
       let timeoutId: NodeJS.Timeout | undefined;
       const timeoutPromise = new Promise<TimeoutResult>((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error("Koneksi timeout (45 detik). Server Supabase mungkin lambat.")), 45000);
+        timeoutId = setTimeout(() => reject(new Error("Koneksi timeout (15 detik). Server Supabase mungkin lambat.")), 15000);
       });
 
       const result = await Promise.race([
@@ -125,12 +116,12 @@ function AuthFormsContent() {
 
     setIsLoading(true);
 
-    const email = `${regData.username.trim().toLowerCase()}@gaulgym.com`;
+    const email = regData.username.trim().toLowerCase();
 
     try {
       let timeoutId: NodeJS.Timeout | undefined;
       const timeoutPromise = new Promise<TimeoutResult>((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error("Koneksi timeout (45 detik). Server Supabase mungkin lambat.")), 45000);
+        timeoutId = setTimeout(() => reject(new Error("Koneksi timeout (15 detik). Server Supabase mungkin lambat.")), 15000);
       });
 
       const result = await Promise.race([
@@ -202,7 +193,7 @@ function AuthFormsContent() {
               <form onSubmit={handleLoginSubmit} className="space-y-[20px]" noValidate>
                 <div>
                   <label htmlFor="login-email" className="block text-[13px] font-medium mb-[8px] text-[var(--color-ink-subtle)] ml-[2px]">
-                    Username atau Email
+                    Email
                   </label>
                   <div className={inputContainerClass}>
                     <User className={iconClass} />
@@ -211,7 +202,7 @@ function AuthFormsContent() {
                       type="text"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="contoh: budi123 atau budi@email.com"
+                      placeholder="contoh: budi@email.com"
                       required
                       className={inputClass}
                     />
@@ -310,7 +301,7 @@ function AuthFormsContent() {
                   {formErrors.name && <p className="text-[12px] mt-[6px] ml-[2px] text-red-400">{formErrors.name}</p>}
                 </div>
                 <div>
-                  <label htmlFor="reg-username" className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)] ml-[2px]">Username</label>
+                  <label htmlFor="reg-username" className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)] ml-[2px]">Email</label>
                   <div className={inputContainerClass}>
                     <Mail className={iconClass} />
                     <input
@@ -318,7 +309,7 @@ function AuthFormsContent() {
                       type="text"
                       value={regData.username}
                       onChange={(e) => { setRegData({ ...regData, username: e.target.value }); if (formErrors.username) setFormErrors({ ...formErrors, username: undefined }); }}
-                      placeholder="contoh: ucok_sangar"
+                      placeholder="contoh: ucok@email.com"
                       className={`${inputClass} ${formErrors.username ? 'border-red-500/50 focus:border-red-500 focus:shadow-[0_0_0_4px_rgba(239,68,68,0.1)]' : ''}`}
                       aria-invalid={!!formErrors.username}
                     />
@@ -334,7 +325,7 @@ function AuthFormsContent() {
                       type={showRegPw ? "text" : "password"}
                       value={regData.password}
                       onChange={(e) => { setRegData({ ...regData, password: e.target.value }); if (formErrors.password) setFormErrors({ ...formErrors, password: undefined }); }}
-                      placeholder="Minimal 6 karakter"
+                      placeholder="Minimal 12 karakter dengan huruf besar, kecil, angka, dan simbol"
                       className={`${inputClass} pr-[44px] ${formErrors.password ? 'border-red-500/50 focus:border-red-500 focus:shadow-[0_0_0_4px_rgba(239,68,68,0.1)]' : ''}`}
                       aria-invalid={!!formErrors.password}
                     />

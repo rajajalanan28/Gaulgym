@@ -18,7 +18,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 function generateSecurePassword() {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
-  return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  const randomValues = new Uint8Array(12);
+  crypto.getRandomValues(randomValues);
+  return Array.from(randomValues).map(x => chars[x % chars.length]).join('');
 }
 
 export async function registerMemberAction(formData: FormData) {
@@ -88,7 +90,9 @@ export async function registerMemberAction(formData: FormData) {
     }
 
     // 2. Generate a random display ID for the member
-    const displayId = 'GG-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const randomBytes = new Uint8Array(4);
+    crypto.getRandomValues(randomBytes);
+    const displayId = 'GG-' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 6).toUpperCase();
     const qrCode = uuidv4();
 
     // 4. Handle Photo Upload
@@ -97,7 +101,8 @@ export async function registerMemberAction(formData: FormData) {
       try {
         const base64Data = photoBase64.replace(/^data:image\/\w+;base64,/, "");
         const buffer = Buffer.from(base64Data, 'base64');
-        const filename = `${userId}-${Date.now()}.jpg`;
+        const safeId = userId.replace(/[^a-zA-Z0-9_-]/g, '');
+        const filename = `${safeId}-${Date.now()}.jpg`;
 
         const { error: uploadError } = await supabaseAdmin
           .storage
@@ -153,7 +158,9 @@ export async function updateMemberPhotoAction(memberId: string, userId: string, 
     let photoUrl = null;
     const base64Data = photoBase64.replace(/^data:image\/\w+;base64,/, '');
     const buffer = Buffer.from(base64Data, 'base64');
-    const filename = `${userId || memberId}-${Date.now()}.jpg`;
+    const idToUse = userId || memberId;
+    const safeId = idToUse.replace(/[^a-zA-Z0-9_-]/g, '');
+    const filename = `${safeId}-${Date.now()}.jpg`;
 
     const { error: uploadError } = await supabaseAdmin
       .storage

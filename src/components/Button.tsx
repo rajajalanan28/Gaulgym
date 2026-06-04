@@ -1,7 +1,5 @@
 'use client';
 
-import { colors, borderRadius } from '@/lib/design-tokens';
-
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
@@ -13,35 +11,20 @@ interface ButtonProps {
   disabled?: boolean;
   fullWidth?: boolean;
   type?: 'button' | 'submit' | 'reset';
+  className?: string;
 }
 
-const variantStyles = {
-  primary: {
-    background: colors.primary,
-    color: '#FFFFFF',
-    border: 'none',
-  },
-  secondary: {
-    background: colors.secondary,
-    color: '#FFFFFF',
-    border: 'none',
-  },
-  outline: {
-    background: 'transparent',
-    color: colors.primary,
-    border: `2px solid ${colors.primary}`,
-  },
-  ghost: {
-    background: 'transparent',
-    color: colors.textPrimary,
-    border: 'none',
-  },
+const variantClasses: Record<ButtonVariant, string> = {
+  primary: 'bg-[var(--color-primary)] text-white border-none hover:bg-[var(--color-primary-hover)]',
+  secondary: 'bg-gray-500 text-white border-none hover:bg-gray-600',
+  outline: 'bg-transparent text-[var(--color-primary)] border-2 border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10',
+  ghost: 'bg-transparent text-[var(--color-ink)] border-none hover:bg-[var(--color-surface-2)]',
 };
 
-const sizeStyles = {
-  sm: { padding: '8px 16px', fontSize: '14px' },
-  md: { padding: '12px 24px', fontSize: '16px' },
-  lg: { padding: '16px 32px', fontSize: '18px' },
+const sizeClasses: Record<ButtonSize, string> = {
+  sm: 'px-4 py-2 text-sm',
+  md: 'px-6 py-3 text-base',
+  lg: 'px-8 py-4 text-lg',
 };
 
 export function Button({ 
@@ -52,39 +35,22 @@ export function Button({
   disabled = false,
   fullWidth = false,
   type = 'button',
+  className = '',
 }: ButtonProps) {
-  const baseStyle = variantStyles[variant];
-  const sizeStyle = sizeStyles[size];
-
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
-      style={{
-        ...baseStyle,
-        ...sizeStyle,
-        borderRadius: borderRadius.md,
-        fontWeight: 600,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.5 : 1,
-        width: fullWidth ? '100%' : 'auto',
-        transition: 'all 0.2s ease',
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '8px',
-      }}
-      onMouseEnter={(e) => {
-        if (!disabled) {
-          e.currentTarget.style.transform = 'translateY(-1px)';
-          e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 87, 34, 0.3)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
-      }}
+      className={`
+        ${variantClasses[variant]}
+        ${sizeClasses[size]}
+        rounded-lg font-semibold transition-all duration-200
+        inline-flex items-center justify-center gap-2
+        ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:-translate-y-px hover:shadow-lg'}
+        ${fullWidth ? 'w-full' : 'w-auto'}
+        ${className}
+      `.trim()}
     >
       {children}
     </button>

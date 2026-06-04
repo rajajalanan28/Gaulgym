@@ -106,7 +106,7 @@ export default function InventoryPage() {
       // Upload Image if selected
       if (newProductImage) {
         const fileExt = newProductImage.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+        const fileName = `${crypto.randomUUID()}_${Date.now()}.${fileExt}`;
         const filePath = `${user.gymId}/${fileName}`;
 
         const { error: uploadError, data: uploadData } = await supabase.storage

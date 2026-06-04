@@ -73,19 +73,31 @@ export default function CheckInPage() {
     
     try {
       // 1. Cari Member by display_id OR qr_code
-      const { data: members, error: memberErr } = await supabase
+      // Use separate queries to avoid injection via string interpolation in .or()
+      const sanitizedQuery = memberIdQuery.replace(/[^a-zA-Z0-9\-_]/g, '');
+      const { data: membersByDisplayId } = await supabase
         .from('members')
         .select('*')
         .eq('gym_id', gymId)
-        .or(`display_id.eq.${memberIdQuery},qr_code.eq.${memberIdQuery}`);
+        .eq('display_id', sanitizedQuery);
 
-      if (memberErr || !members || members.length === 0) {
+      const { data: membersByQrCode } = await supabase
+        .from('members')
+        .select('*')
+        .eq('gym_id', gymId)
+        .eq('qr_code', sanitizedQuery);
+
+      const members = [...(membersByDisplayId || []), ...(membersByQrCode || [])];
+      // Deduplicate by id
+      const uniqueMembers = members.filter((m, i, arr) => arr.findIndex(x => x.id === m.id) === i);
+
+      if (uniqueMembers.length === 0) {
         setLastScanResult({ success: false, message: "Member tidak ditemukan." });
         setShowConfirmation(true);
         return;
       }
 
-      const member = members[0];
+      const member = uniqueMembers[0];
 
       // 2. Cari Subscription aktif
       const { data: subData } = await supabase

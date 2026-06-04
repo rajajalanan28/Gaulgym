@@ -104,7 +104,17 @@ CREATE TABLE IF NOT EXISTS attendance (
 );
 
 -- ==========================================
--- DUMMY DATA UNTUK TESTING
+-- ⚠️  WARNING: DEVELOPMENT-ONLY TEST DATA  ⚠️
+-- ==========================================
+-- The UUIDs, email addresses, and credentials below are hardcoded
+-- placeholders for LOCAL DEVELOPMENT and automated testing ONLY.
+--
+-- DO NOT use these values in staging or production environments.
+-- In production, users must be created through the proper
+-- authentication flow (Supabase Auth) and never inserted directly.
+--
+-- If this file is accidentally applied to a production database,
+-- DELETE these rows immediately.
 -- ==========================================
 
 -- Bikin 1 Owner (Password bebas karena kita mock login)

@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles?: ('Admin' | 'Staff' | 'Member' | 'Owner')[];
+  allowedRoles?: ('Admin' | 'Member' | 'Owner')[];
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
@@ -19,7 +19,9 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     }
   }, [loading, user, router]);
 
-  if (loading) {
+  // Show a single loading state for both loading and unauthenticated states.
+  // The useEffect above handles the redirect when !loading && !user.
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--color-canvas)]">
         <div className="flex flex-col items-center gap-4">
@@ -28,23 +30,9 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
             borderTopColor: 'var(--color-primary)',
             animation: 'spin 0.8s linear infinite',
           }} />
-          <p className="text-[var(--color-ink-muted)] font-medium text-[14px]">Memuat data...</p>
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-canvas)]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 rounded-full" style={{
-            border: '4px solid var(--color-hairline)',
-            borderTopColor: 'var(--color-primary)',
-            animation: 'spin 0.8s linear infinite',
-          }} />
-          <p className="text-[var(--color-ink-muted)] font-medium text-[14px]">Mengarahkan ke halaman login...</p>
+          <p className="text-[var(--color-ink-muted)] font-medium text-[14px]">
+            {loading ? 'Memuat data...' : 'Mengarahkan ke halaman login...'}
+          </p>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import { Menu, LogOut, ArrowLeft } from 'lucide-react';
 import { BottomNav } from './BottomNav';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export function DashboardHeader() {
   const { user, logout } = useAuth();
@@ -64,12 +65,12 @@ export function DashboardHeader() {
 
           {menuOpen && (
             <div role="navigation" aria-label="Menu utama" className="absolute top-full left-0 mt-2 w-[200px] bg-[var(--color-surface-1)] hairline-border rounded-md shadow-2xl py-2 z-50">
-              <a href="/beranda" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Beranda</a>
-              <a href="/tentang" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Tentang</a>
-              <a href="/fasilitas" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Fasilitas</a>
-              <a href="/paket" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Paket</a>
-              <a href="/kalkulator-bmi" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Kalkulator BMI</a>
-              <a href="/kontak" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Kontak</a>
+              <Link href="/beranda" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Beranda</Link>
+              <Link href="/tentang" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Tentang</Link>
+              <Link href="/fasilitas" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Fasilitas</Link>
+              <Link href="/paket" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Paket</Link>
+              <Link href="/kalkulator-bmi" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Kalkulator BMI</Link>
+              <Link href="/kontak" onClick={() => setMenuOpen(false)} className="block px-4 py-2 text-[14px] text-[var(--color-ink)] hover:bg-[var(--color-surface-2)] transition-colors">Kontak</Link>
             </div>
           )}
         </div>
@@ -84,13 +85,13 @@ export function DashboardHeader() {
 
       {/* Right side: Dashboard button + Logout */}
       <div className="flex items-center gap-2 md:gap-3">
-        <a
+        <Link
           href={dashboardUrl}
           aria-label="Buka dashboard"
           className="px-[12px] py-[6px] text-[12px] md:text-[13px] font-medium text-white bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] rounded-md transition-colors focus-ring hidden md:inline-flex"
         >
           Dashboard
-        </a>
+        </Link>
         <button
           onClick={handleLogout}
           aria-label="Keluar dari akun"
@@ -99,7 +100,7 @@ export function DashboardHeader() {
           <LogOut size={16} className="md:hidden" />
           <span className="hidden md:inline">Logout</span>
         </button>
-        </div>
+      </div>
       </div>
       
       {/* Inject BottomNav automatically for all pages using DashboardHeader */}

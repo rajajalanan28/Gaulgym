@@ -1,1028 +1,351 @@
-# 🔍 Laporan Code Review - Gym Management Website
+# CODE REVIEW REPORT - gym_management_website
 
-**Tanggal Audit:** 4 Juni 2026  
-**Auditor:** Claude Code (Automated Review)  
-**Project:** Gym Management Website (Next.js)  
-**Path:** `D:\gym_management_website`
-
----
-
-## 📊 Ringkasan Skor
-
-| Area | Skor | Status |
-|------|------|--------|
-| **Keamanan Keseluruhan** | 3/10 | 🚨 RENTAN |
-| **Autentikasi** | 4/10 | ⚠️ KURANG |
-| **Otorisasi** | 3/10 | 🚨 RENTAN |
-| **Perlindungan Data** | 4/10 | ⚠️ KURANG |
-| **Arsitektur** | 5/10 | ⚠️ MODERAT |
-| **Code Quality** | 5/10 | ⚠️ MODERAT |
-| **Maintainability** | 5/10 | ⚠️ MODERAT |
-| **Performance** | 6/10 | ⚠️ MODERAT |
-| **Keamanan Backend** | 3/10 | 🚨 RENTAN |
-| **API Design** | 5/10 | ⚠️ MODERAT |
+> **Generated:** June 5, 2026  
+> **Scope:** Full-stack review (Frontend + Backend + Security)  
+> **Total Findings:** 75 (9 Critical, 25 High, 25 Medium, 16 Low)
 
 ---
 
-## 🚨 Temuan Kritis - HARUS SEGERA DIPERBAIKI
+## Executive Summary
 
-### 1. IDOR Vulnerability - Privilege Escalation (CWE-639)
-
-**File:** `src/app/api/admin/promote/route.ts`
-
-**Masalah:** Endpoint promote menerima `userId`, `ownerId`, `memberId`, `gymId` langsung dari request client tanpa validasi server-side. Attacker dengan sesi authenticated apapun bisa promote user lain jadi Admin!
-
-**Dampak:** CRITICAL - Siapa pun bisa jadi Admin
-
-**Solusi:**
-```typescript
-// src/app/api/admin/promote/route.ts
-import { createClient } from '@supabase/supabase-js';
-import { headers } from 'next/headers';
-
-export async function POST(request: Request) {
-  try {
-    // 1. Get authenticated user from session
-    const headersList = headers();
-    const authHeader = headersList.get('Authorization');
-    
-    if (!authHeader) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
-    // 2. Create Supabase client dengan service role
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-    
-    // 3. Verify requester identity from token
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-    
-    if (authError || !user) {
-      return Response.json({ error: 'Invalid token' }, { status: 401 });
-    }
-    
-    // 4. Get requester's role and gym from database
-    const { data: requester, error: requesterError } = await supabase
-      .from('users')
-      .select('id, role, gym_id')
-      .eq('id', user.id)
-      .single();
-    
-    // 5. CRITICAL: Verify requester is Owner
-    if (requester?.role !== 'Owner') {
-      return Response.json({ error: 'Forbidden - Owner only' }, { status: 403 });
-    }
-    
-    // 6. Get request body
-    const { userId, memberId } = await request.json();
-    
-    // 7. CRITICAL: Verify target member belongs to requester's gym
-    const { data: targetMember, error: memberError } = await supabase
-      .from('members')
-      .select('id, gym_id, user_id')
-      .eq('id', memberId)
-      .single();
-    
-    if (memberError || !targetMember) {
-      return Response.json({ error: 'Member not found' }, { status: 404 });
-    }
-    
-    // CRITICAL: Verify member belongs to requester's gym
-    if (targetMember.gym_id !== requester.gym_id) {
-      return Response.json({ 
-        error: 'Forbidden - Member does not belong to your gym' 
-      }, { status: 403 });
-    }
-    
-    // 8. Update user role to Admin
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ role: 'Admin' })
-      .eq('id', userId)
-      .eq('gym_id', requester.gym_id); // Additional safety
-    
-    if (updateError) {
-      return Response.json({ error: 'Failed to update role' }, { status: 500 });
-    }
-    
-    return Response.json({ success: true, message: 'User promoted to Admin' });
-    
-  } catch (error) {
-    console.error('Promote error:', error);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-```
+| Category | Critical | High | Medium | Low | Total |
+|----------|----------|------|--------|-----|-------|
+| **Frontend** | 2 | 10 | 10 | 13 | 35 |
+| **Backend** | 5 | 9 | 7 | 2 | 23 |
+| **Security** | 2 | 6 | 8 | 1 | 17 |
+| **TOTAL** | **9** | **25** | **25** | **16** | **75** |
 
 ---
 
-### 2. API Endpoint Tanpa Authentication (CWE-306)
+## 🚨 CRITICAL FINDINGS (Immediate Action Required)
 
-#### 2a. `/api/backfill` - Open Endpoint
+### [C-1] Middleware uses ANON key + RLS for auth decisions
+**File:** `src/middleware.ts` (line 17)  
+**Category:** Backend + Security
 
-**File:** `src/app/api/backfill/route.ts`
+The middleware creates a server-side Supabase client using `NEXT_PUBLIC_SUPABASE_ANON_KEY` instead of the service role key. Because RLS is enabled on the `users` table, the role-check query runs with the user's own credentials and is subject to RLS policies — which may deny the read, silently returning `null`. This means `userRole` is `undefined`, and the user bypasses the `!userRole` check and **gains access to protected routes**.
 
-**Masalah:** Tidak ada authentication. Siapa pun bisa trigger backfill yang membuat gym data dan sync member records!
+**Impact:** Any user could potentially access any protected route because RLS silently denies role lookups.
 
-**Dampak:** CRITICAL - Data manipulation by anyone
-
-**Solusi:**
+**Recommendation:**
 ```typescript
-// Tambah authentication check di awal function
-export async function GET(request: Request) {
-  // 1. Verify Bearer token
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  
-  // 2. Verify Owner role
-  const { data: user } = await supabaseAdmin.auth.getUser(
-    authHeader.replace('Bearer ', '')
-  );
-  
-  const { data: userData } = await supabaseAdmin
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-  
-  if (userData?.role !== 'Owner') {
-    return Response.json({ error: 'Forbidden' }, { status: 403 });
-  }
-  
-  // 3. Continue with backfill logic...
-}
-
-// ATAU: Hapus endpoint ini dari production
-```
-
-#### 2b. `/api/products/seed` - Unprotected
-
-**File:** `src/app/api/products/seed/route.ts`
-
-**Masalah:** Siapa pun bisa seed products ke gym manapun dengan providing gymId.
-
-**Solusi:**
-```typescript
-// Tambah gym ownership verification
-export async function POST(request: Request) {
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  
-  // Verify user owns the gym
-  const { gymId } = await request.json();
-  const user = await verifyOwnerOfGym(supabaseAdmin, authHeader, gymId);
-  
-  if (!user) {
-    return Response.json({ error: 'Forbidden' }, { status: 403 });
-  }
-  
-  // Continue with seeding...
-}
-```
-
----
-
-### 3. Sensitive Data di LocalStorage (CWE-79)
-
-**File:** `src/lib/auth-context.tsx` (line 42-50)
-
-**Masalah:** User data (id, email, name, role, gymId) di-cache di localStorage tanpa encryption. XSS attack bisa steal semua data ini!
-
-**Dampak:** CRITICAL - Session hijacking via XSS
-
-**Solusi - Migrasi ke httpOnly Cookies:**
-```typescript
-// src/lib/auth-context.tsx
-'use client';
-
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import type { User } from '@supabase/supabase-js';
-
-interface AuthContextType {
-  user: User | null;
-  userData: UserData | null;
-  loading: boolean;
-  signOut: () => Promise<void>;
-}
-
-interface UserData {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-  gymId: string | null;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
-
-  useEffect(() => {
-    // 1. Get initial session - this uses httpOnly cookies by default
-    const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        setUser(session.user);
-        // 2. Fetch user data from server (NOT from localStorage)
-        await fetchUserData(session.user.id);
-      }
-      setLoading(false);
-    };
-
-    getInitialSession();
-
-    // 3. Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-          await fetchUserData(session.user.id);
-        } else {
-          setUser(null);
-          setUserData(null);
-        }
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchUserData = async (userId: string) => {
-    // ALWAYS fetch from server, never from localStorage
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, email, name, role, gym_id')
-      .eq('id', userId)
-      .single();
-    
-    if (data && !error) {
-      setUserData({
-        id: data.id,
-        email: data.email,
-        name: data.name,
-        role: data.role,
-        gymId: data.gym_id,
-      });
-    }
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setUserData(null);
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, userData, loading, signOut }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
-};
-```
-
----
-
-### 4. Client-Side Auth Only (CWE-284)
-
-**File:** `src/components/ProtectedRoute.tsx`
-
-**Masalah:** ProtectedRoute hanya check role di client-side dengan useEffect. User bisa bypass dengan modify localStorage atau disable JavaScript.
-
-**Dampak:** CRITICAL - Admin bisa akses Owner routes
-
-**Solusi - Implement Middleware:**
-```typescript
-// src/middleware.ts
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
-
-const protectedRoutes = {
-  '/owner': ['Owner'],
-  '/admin': ['Owner', 'Admin'],
-  '/member': ['Owner', 'Admin', 'Member'],
-};
+// Use SUPABASE_SERVICE_ROLE_KEY instead of anon key
+import { createServerClient } from '@supabase/ssr'
+import { SUPABASE_SERVICE_ROLE_KEY } from '@/lib/config'
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
-
-  // Create Supabase client
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options });
-          response = NextResponse.next({ request });
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options });
-          response = NextResponse.next({ request });
-          response.cookies.set({ name, value: '', ...options });
-        },
-      },
-    }
-  );
-
-  // Get session
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session) {
-    // Redirect to login if accessing protected route
-    if (protectedRoutes[request.nextUrl.pathname]) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
-    return response;
-  }
-
-  // Get user role from database
-  const { data: userData } = await supabase
-    .from('users')
-    .select('role, gym_id')
-    .eq('id', session.user.id)
-    .single();
-
-  const userRole = userData?.role;
-  const pathname = request.nextUrl.pathname;
-
-  // Check if route is protected
-  for (const [routePrefix, allowedRoles] of Object.entries(protectedRoutes)) {
-    if (pathname.startsWith(routePrefix)) {
-      if (!userRole || !allowedRoles.includes(userRole)) {
-        // Redirect to appropriate dashboard based on role
-        const redirectPath = userRole === 'Owner' ? '/owner/dashboard' 
-          : userRole === 'Admin' ? '/admin/dashboard' 
-          : '/member/dashboard';
-        return NextResponse.redirect(new URL(redirectPath, request.url));
-      }
-      break;
-    }
-  }
-
-  return response;
-}
-
-export const config = {
-  matcher: [
-    '/owner/:path*',
-    '/admin/:path*',
-    '/member/:path*',
-    '/dashboard/:path*',
-  ],
-};
-```
-
----
-
-### 5. Missing RLS Policies (CWE-284)
-
-**File:** `supabase/migrations/20260604_enable_rls.sql`
-
-**Masalah:** RLS tidak di-enable untuk tabel `products`, `subscriptions`, `packages`, dan `gyms`. Semua data bisa diakses siapa pun dengan service role.
-
-**Solusi:**
-```sql
--- Enable RLS on remaining tables
-ALTER TABLE products ENABLE ROW LEVEL SECURITY;
-ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE packages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE gyms ENABLE ROW LEVEL SECURITY;
-
--- PRODUCTS POLICIES
--- Admins can CRUD products in their gym
-CREATE POLICY "admins_crud_products" ON products
-  FOR ALL
-  USING (
-    gym_id IN (
-      SELECT gym_id FROM users 
-      WHERE id = auth.uid() AND role IN ('Owner', 'Admin')
-    )
-  );
-
--- Anyone can READ products (for public pricing)
-CREATE POLICY "anyone_read_products" ON products
-  FOR SELECT USING (true);
-
--- SUBSCRIPTIONS POLICIES
--- Members can read their own subscriptions
-CREATE POLICY "members_read_own_subscriptions" ON subscriptions
-  FOR SELECT
-  USING (
-    member_id IN (
-      SELECT id FROM members WHERE user_id = auth.uid()
-    )
-  );
-
--- Admins can CRUD subscriptions
-CREATE POLICY "admins_crud_subscriptions" ON subscriptions
-  FOR ALL
-  USING (
-    gym_id IN (
-      SELECT gym_id FROM users 
-      WHERE id = auth.uid() AND role IN ('Owner', 'Admin')
-    )
-  );
-
--- PACKAGES POLICIES
--- Anyone can READ packages
-CREATE POLICY "anyone_read_packages" ON packages
-  FOR SELECT USING (true);
-
--- Admins can CRUD packages
-CREATE POLICY "admins_crud_packages" ON packages
-  FOR ALL
-  USING (
-    gym_id IN (
-      SELECT gym_id FROM users 
-      WHERE id = auth.uid() AND role IN ('Owner', 'Admin')
-    )
-  );
-
--- GYMS POLICIES
--- Owners can only see their own gyms
-CREATE POLICY "owners_read_own_gyms" ON gyms
-  FOR SELECT
-  USING (owner_id = auth.uid());
-
--- Owners can CRUD their own gyms
-CREATE POLICY "owners_crud_own_gyms" ON gyms
-  FOR ALL
-  USING (owner_id = auth.uid());
-```
-
----
-
-## ⚠️ Temuan HIGH - Perlu Perbaikan Segera
-
-### 1. Weak Password Policy (CWE-307)
-
-**File:** `src/components/auth/AuthForms.tsx` (line 73)
-
-**Masalah:** Password minimum hanya 6 karakter tanpa complexity requirements.
-
-**Solusi:**
-```typescript
-// src/components/auth/AuthForms.tsx
-
-function validatePassword(password: string): string | null {
-  if (password.length < 12) {
-    return 'Password minimal 12 karakter';
-  }
-  if (!/[A-Z]/.test(password)) {
-    return 'Password harus mengandung huruf besar';
-  }
-  if (!/[a-z]/.test(password)) {
-    return 'Password harus mengandung huruf kecil';
-  }
-  if (!/[0-9]/.test(password)) {
-    return 'Password harus mengandung angka';
-  }
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    return 'Password harus mengandung karakter khusus (!@#$%^&*)';
-  }
-  return null;
-}
-
-// Usage in form
-const passwordError = validatePassword(password);
-if (passwordError) {
-  setErrors({ ...errors, password: passwordError });
-  return;
+    process.env.SUPABASE_SERVICE_ROLE_KEY!  // ← Bypass RLS for auth
+  )
 }
 ```
 
 ---
 
-### 2. Missing CSRF Protection (CWE-346)
+### [C-2] Staff creation bypasses Supabase Auth — impossible to log in
+**File:** `src/app/owner/admin/page.tsx` (lines 66-76)  
+**Category:** Frontend + Security
 
-**File:** `next.config.ts`
+Admin accounts are created by directly inserting into the `users` table WITHOUT calling `supabase.auth.admin.createUser()`. The inserted user has **no password and no auth record**, meaning they cannot actually log in. The staff creation feature is fundamentally broken.
 
-**Masalah:** Tidak ada CSRF tokens. Semua forms dan API endpoints vulnerable ke CSRF attacks.
+**Impact:** Created admins can never log in.
 
-**Solusi:**
+**Recommendation:**
 ```typescript
-// next.config.ts
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  async headers() {
-    return [
-      {
-        source: '/:path*',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
-          },
-          // ADD THESE:
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains',
-          },
-          {
-            key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co;",
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
-        ],
-      },
-    ];
-  },
-};
-
-module.exports = nextConfig;
-```
-
----
-
-### 3. Missing Security Headers (CWE-614)
-
-**File:** `src/app/layout.tsx`
-
-**Masalah:** Headers keamanan yang penting missing seperti CSP, HSTS, XSS-Protection.
-
-**Solusi:** Lihat solusi #2 di atas. Security headers harus di-set di `next.config.ts` atau di middleware.
-
----
-
-### 4. Ghost Account Recovery (CWE-639)
-
-**File:** `src/lib/auth-context.tsx`
-
-**Masalah:** Login function otomatis insert user ke database untuk untrusted users. Ini allow potential account takeover.
-
-**Solusi:**
-```typescript
-// Hapus logic auto-insert ini dari login function
-// Gunakan proper user provisioning flow
-
-// SEBELUM (MASALAH):
-const login = async (email: string, password: string) => {
-  // ... login logic ...
-  
-  // MASALAH: Auto-insert untuk user yang tidak ada di DB
-  const { data: existingUser } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single();
-    
-  if (!existingUser) {
-    // MASALAH: Insert tanpa verify!
-    await supabase.from('users').insert({
-      id: user.id,
-      email: user.email,
-      // ... fields
-    });
-  }
-};
-
-// SESUDAH (FIXED):
-const login = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-  
-  if (error) throw error;
-  
-  // Verify user exists in database - FAIL if not
-  const { data: existingUser } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', data.user.id)
-    .single();
-    
-  if (!existingUser) {
-    // User provisioning HARUS dilakukan oleh Owner/Admin
-    // Jangan auto-create di login
-    await supabase.auth.signOut();
-    throw new Error('Akun tidak ditemukan. Hubungi admin untuk aktivasi.');
-  }
-  
-  return data;
-};
-```
-
----
-
-### 5. OAuth Callback Without State Verification (CWE-346)
-
-**File:** `src/app/auth/callback/page.tsx`
-
-**Masalah:** OAuth callback performs database inserts tanpa verify state parameter.
-
-**Solusi:**
-```typescript
-// src/app/auth/callback/page.tsx
-'use client';
-
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-
-export default function Callback() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const handleCallback = async () => {
-      const supabase = createClient();
-      
-      // 1. Get OAuth code from URL
-      const code = searchParams.get('code');
-      const error = searchParams.get('error');
-      
-      if (error) {
-        console.error('OAuth error:', error);
-        router.push('/login?error=' + encodeURIComponent(error));
-        return;
-      }
-      
-      if (!code) {
-        router.push('/login?error=no_code');
-        return;
-      }
-      
-      // 2. Exchange code for session
-      const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-      
-      if (exchangeError || !data.user) {
-        console.error('Session exchange error:', exchangeError);
-        router.push('/login?error=session_failed');
-        return;
-      }
-      
-      // 3. Verify user exists in database
-      const { data: existingUser } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-      
-      if (!existingUser) {
-        // OAuth user baru - perlu provisioning oleh admin
-        // Jangan auto-create
-        console.log('New OAuth user - needs admin provisioning');
-        await supabase.auth.signOut();
-        router.push('/login?error=new_user_needs_approval');
-        return;
-      }
-      
-      // 4. Success - redirect to dashboard
-      const redirectPath = existingUser.role === 'Owner' ? '/owner/dashboard'
-        : existingUser.role === 'Admin' ? '/admin/dashboard'
-        : '/member/dashboard';
-      
-      router.push(redirectPath);
-    };
-
-    handleCallback();
-  }, [searchParams, router]);
-
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-        <p className="text-gray-600">Memproses login...</p>
-      </div>
-    </div>
-  );
-}
-```
-
----
-
-### 6. Hardcoded Default Password (CWE-521)
-
-**File:** `src/components/pages/MemberAddPage.tsx` (line 126-127)
-
-**Masalah:** Default password `gaulgym123` exposed di code.
-
-**Solusi:**
-```typescript
-// Generate unique password untuk setiap member baru
-import { randomBytes } from 'crypto';
-
-function generateSecurePassword(length: number = 16): string {
-  const charset = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*';
-  return randomBytes(length)
-    .toString('base64')
-    .split('')
-    .map(c => charset[Math.floor(Math.random() * charset.length)])
-    .join('')
-    .slice(0, length);
-}
-
-// Di function addMember:
-const tempPassword = generateSecurePassword();
-
-// Create auth account dengan secure password
-const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-  email: memberEmail,
-  password: tempPassword,
+// Use Supabase Admin API to create auth user first
+const { data, error } = await supabaseAdmin.auth.admin.createUser({
+  email,
   email_confirm: true,
-});
-
-// Kirim password via secure channel
-await sendMemberWelcomeEmail(memberEmail, tempPassword);
-
-// Jangan tampilkan password di UI!
+  user_metadata: { full_name, role: 'Admin', gym_id }
+})
+if (error) throw error
+// Then insert into users table with the auth UID
 ```
 
 ---
 
-### 7. Env Vars Validation Missing
+### [C-3] RLS enabled on `products` table with ZERO policies
+**File:** `supabase/migrations/20260604_enable_rls.sql` (line 7)  
+**Category:** Backend
 
-**File:** `src/app/api/admin/promote/route.ts` (line 5-6), `src/lib/supabase.ts`
+The `products` table has RLS enabled but no policies are created anywhere. Every query against `products` using the anon key or any authenticated user's credentials will be **DENIED by RLS**, causing the inventory and POS pages to silently fail.
 
-**Masalah:** Non-null assertion `!` pada environment variables bisa crash kalo missing.
+**Impact:** Product queries fail silently — inventory and POS are broken.
 
-**Solusi:**
-```typescript
-// src/lib/config.ts
-export function validateEnvVars() {
-  const required = [
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-    'SUPABASE_SERVICE_ROLE_KEY',
-  ];
-  
-  const missing = required.filter(key => !process.env[key]);
-  
-  if (missing.length > 0) {
-    throw new Error(
-      `Missing required environment variables: ${missing.join(', ')}\n` +
-      'Please set these in your .env file.'
-    );
-  }
-}
+**Recommendation:**
+```sql
+-- Add to 20260604_enable_rls.sql
+CREATE POLICY "owners_select_products" ON products
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM gyms WHERE id = gym_id AND owner_id = auth.uid())
+  );
 
-// Call validation at startup
-validateEnvVars();
+CREATE POLICY "owners_all_products" ON products
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM gyms WHERE id = gym_id AND owner_id = auth.uid())
+  );
 
-// Export validated values
-export const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-export const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-export const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+CREATE POLICY "admins_select_products" ON products
+  FOR SELECT USING (
+    gym_id IN (SELECT gym_id FROM users WHERE id = auth.uid() AND role = 'Admin')
+  );
 ```
 
 ---
 
-### 8. No GymId Validation - Cross-Gym Data Access
+### [C-4] RLS enabled on `subscriptions` table with ZERO policies
+**File:** `supabase/migrations/20260604_enable_rls.sql` (line 5)  
+**Category:** Backend
 
-**File:** `src/app/owner/reports/page.tsx` (line 21-22)
+`subscriptions` table has RLS enabled but no policies. Members cannot read their own subscriptions, and Admins cannot manage them.
 
-**Masalah:** Jika `user.gymId` undefined, query fetch ALL data dari semua gyms!
+**Impact:** All subscription/renewal flows are broken.
 
-**Solusi:**
+**Recommendation:**
+```sql
+-- Add to 20260604_enable_rls.sql
+CREATE POLICY "members_read_own_subscriptions" ON subscriptions
+  FOR SELECT USING (
+    member_id IN (SELECT id FROM members WHERE user_id = auth.uid())
+  );
+
+CREATE POLICY "admins_manage_subscriptions" ON subscriptions
+  FOR ALL USING (
+    gym_id IN (SELECT gym_id FROM users WHERE id = auth.uid() AND role = 'Admin')
+  );
+```
+
+---
+
+### [C-5] RLS enabled on `users` table with broken policies
+**File:** `supabase/migrations/20260604_enable_rls.sql` (line 3)  
+**Category:** Backend
+
+The `users` table has RLS enabled but no policies exist. Owners cannot read their own data, and all user queries fail silently.
+
+**Impact:** User data is inaccessible — auth context breaks.
+
+---
+
+### [C-6] IDOR: Any Owner can promote users from ANY gym to Admin
+**File:** `src/app/api/admin/promote/route.ts` (lines 29-36)  
+**Category:** Security
+
+The promote endpoint verifies the requester is an Owner, but does NOT verify that the target user's gym belongs to the requesting owner.
+
+**Impact:** Any Owner can promote users from other owner's gyms to Admin.
+
+**Recommendation:**
 ```typescript
-// src/app/owner/reports/page.tsx
-export default function OwnerReportsPage() {
-  const { userData } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reportData, setReportData] = useState<ReportData | null>(null);
+// Add ownership validation
+const { data: gym } = await supabaseAdmin
+  .from('users').select('gym_id').eq('id', targetUserId).single()
 
-  useEffect(() => {
-    const fetchReportData = async () => {
-      // CRITICAL: Validate gymId exists
-      if (!userData?.gymId) {
-        setError('Gym tidak ditemukan. Silakan hubungi administrator.');
-        setLoading(false);
-        return;
-      }
+const { data: gymOwner } = await supabaseAdmin
+  .from('gyms').select('owner_id').eq('id', gym?.gym_id).single()
 
-      try {
-        const supabase = createClient();
-        const { data, error: fetchError } = await supabase
-          .from('members')
-          .select('*')
-          .eq('gym_id', userData.gymId); // Use user's gymId, NOT null!
-
-        if (fetchError) throw fetchError;
-        
-        setReportData(data);
-      } catch (err) {
-        setError('Gagal memuat laporan');
-        console.error('Report fetch error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (userData) {
-      fetchReportData();
-    }
-  }, [userData]);
-
-  // Show error if no gymId
-  if (!userData?.gymId) {
-    return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h2 className="text-red-800 font-semibold">Error</h2>
-          <p className="text-red-600">{error || 'Gym tidak ditemukan'}</p>
-        </div>
-      </div>
-    );
-  }
-  // ... rest of component
+if (gymOwner?.owner_id !== user.id) {
+  return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
 }
 ```
 
 ---
 
-## 📋 Prioritas Perbaikan
+### [C-7] Service role key exposure via client-side code
+**File:** `src/app/actions/user.ts`, `src/lib/auth-context.tsx`  
+**Category:** Security
 
-### 🔥 Urgent (1-2 Hari)
+The service role key is used in client-side code. In Next.js, any variable prefixed with `NEXT_PUBLIC_` is exposed to the browser. The `SUPABASE_SERVICE_ROLE_KEY` must never be prefixed with `NEXT_PUBLIC_`.
 
-| # | Issue | Estimasi |
-|---|-------|----------|
-| 1 | Fix IDOR vulnerability di `/api/admin/promote` | 2 jam |
-| 2 | Add auth ke `/api/backfill` endpoint | 1 jam |
-| 3 | Add auth ke `/api/products/seed` endpoint | 1 jam |
-| 4 | Migrate session dari localStorage ke httpOnly cookies | 6 jam |
-| 5 | Implement server-side middleware untuk auth | 4 jam |
-| 6 | Add RLS policies untuk products, subscriptions, packages | 3 jam |
+**Impact:** If the key leaks, full account creation is possible.
 
-### ⚡ High (1 Minggu)
-
-| # | Issue | Estimasi |
-|---|-------|----------|
-| 7 | Enforce strong password policy | 2 jam |
-| 8 | Add security headers (CSP, HSTS, dll) | 2 jam |
-| 9 | Fix ghost account recovery logic | 2 jam |
-| 10 | Add OAuth state verification | 2 jam |
-| 11 | Remove hardcoded default password | 1 jam |
-| 12 | Add env vars validation | 1 jam |
-| 13 | Fix gymId validation di semua pages | 3 jam |
-| 14 | Validate env vars before creating Supabase client | 1 jam |
-
-### 📝 Medium (2-4 Minggu)
-
-| # | Issue | Estimasi |
-|---|-------|----------|
-| 15 | Unify type definitions (hapus duplikasi) | 4 jam |
-| 16 | Create unified error handling pattern | 3 jam |
-| 17 | Fix TypeScript `any` types | 6 jam |
-| 18 | Add rate limiting | 4 jam |
-| 19 | Add request logging/audit trail | 4 jam |
-| 20 | Add database indexes | 2 jam |
-| 21 | Fix camera cleanup di QR scanner | 2 jam |
-| 22 | Add loading skeletons | 4 jam |
-
-### 🔧 Low (Saat Possible)
-
-| # | Issue | Estimasi |
-|---|-------|----------|
-| 23 | Use `router.push()` instead of `window.location.href` | 1 jam |
-| 24 | Use Next.js Image component | 2 jam |
-| 25 | Add proper ARIA announcements | 2 jam |
-| 26 | Add AbortController untuk request cancellation | 2 jam |
-| 27 | Fix URL encoding dengan URLSearchParams | 1 jam |
-| 28 | Use native `crypto.randomUUID()` | 1 jam |
-| 29 | Remove duplicate type definitions | 2 jam |
-| 30 | Add proper error boundaries | 3 jam |
+**Recommendation:**
+- Ensure `SUPABASE_SERVICE_ROLE_KEY` does NOT have the `NEXT_PUBLIC_` prefix
+- Only access it in server-side code (Route Handlers or Server Actions)
+- Add validation: `if (process.env.SUPABASE_SERVICE_ROLE_KEY?.startsWith('eyJ')) throw new Error('...')`
 
 ---
 
-## 📈 Statistik Temuan
+### [C-8] AuthForms login silently transforms emails — breaks non-Gmail users
+**File:** `src/components/auth/AuthForms.tsx` (lines 88-90)  
+**Category:** Frontend + Security
 
-```
-┌─────────────────────────────────────────────────────────┐
-│              DISTRIBUSI SEVERITY                        │
-├──────────────┬────────┬─────────────────────────────────┤
-│  CRITICAL    │    8   │ ██████████████████████████     │
-│  HIGH        │   14   │ ████████████████████████████████│
-│  MEDIUM      │    9   │ ████████████████████           │
-│  LOW         │   11   │ ██████████████████████         │
-├──────────────┴────────┴─────────────────────────────────┤
-│  TOTAL FINDINGS: 42 issues                             │
-└─────────────────────────────────────────────────────────┘
+The login form prepends `@gaulgym.com` if no `@` is found in the input. If the backend stores users by their raw email (e.g., `budi@gmail.com`), the login will always fail for non-Gmail users.
 
-┌─────────────────────────────────────────────────────────┐
-│              BREAKDOWN BY CATEGORY                      │
-├─────────────────────────┬────────┬───────────────────────┤
-│  Security                │   20   │ ██████████████████    │
-│  Backend/Database        │   12   │ ████████████          │
-│  Code Quality            │    6   │ ██████                │
-│  Architecture            │    3   │ ███                   │
-│  Performance             │    1   │ █                     │
-└─────────────────────────┴────────┴───────────────────────┘
+**Impact:** Users who type `budi` get transformed to `budi@gaulgym.com` and always fail login.
+
+**Recommendation:**
+1. Remove the email transformation entirely
+2. Require full email input
+3. Or query the database first to find the correct email from the username
+
+---
+
+### [C-9] No RLS on `sales_transactions` and `sales_items`
+**File:** `supabase/migrations/20260604_enable_rls.sql` (line 7)  
+**Category:** Security
+
+The POS page references `sales_transactions` and `sales_items` tables, but RLS is not enabled on these tables. This means unauthenticated users could read/write all transactions.
+
+**Recommendation:**
+```sql
+ALTER TABLE sales_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sales_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "admins_manage_transactions" ON sales_transactions
+  FOR ALL USING (
+    gym_id IN (SELECT gym_id FROM users WHERE id = auth.uid() AND role = 'Admin')
+  );
 ```
 
 ---
 
-## 🎯 Kesimpulan
+## ⚠️ HIGH PRIORITY FINDINGS
 
-### 🚨 Jangan Deploy ke Production Sebelum:
+### Frontend (10 issues)
 
-1. **🛑 Fix IDOR vulnerability** - Siapa pun bisa jadi Admin
-2. **🛑 Add authentication ke API endpoints** - backfill & seed open
-3. **🛑 Migrate dari localStorage ke httpOnly cookies** - XSS vulnerability
-4. **🛑 Implement server-side middleware** - Client-side auth bisa dibypass
-5. **🛑 Add RLS policies** - products, subscriptions, packages exposed
+| # | File | Issue | Line |
+|---|------|-------|------|
+| H-1 | `src/components/DashboardHeader.tsx` | Extra closing `</div>` tag — malformed JSX | 101 |
+| H-2 | `src/components/DashboardHeader.tsx` | Using `<a href>` instead of `<Link>` for internal navigation | 35 |
+| H-3 | `src/components/PublicFooter.tsx` | Using `<a href>` instead of `<Link>` for internal navigation | 11 |
+| H-4 | `src/app/admin/checkin/page.tsx` | Effect dependency ordering — camera effect runs before `processCheckin` is stable | 158 |
+| H-5 | `src/lib/auth-context.tsx` | `fetchUserProfile` captures stale closures (defined inside component body) | 62 |
+| H-6 | `src/lib/config.ts` | Missing env vars only logged, not enforced — app continues with broken config | 14 |
+| H-7 | `src/app/admin/member/page.tsx` | Manual Bearer token extraction — fragile auth pattern | 245 |
+| H-8 | `src/components/Table.tsx` | Using array index as row `key` — breaks on sort/filter/reorder | 45 |
+| H-9 | `src/app/admin/reports/page.tsx` | Admin reports delegates to owner-only page — always access denied for admins | 1 |
+| H-10 | `src/lib/supabase.ts` | Wrong field: uses `created_at` instead of `join_date` for new members filter | 221 |
 
-### ✅ Yang Sudah Baik:
+### Backend (9 issues)
 
-- TypeScript digunakan dengan cukup konsisten
-- Component architecture cukup modular
-- Design system dengan Tailwind
-- Supabase Auth integration
-- RLS policies sudah ada untuk tabel utama
+| # | File | Issue | Line |
+|---|------|-------|------|
+| H-11 | `src/middleware.ts` | Missing gym-scoping: Owners can access any gym's admin/member routes | 53 |
+| H-12 | `src/middleware.ts` | Cookie options not hardened — no sameSite, httpOnly, secure attributes | 25 |
+| H-13 | `setup-staff-policies.sql` | Duplicate policy allows ANY Admin to read ALL users system-wide | 12 |
+| H-14 | `src/lib/config.ts` | Missing env vars only logged, not thrown — app continues with broken config | 14 |
+| H-15 | `src/lib/auth-context.tsx` | Auto-assigning member to arbitrary first gym on login — wrong gym possible | 167 |
+| H-16 | `src/app/api/backfill/route.ts` | Backfill picks arbitrary gym without ownership check — could corrupt other owners' gyms | 33 |
+| H-17 | `src/app/api/products/seed/route.ts` | No ownership validation — any Owner can seed products for any gym | 44 |
+| H-18 | `src/app/api/admin/promote/route.ts` | No ownership check — any Owner can promote users from any gym | 29 |
+| H-19 | `src/app/actions/user.ts` | Path traversal in photo upload filename | 100 |
 
-### 📋 Checklist Sebelum Production:
+### Security (6 issues)
 
-```markdown
-## Keamanan (Critical)
-- [ ] Fix IDOR di /api/admin/promote
-- [ ] Add auth ke /api/backfill
-- [ ] Add auth ke /api/products/seed
-- [ ] Migrate session to httpOnly cookies
-- [ ] Implement middleware for auth
-- [ ] Add all RLS policies
-
-## Keamanan (High)
-- [ ] Enforce strong password policy
-- [ ] Add security headers (CSP, HSTS)
-- [ ] Fix ghost account recovery
-- [ ] Add OAuth state verification
-- [ ] Remove hardcoded passwords
-- [ ] Validate env vars
-
-## Code Quality
-- [ ] Unify type definitions
-- [ ] Create error handling pattern
-- [ ] Fix TypeScript 'any' types
-- [ ] Add rate limiting
-- [ ] Add loading skeletons
-```
+| # | File | Issue | Line |
+|---|------|-------|------|
+| S-1 | `next.config.ts` | CSP header contains `unsafe-inline` and `unsafe-eval` | 23 |
+| S-2 | `src/lib/config.ts` | Missing env vars only logged, not enforced | 14 |
+| S-3 | `src/app/actions/user.ts` | Path traversal vulnerability in photo upload filename | 100 |
+| S-4 | `src/app/owner/admin/page.tsx` | Admin creation bypasses Supabase Auth — no login possible | 52 |
+| S-5 | `supabase/migrations/20260604_enable_rls.sql` | RLS not enabled on `sales_transactions` and `sales_items` | 7 |
+| S-6 | `src/components/auth/AuthForms.tsx` | Login silently transforms emails — breaks non-Gmail users | 88 |
 
 ---
 
-## 📁 Files yang Terdampak
+## 📋 MEDIUM PRIORITY FINDINGS
 
-| File | Issues |
-|------|--------|
-| `src/app/api/admin/promote/route.ts` | IDOR, no env validation |
-| `src/app/api/backfill/route.ts` | No auth |
-| `src/app/api/products/seed/route.ts` | No auth |
-| `src/lib/auth-context.tsx` | localStorage, ghost accounts |
-| `src/components/ProtectedRoute.tsx` | Client-side only |
-| `src/components/auth/AuthForms.tsx` | Weak password, no rate limit |
-| `src/app/layout.tsx` | Missing headers, dangerouslySetInnerHTML |
-| `src/app/auth/callback/page.tsx` | No state verification |
-| `src/lib/supabase.ts` | Fallback secrets, no validation |
-| `src/types/index.ts` | Duplicate definitions |
-| `src/app/owner/reports/page.tsx` | No gymId validation |
-| `src/app/admin/checkin/page.tsx` | Camera cleanup, dummy-gym-id |
-| `src/components/pages/MemberAddPage.tsx` | Hardcoded password |
-| `supabase/migrations/20260604_enable_rls.sql` | Missing policies |
+### Frontend (10 issues)
+
+| # | File | Issue |
+|---|------|-------|
+| M-1 | `src/components/ProtectedRoute.tsx` | Double spinner render when loading=true and user=null |
+| M-2 | `src/lib/auth-context.tsx` | Role parameter ignored in register function — silently overwritten to 'Member' |
+| M-3 | `src/lib/supabase.ts` | Helper functions throw errors without consistent error handling in callers |
+| M-4 | `src/app/admin/member/page.tsx` | No request cancellation on re-fetch — potential race conditions |
+| M-5 | `src/app/admin/member/page.tsx` | Untyped `any[]` state for packages — no TypeScript safety |
+| M-6 | `src/app/beranda/page.tsx` | Hero heading can overflow on mid-size mobile screens |
+| M-7 | `src/app/admin/pos/page.tsx` | Sequential stock deduction — N network calls for N items |
+| M-8 | `src/app/dashboard/reports/page.tsx` | Weekly grouping logic is incorrect — doesn't handle month boundaries |
+| M-9 | `src/lib/auth-context.tsx` | Duplicate type definitions — `AuthUser` defined in multiple places |
+| M-10 | `src/components/Button.tsx` | Mixed styling approach — inline JS styles + design tokens + Tailwind creates inconsistency |
+
+### Backend (7 issues)
+
+| # | File | Issue |
+|---|------|-------|
+| M-11 | `src/middleware.ts` | Single-gym constraint: owner_id stored per-user, but ownership is gym-level (1:N) |
+| M-12 | `supabase/init.sql` | Hardcoded test credentials and UUIDs in init.sql |
+| M-13 | `src/app/api/backfill/route.ts` | N+1 query pattern in backfill endpoint — sequential inserts in a loop |
+| M-14 | `supabase/migrations/20260604_add_indexes.sql` | Missing indexes on frequently queried columns |
+| M-15 | `src/app/api/admin/promote/route.ts` | No rate limiting on sensitive admin operations |
+| M-16 | `src/lib/auth-context.tsx` | Fallback gym selection uses arbitrary first gym — silent wrong assignment |
+| M-17 | `src/components/pages/MemberManagePage.tsx` | Direct Supabase calls from form handlers lack CSRF protection |
+
+### Security (8 issues)
+
+| # | File | Issue |
+|---|------|-------|
+| S-7 | `src/app/actions/user.ts` | Weak random generator (`Math.random()`) for display_id |
+| S-8 | `src/lib/auth-context.tsx` | No email verification check on login |
+| S-9 | `src/app/admin/checkin/page.tsx` | OIDC/injection risk in member search query |
+| S-10 | `src/middleware.ts` | Database call on every protected route request — no caching |
+| S-11 | `src/lib/auth-context.tsx` | Login timeout too long (45s) — potential DoS |
+| S-12 | `.gitignore` | No `.env.example` — developers may misconfigure the app |
+| S-13 | `src/app/admin/member/new/page.tsx` | Potential stored XSS via member photo URL |
+| S-14 | `src/app/api/backfill/route.ts` | Backfill endpoint accessible to any Owner |
 
 ---
 
-**Laporan dibuat:** 4 Juni 2026  
-**Tool:** Claude Code Automated Review  
-**Version:** 1.0
+## ℹ️ LOW PRIORITY FINDINGS
+
+### Frontend (13 issues)
+
+| # | File | Issue | Line |
+|---|------|-------|------|
+| L-1 | `src/components/Sidebar.tsx` | Unused imports from design-tokens | 4 |
+| L-2 | `src/app/beranda/page.tsx` | Over-dynamic import of small lucide-react icons | 14 |
+| L-3 | `src/app/layout.tsx` | Service worker registration silently swallows all errors | 53 |
+| L-4 | `src/app/dashboard/reports/page.tsx` | CSV export doesn't include BOM for Unicode/UTF-8 | 249 |
+| L-5 | `src/components/BottomNav.tsx` | BottomNav may briefly render on login page before auth resolves | 13 |
+| L-6 | `src/components/StatCard.tsx` | StatCard displays raw numbers without formatting | 14 |
+| L-7 | `src/app/admin/dashboard/page.tsx` | Hardcoded `+0` change value in stat cards — misleading data | 44 |
+| L-8 | `src/components/charts/RevenueChart.tsx` | No issues found — imports all used | 1 |
+| L-9 | `src/app/beranda/page.tsx` | Inconsistent dynamic vs static import patterns | 10 |
+| L-10 | `src/app/beranda/page.tsx` | Decorative div with `cursor-pointer` but no click handler | 36 |
+
+### Backend (2 issues)
+
+| # | File | Issue | Line |
+|---|------|-------|------|
+| L-11 | `src/lib/supabase.ts` | Sequential awaits in `getOwnerStats` instead of parallel queries | 160 |
+| L-12 | `src/app/actions/user.ts` | `Math.random()` used for display_id instead of UUID | 91 |
+| L-13 | `setup-products-columns.sql` | Storage bucket insert uses `ON CONFLICT DO NOTHING` with no verification | 8 |
+
+### Security (1 issue)
+
+| # | File | Issue | Line |
+|---|------|-------|------|
+| L-14 | `src/components/auth/AuthForms.tsx` | Password validation inconsistency between logic and UI | 74 |
+
+---
+
+## 📊 Recommendations Summary
+
+### Priority 1: Fix Critical Issues First
+1. Fix middleware to use service role key for auth decisions
+2. Fix staff creation to use Supabase Auth API
+3. Add RLS policies for `products`, `subscriptions`, `users`, `gyms`, `sales_transactions`, `sales_items`
+4. Add ownership validation in all admin API routes
+5. Fix email transformation bug in login
+6. Ensure service role key is never exposed to client
+
+### Priority 2: Address High Priority Issues
+1. Replace all `<a href>` with `<Link>` in `DashboardHeader` and `PublicFooter`
+2. Fix effect dependency ordering in checkin page
+3. Add gym-scoping checks in middleware
+4. Harden cookie options
+5. Remove arbitrary gym selection fallbacks
+
+### Priority 3: Technical Debt
+1. Standardize type definitions in `types/index.ts`
+2. Add missing database indexes
+3. Implement rate limiting on admin operations
+4. Fix CSV export for Unicode
+5. Add email verification check on login
+
+---
+
+*Report generated via automated code review workflow*

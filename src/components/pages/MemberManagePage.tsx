@@ -21,6 +21,13 @@ interface MemberData {
   user_id: string | null;
 }
 
+interface PackageData {
+  id: string;
+  name: string;
+  price: number;
+  duration_days: number;
+}
+
 const ITEMS_PER_PAGE = 10;
 
 export default function MembersPage() {
@@ -28,7 +35,7 @@ export default function MembersPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [members, setMembers] = useState<MemberData[]>([]);
-  const [packages, setPackages] = useState<any[]>([]);
+  const [packages, setPackages] = useState<PackageData[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [activeGymId, setActiveGymId] = useState<string>('');
@@ -110,10 +117,12 @@ export default function MembersPage() {
   }, [memberCardModal]);
 
   useEffect(() => {
-    fetchData();
+    const controller = new AbortController();
+    fetchData(controller.signal);
+    return () => controller.abort();
   }, [user]);
 
-  async function fetchData() {
+  async function fetchData(signal?: AbortSignal) {
     if (!user) return;
     
     let gymId = user.gymId;
@@ -138,6 +147,8 @@ export default function MembersPage() {
         .from('members')
         .select('*')
         .eq('gym_id', gymId);
+      
+      if (signal?.aborted) return;
         
       if (memError) throw memError;
 
@@ -147,6 +158,8 @@ export default function MembersPage() {
         .select('*')
         .eq('gym_id', gymId)
         .in('status', ['active', 'expired']);
+      
+      if (signal?.aborted) return;
         
       if (subError) throw subError;
 
@@ -155,6 +168,8 @@ export default function MembersPage() {
         .from('packages')
         .select('*')
         .eq('gym_id', gymId);
+
+      if (signal?.aborted) return;
 
       if (pkgError) throw pkgError;
       if (pkgData) setPackages(pkgData);
@@ -244,7 +259,8 @@ export default function MembersPage() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
-        const res = await fetch('/api/admin/promote', {
+        // Note: CSRF protection is handled securely by Supabase via JWT authorization headers in the SDK
+        const res = await fetch('/api/owner/promote', {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -299,6 +315,12 @@ export default function MembersPage() {
 
   const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
   const paginatedMembers = filteredMembers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  const sanitizeUrl = (url: string | null) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image/')) return url;
+    return '';
+  };
 
   const getStatusStyle = (status: MemberData["status"]) => {
     switch (status) {
@@ -362,7 +384,7 @@ export default function MembersPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--color-surface-3)] shrink-0">
                             {member.photoUrl ? (
-                              <img src={member.photoUrl} alt={member.name} className="w-full h-full object-cover" />
+                              <img src={sanitizeUrl(member.photoUrl)} alt={member.name} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center text-[var(--color-ink-subtle)] font-bold text-[12px]">
                                 {member.name.charAt(0).toUpperCase()}
@@ -579,7 +601,7 @@ export default function MembersPage() {
                     <div className="shrink-0 relative group">
                       {photoBase64 || memberCardModal.photoUrl ? (
                         <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-[var(--color-surface-1)] shadow-lg">
-                          <img src={photoBase64 || memberCardModal.photoUrl || ''} alt={memberCardModal.name} className="w-full h-full object-cover" />
+                          <img src={photoBase64 || sanitizeUrl(memberCardModal.photoUrl) || ''} alt={memberCardModal.name} className="w-full h-full object-cover" />
                         </div>
                       ) : (
                         <div className="w-28 h-28 rounded-full bg-[var(--color-surface-3)] border-4 border-[var(--color-surface-1)] shadow-lg flex items-center justify-center text-4xl font-bold text-[var(--color-primary)]">

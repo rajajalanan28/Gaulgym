@@ -188,8 +188,11 @@ export default function ReportsPage() {
       if (timeFilter === 'daily') {
         key = date.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' }); // e.g. "5 Jun"
       } else if (timeFilter === 'weekly') {
-        const week = Math.ceil(date.getDate() / 7);
-        key = `M${week} ${date.toLocaleDateString('id-ID', { month: 'short' })}`;
+        const thursday = new Date(date);
+        thursday.setDate(date.getDate() + (3 - ((date.getDay() + 6) % 7)));
+        const yearStart = new Date(thursday.getFullYear(), 0, 1);
+        const weekNo = Math.ceil((((thursday.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+        key = `W${weekNo} ${date.toLocaleDateString('id-ID', { month: 'short' })}`;
       } else if (timeFilter === 'monthly') {
         key = date.toLocaleDateString('id-ID', { month: 'short', year: 'numeric' }); // e.g. "Jun 2026"
       }
@@ -257,7 +260,7 @@ export default function ReportsPage() {
       t.type === 'income' ? t.amount : `-${t.amount}`
     ]);
 
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

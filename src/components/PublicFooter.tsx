@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 
 export function PublicFooter() {
   return (
@@ -8,12 +10,12 @@ export function PublicFooter() {
         
         {/* Brand */}
         <div className="md:col-span-4">
-          <a href="/beranda" className="inline-flex items-center gap-2 outline-none mb-4 focus-ring rounded-sm">
+          <Link href="/beranda" className="inline-flex items-center gap-2 outline-none mb-4 focus-ring rounded-sm">
             <img src="/images/logo gym-2.png" alt="Gaul Gym Logo" className="w-5 h-5 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             <h2 className="text-[15px] font-semibold tracking-tight text-[var(--color-ink)]">
               GAUL GYM
             </h2>
-          </a>
+          </Link>
           <p className="text-[var(--color-ink-subtle)] leading-[1.5] text-[13px] max-w-xs">
             Transformasikan tubuh dan pikiran Anda dengan fasilitas premium dan pelatih profesional kelas dunia.
           </p>
@@ -23,18 +25,18 @@ export function PublicFooter() {
         <div className="md:col-span-2 md:col-start-7">
           <h3 className="text-[var(--color-ink)] font-medium mb-4 text-[13px]">Navigasi</h3>
           <div className="flex flex-col gap-[12px]">
-            <a href="/tentang" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+            <Link href="/tentang" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
               Tentang Kami
-            </a>
-            <a href="/beranda" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+            </Link>
+            <Link href="/beranda" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
               Karir
-            </a>
-            <a href="/fasilitas" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+            </Link>
+            <Link href="/fasilitas" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
               Fasilitas & Alat
-            </a>
-            <a href="/beranda" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+            </Link>
+            <Link href="/beranda" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
               Testimoni
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -43,19 +45,19 @@ export function PublicFooter() {
           <h3 className="text-[var(--color-ink)] font-medium mb-4 text-[13px]">Bantuan</h3>
           <ul className="space-y-3">
             <li>
-              <a href="/kontak" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <Link href="/kontak" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Hubungi Kami
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <Link href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Syarat & Ketentuan
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <Link href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Kebijakan Privasi
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -65,14 +67,14 @@ export function PublicFooter() {
           <h3 className="text-[var(--color-ink)] font-medium mb-4 text-[13px]">Sosial</h3>
           <ul className="space-y-3">
             <li>
-              <a href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <Link href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Twitter / X
-              </a>
+              </Link>
             </li>
             <li>
-              <a href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
+              <Link href="#" className="text-[13px] text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors focus-ring rounded-sm">
                 Instagram
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
