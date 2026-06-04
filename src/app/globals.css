@@ -75,7 +75,6 @@ body {
   background-color: var(--color-primary-focus);
   transform: translateY(0);
 }
-}
 
 .focus-ring {
   outline: none;
