@@ -16,6 +16,11 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 
 import { v4 as uuidv4 } from 'uuid';
 
+function generateSecurePassword() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
 export async function registerMemberAction(formData: FormData) {
   try {
     const email = formData.get('email') as string;
@@ -47,10 +52,12 @@ export async function registerMemberAction(formData: FormData) {
       // Optional: Update their gym_id if it's null
       await supabaseAdmin.from('users').update({ gym_id: gymId }).eq('id', userId);
     } else {
+      const tempPassword = generateSecurePassword();
+
       // Create user in Supabase Auth using Admin API
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email,
-        password: 'gaulgym123',
+        password: tempPassword,
         email_confirm: true,
         user_metadata: { name }
       });

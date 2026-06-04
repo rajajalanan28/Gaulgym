@@ -242,9 +242,14 @@ export default function MembersPage() {
     
     if (confirm(`Yakin ingin mempromosikan ${member.name} menjadi Admin?`)) {
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
         const res = await fetch('/api/admin/promote', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token || ''}`
+          },
           body: JSON.stringify({
             userId: member.user_id,
             ownerId: user.id,
