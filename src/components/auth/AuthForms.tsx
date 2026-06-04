@@ -70,7 +70,13 @@ function AuthFormsContent() {
     if (!regData.name || regData.name.trim().length < 2) errs.name = 'Nama minimal 2 karakter.';
     if (!regData.username || regData.username.trim().length < 3) errs.username = 'Username minimal 3 karakter.';
     else if (!/^[a-zA-Z0-9_]+$/.test(regData.username)) errs.username = 'Username hanya boleh huruf, angka, dan underscore.';
-    if (!regData.password || regData.password.length < 6) errs.password = 'Kata sandi minimal 6 karakter.';
+    
+    if (!regData.password || regData.password.length < 12) errs.password = 'Kata sandi minimal 12 karakter.';
+    else if (!/[A-Z]/.test(regData.password)) errs.password = 'Kata sandi harus mengandung huruf besar.';
+    else if (!/[a-z]/.test(regData.password)) errs.password = 'Kata sandi harus mengandung huruf kecil.';
+    else if (!/[0-9]/.test(regData.password)) errs.password = 'Kata sandi harus mengandung angka.';
+    else if (!/[!@#$%^&*(),.?":{}|<>]/.test(regData.password)) errs.password = 'Kata sandi harus mengandung karakter khusus.';
+    
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };

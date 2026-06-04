@@ -16,22 +16,23 @@ export default function ReportsPage() {
 
   useEffect(() => {
     if (authLoading || !user) return;
-    
-    // Admin or Owner should have gymId (or activeGymId context, we just use user.gymId for now if set)
-    const gymId = user.gymId; 
-    
-    // Wait, let's fetch based on user's gyms if they are owner.
-    // For simplicity, we fetch all if owner without gymId, but let's assume they have it or we fetch all.
-    fetchData();
+    fetchData(user.gymId);
   }, [user, authLoading]);
 
-  const fetchData = async () => {
+  const fetchData = async (gymId: string | undefined) => {
     setLoading(true);
     try {
+      if (!gymId) {
+        console.error("Gym ID tidak ditemukan!");
+        setLoading(false);
+        return;
+      }
+
       // Fetch POS Transactions
       const { data: posData, error: posError } = await supabase
         .from('transactions')
         .select('created_at, total_amount')
+        .eq('gym_id', gymId)
         .order('created_at', { ascending: true });
         
       if (posError) throw posError;
@@ -45,6 +46,7 @@ export default function ReportsPage() {
             price
           )
         `)
+        .eq('gym_id', gymId)
         .order('created_at', { ascending: true });
 
       if (subError) throw subError;

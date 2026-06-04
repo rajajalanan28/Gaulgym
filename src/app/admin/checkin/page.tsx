@@ -183,8 +183,14 @@ export default function CheckInPage() {
     }
 
     return () => {
-      if (html5QrCode && html5QrCode.isScanning) {
-        html5QrCode.stop().catch(console.error);
+      if (html5QrCode) {
+        if (html5QrCode.isScanning) {
+          html5QrCode.stop().then(() => {
+            html5QrCode?.clear();
+          }).catch(console.error);
+        } else {
+          html5QrCode.clear();
+        }
       }
     };
   }, [isScanning, processCheckin]);

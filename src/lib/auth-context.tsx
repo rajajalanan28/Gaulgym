@@ -40,27 +40,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Read cached user from localStorage instantly (no async)
 function getCachedUser(): AuthUser | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const cached = localStorage.getItem(CACHE_KEY);
-    if (cached) return JSON.parse(cached);
-  } catch {
-    // ignore
-  }
+  // Disabled local storage caching for security (Issue #4)
   return null;
 }
 
 function setCachedUser(user: AuthUser | null) {
-  if (typeof window === 'undefined') return;
-  try {
-    if (user) {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(CACHE_KEY);
-    }
-  } catch {
-    // ignore
-  }
+  // Disabled local storage caching for security (Issue #4)
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -171,23 +156,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let userData = initialUserData;
 
       if (userError || !userData) {
-        console.log('Ghost account detected. Attempting recovery...');
-        const { error: recoveryError } = await supabase.from('users').insert({
-          id: authData.user.id,
-          email: authData.user.email,
-          name: authData.user.user_metadata?.name || 'User',
-          role: authData.user.user_metadata?.role || 'Member',
-          gym_id: authData.user.user_metadata?.gym_id,
-          is_active: true,
-        });
-
-        if (recoveryError) {
-          await supabase.auth.signOut();
-          return { success: false, error: 'Akun rusak permanen dan gagal dipulihkan. Silakan daftar ulang dengan email baru.' };
-        }
-
-        const { data: recoveredData } = await supabase.from('users').select('*').eq('id', authData.user.id).single();
-        userData = recoveredData;
+        await supabase.auth.signOut();
+        return { success: false, error: 'Akun tidak ditemukan. Hubungi admin untuk aktivasi.' };
       }
 
       // Backfill ke tabel members jika belum ada

@@ -1,66 +1,19 @@
 import Link from 'next/link';
-
 export default function NotFound() {
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'var(--color-canvas)',
-      color: 'var(--color-ink)',
-      padding: '32px',
-      textAlign: 'center',
-    }}>
-      <div style={{
-        fontSize: '120px',
-        fontWeight: 800,
-        lineHeight: 1,
-        letterSpacing: '-0.05em',
-        background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-hover))',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        marginBottom: '16px',
-      }}>
-        404
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--color-canvas)] text-[var(--color-ink)] p-4">
+      <div className="text-center space-y-4">
+        <h1 className="text-8xl font-bold text-[var(--color-primary)]">404</h1>
+        <h2 className="text-2xl font-semibold">Halaman Tidak Ditemukan</h2>
+        <p className="text-[var(--color-ink-muted)] max-w-md mx-auto">
+          Maaf, halaman yang Anda cari tidak ada atau telah dipindahkan.
+        </p>
+        <div className="pt-4">
+          <Link href="/" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[var(--color-primary)] hover:opacity-90 transition-opacity">
+            Kembali ke Beranda
+          </Link>
+        </div>
       </div>
-      <h1 style={{
-        fontSize: '28px',
-        fontWeight: 700,
-        color: 'var(--color-ink)',
-        marginBottom: '12px',
-        letterSpacing: '-0.02em',
-      }}>
-        Halaman Tidak Ditemukan
-      </h1>
-      <p style={{
-        fontSize: '16px',
-        color: 'var(--color-ink-muted)',
-        maxWidth: '440px',
-        lineHeight: 1.6,
-        marginBottom: '32px',
-      }}>
-        Halaman yang Anda cari mungkin sudah dipindahkan, dihapus, atau tidak pernah ada.
-      </p>
-      <Link
-        href="/"
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '12px 24px',
-          background: 'var(--color-primary)',
-          color: 'white',
-          borderRadius: '8px',
-          fontSize: '15px',
-          fontWeight: 600,
-          textDecoration: 'none',
-          transition: 'background 0.2s',
-        }}
-      >
-        ← Kembali ke Beranda
-      </Link>
     </div>
   );
 }

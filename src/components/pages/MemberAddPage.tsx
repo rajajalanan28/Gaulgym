@@ -123,7 +123,7 @@ export default function NewMemberPage() {
               Daftar Member Baru
             </h1>
             <p className="text-sm text-gray-400 mt-2">
-              Member yang didaftarkan akan mendapatkan password default: <strong className="text-white">gaulgym123</strong>
+              Member yang didaftarkan akan mendapatkan <strong className="text-white">password acak</strong> yang unik.
             </p>
           </div>
 
