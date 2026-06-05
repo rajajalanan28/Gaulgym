@@ -47,15 +47,20 @@ export default function ProductManagementPage() {
     try {
       setLoading(true);
       // Fetch gym id
-      const { data: gym } = await supabase
+      const { data: gyms, error } = await supabase
         .from('gyms')
         .select('id')
         .eq('owner_id', user!.id)
-        .single();
+        .limit(1);
         
-      if (gym) {
-        setGymId(gym.id);
-        fetchProducts(gym.id);
+      if (error) throw error;
+        
+      if (gyms && gyms.length > 0) {
+        setGymId(gyms[0].id);
+        await fetchProducts(gyms[0].id);
+      } else {
+        // No gym found for this owner
+        setLoading(false);
       }
     } catch (error) {
       console.error('Error fetching gym:', error);
