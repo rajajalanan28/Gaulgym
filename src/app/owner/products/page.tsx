@@ -89,9 +89,14 @@ export default function ProductManagementPage() {
     if (!gymId) return;
     try {
       setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const res = await fetch('/api/products/seed', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token || ''}`
+        },
         body: JSON.stringify({ gymId })
       });
       const data = await res.json();
@@ -311,58 +316,58 @@ export default function ProductManagementPage() {
         {/* Modal Form */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-            <div className="bg-[var(--color-surface-1)] hairline-border w-full max-w-md rounded-[20px] shadow-2xl overflow-hidden flex flex-col">
-              <div className="px-6 py-5 border-b border-[var(--color-hairline)] flex justify-between items-center bg-[var(--color-surface-2)]">
-                <h2 className="text-[18px] font-bold text-[var(--color-ink)]">
+            <div className="bg-[var(--color-surface-1)] hairline-border w-full max-w-[400px] rounded-[16px] shadow-2xl overflow-hidden flex flex-col">
+              <div className="px-5 py-4 border-b border-[var(--color-hairline)] flex justify-between items-center bg-[var(--color-surface-2)]">
+                <h2 className="text-[16px] font-bold text-[var(--color-ink)]">
                   {editingProduct ? 'Edit Produk' : 'Tambah Produk'}
                 </h2>
               </div>
               
-              <form id="product-form" onSubmit={handleSubmit} className="p-6 space-y-4">
+              <form id="product-form" onSubmit={handleSubmit} className="p-5 space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-[var(--color-ink)]">Nama Produk</label>
+                  <label className="block text-[13px] font-medium mb-1.5 text-[var(--color-ink)]">Nama Produk</label>
                   <input
                     type="text"
                     required
                     value={formData.name}
                     onChange={e => setFormData({...formData, name: e.target.value})}
-                    className="w-full bg-[var(--color-surface-2)] border border-[var(--color-hairline)] rounded-xl px-4 py-3 text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                    className="w-full bg-[var(--color-surface-2)] border border-[var(--color-hairline)] rounded-lg px-3 py-2.5 text-[14px] text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                     placeholder="Contoh: Air Mineral"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-[var(--color-ink)]">Harga (Rp)</label>
+                  <label className="block text-[13px] font-medium mb-1.5 text-[var(--color-ink)]">Harga (Rp)</label>
                   <input
                     type="number"
                     required
                     min="0"
                     value={formData.price}
                     onChange={e => setFormData({...formData, price: e.target.value})}
-                    className="w-full bg-[var(--color-surface-2)] border border-[var(--color-hairline)] rounded-xl px-4 py-3 text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                    className="w-full bg-[var(--color-surface-2)] border border-[var(--color-hairline)] rounded-lg px-3 py-2.5 text-[14px] text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                     placeholder="Contoh: 5000"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-[var(--color-ink)]">Stok Awal</label>
+                  <label className="block text-[13px] font-medium mb-1.5 text-[var(--color-ink)]">Stok Awal</label>
                   <input
                     type="number"
                     required
                     min="0"
                     value={formData.stock}
                     onChange={e => setFormData({...formData, stock: e.target.value})}
-                    className="w-full bg-[var(--color-surface-2)] border border-[var(--color-hairline)] rounded-xl px-4 py-3 text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                    className="w-full bg-[var(--color-surface-2)] border border-[var(--color-hairline)] rounded-lg px-3 py-2.5 text-[14px] text-[var(--color-ink)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                     placeholder="Contoh: 50"
                   />
                 </div>
               </form>
               
-              <div className="px-6 py-4 border-t border-[var(--color-hairline)] bg-[var(--color-surface-2)] flex justify-end gap-3 mt-4">
+              <div className="px-5 py-4 border-t border-[var(--color-hairline)] bg-[var(--color-surface-2)] flex justify-end gap-3 mt-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl font-medium text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface-3)] transition-colors text-sm"
+                  className="px-4 py-2 rounded-lg font-medium text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] hover:bg-[var(--color-surface-3)] transition-colors text-sm"
                 >
                   Batal
                 </button>
@@ -370,7 +375,7 @@ export default function ProductManagementPage() {
                   type="submit"
                   form="product-form"
                   disabled={isSubmitting}
-                  className="px-6 py-2.5 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-xl font-semibold transition-colors flex items-center gap-2 text-sm disabled:opacity-50"
+                  className="px-5 py-2 bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-lg font-semibold transition-colors flex items-center gap-2 text-sm disabled:opacity-50"
                 >
                   {isSubmitting && <Loader2 size={16} className="animate-spin" />}
                   {editingProduct ? 'Simpan' : 'Tambah'}
