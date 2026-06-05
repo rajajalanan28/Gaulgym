@@ -1,23 +1,30 @@
-const CACHE_NAME = 'gaulgym-v1';
+const CACHE_NAME = 'gaulgym-v2';
 
 self.addEventListener('install', (event) => {
+  // Segera aktifkan SW baru ini tanpa menunggu tab ditutup
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  // Hapus cache versi lama yang bikin nyangkut (v1)
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([
-        '/',
-        '/beranda',
-        '/login',
-        '/icon.png',
-        '/images/logo gym-2.png'
-      ]);
-    })
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', (event) => {
+  // Network-First strategy agar tidak terjadi bentrok chunk Next.js saat redeploy
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
     })
   );
 });

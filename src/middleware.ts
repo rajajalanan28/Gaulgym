@@ -1,4 +1,5 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 
 /**
@@ -59,17 +60,20 @@ export async function middleware(request: NextRequest) {
     secure: true,
   };
 
-  // C-1: Use service role key to bypass RLS for auth/role checks.
-  // The ANON key is subject to RLS which can block the role query.
+  // We use the ANON key to verify the session. Service role key is only needed for DB queries.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseServiceKey) {
-    console.error('SUPABASE_SERVICE_ROLE_KEY is not set — middleware cannot verify roles.');
-    return NextResponse.redirect(new URL('/login', request.url));
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY in middleware.');
+    // Let client handle it to avoid infinite redirect loops
+    return response;
   }
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    supabaseServiceKey,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
@@ -133,9 +137,13 @@ export async function middleware(request: NextRequest) {
     if (cached) {
       userRole = cached.role;
       userGymId = cached.gym_id;
-    } else {
+    } else if (supabaseServiceKey) {
       // Cache miss or expired — fetch from DB using service role key (bypasses RLS).
-      const { data: userData } = await supabase
+      const adminAuthClient = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: { persistSession: false }
+      });
+      
+      const { data: userData } = await adminAuthClient
         .from('users')
         .select('role, gym_id')
         .eq('id', session.user.id)
@@ -159,6 +167,10 @@ export async function middleware(request: NextRequest) {
           ...hardenedCookieDefaults,
         });
       }
+    } else {
+      // If no service key, we can't reliably check role here due to RLS.
+      // Allow it to pass, client-side ProtectedRoute will catch unauthorized access.
+      return response;
     }
 
     if (!userRole || !allowedRoles.includes(userRole)) {

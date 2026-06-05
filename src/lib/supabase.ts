@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 import { validateEnvVars } from './config'
 
 validateEnvVars();
@@ -6,7 +6,8 @@ validateEnvVars();
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-anon-key'
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// createBrowserClient automatically syncs auth state to cookies so middleware can read it
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
 
 // Database types matching Flutter app entities
 export interface DbUser {
