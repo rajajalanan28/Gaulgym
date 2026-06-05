@@ -9,16 +9,10 @@
  * server-side and client-side — missing vars will crash the process immediately.
  */
 export function validateEnvVars() {
-  const required = [
-    'NEXT_PUBLIC_SUPABASE_URL',
-    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
-  ];
+  const missing: string[] = [];
 
-  // Only check NEXT_PUBLIC vars here. 
-  // SUPABASE_SERVICE_ROLE_KEY is checked independently in middleware.ts
-  // Requiring it here causes SSR to crash on Vercel if it's imported in Client Components.
-
-  const missing = required.filter(key => !process.env[key]);
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) missing.push('NEXT_PUBLIC_SUPABASE_URL');
+  if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
   if (missing.length > 0) {
     const message = `Missing required environment variables: ${missing.join(', ')}`;
