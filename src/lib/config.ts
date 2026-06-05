@@ -14,10 +14,9 @@ export function validateEnvVars() {
     'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   ];
 
-  // Only check service role key on the server side
-  if (typeof window === 'undefined') {
-    required.push('SUPABASE_SERVICE_ROLE_KEY');
-  }
+  // Only check NEXT_PUBLIC vars here. 
+  // SUPABASE_SERVICE_ROLE_KEY is checked independently in middleware.ts
+  // Requiring it here causes SSR to crash on Vercel if it's imported in Client Components.
 
   const missing = required.filter(key => !process.env[key]);
 
