@@ -195,16 +195,21 @@ export async function getOwnerStats(ownerId: string) {
 
     const [
       { count: memberCount, error: memberError },
-      { data: subs, error: subsError }
+      { data: subs, error: subsError },
+      { data: sales, error: salesError }
     ] = await Promise.all([
       supabase.from('members').select('*', { count: 'exact', head: true }).in('gym_id', gymIds),
-      supabase.from('subscriptions').select('amount').in('gym_id', gymIds).eq('status', 'active')
+      supabase.from('subscriptions').select('amount').in('gym_id', gymIds),
+      supabase.from('sales_transactions').select('total_amount').in('gym_id', gymIds)
     ]);
 
     if (memberError) return { data: null, error: memberError };
     if (subsError) return { data: null, error: subsError };
+    if (salesError) return { data: null, error: salesError };
 
-    const revenue = subs?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
+    const subsRevenue = subs?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
+    const salesRevenue = sales?.reduce((acc, curr) => acc + (curr.total_amount || 0), 0) || 0;
+    const revenue = subsRevenue + salesRevenue;
 
     return {
       data: {
