@@ -170,24 +170,38 @@ export async function getOwnerStats(ownerId: string) {
     const { data: gyms, error: gymsError } = await getGymsByOwner(ownerId);
     if (gymsError || !gyms) return { data: null, error: gymsError || new Error('Failed to fetch gyms') };
     
+    // Admin count depends only on ownerId, not gymIds
+    const { count: adminCount, error: adminError } = await supabase
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'Admin')
+      .eq('owner_id', ownerId);
+
+    if (adminError) return { data: null, error: adminError };
+
     const gymIds = gyms.map((g: DbGym) => g.id);
 
     if (gymIds.length === 0) {
-      return { data: { totalGyms: 0, totalMembers: 0, totalAdmin: 0, totalRevenue: 0 }, error: null };
+      return { 
+        data: { 
+          totalGyms: 0, 
+          totalMembers: 0, 
+          totalAdmin: adminCount || 0, 
+          totalRevenue: 0 
+        }, 
+        error: null 
+      };
     }
 
     const [
       { count: memberCount, error: memberError },
-      { count: adminCount, error: adminError },
       { data: subs, error: subsError }
     ] = await Promise.all([
       supabase.from('members').select('*', { count: 'exact', head: true }).in('gym_id', gymIds),
-      supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'Admin').eq('owner_id', ownerId),
       supabase.from('subscriptions').select('amount').in('gym_id', gymIds).eq('status', 'active')
     ]);
 
     if (memberError) return { data: null, error: memberError };
-    if (adminError) return { data: null, error: adminError };
     if (subsError) return { data: null, error: subsError };
 
     const revenue = subs?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
