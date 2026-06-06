@@ -1,17 +1,93 @@
-'use client';
-
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth-context';
-import { Check } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { Check, Loader2 } from 'lucide-react';
 
 const PublicNavbar = dynamic(() => import('@/components/PublicNavbar').then(m => ({ default: m.PublicNavbar })), { ssr: true });
 import { DashboardHeader } from '@/components/DashboardHeader';
 const PublicFooter = dynamic(() => import('@/components/PublicFooter').then(m => ({ default: m.PublicFooter })), { ssr: true, loading: () => <div className="h-[200px]" /> });
 
+interface PackageData {
+  name: string;
+  price: string | number;
+  period: string;
+  features: string[];
+  highlighted: boolean;
+  color?: string;
+}
+
 export default function PackagesPage() {
   const { user } = useAuth();
+  const [dbPackages, setDbPackages] = useState<PackageData[] | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const packages = [
+  const fallbackPackages: PackageData[] = [
+    {
+      name: 'Harian',
+      price: '50.000',
+      period: 'kunjungan',
+      features: ['Akses Bebas Alat Gym', 'Ruang Ganti & Loker', 'Free WiFi'],
+      highlighted: false,
+    },
+    {
+      name: 'Bulanan',
+      price: '150.000',
+      period: 'bulan',
+      features: ['Semua Fitur Harian', 'Bebas Kunjungan Tanpa Batas', 'Akses Semua Kelas (Yoga, Zumba)', 'Akses Sauna'],
+      highlighted: true,
+    },
+    {
+      name: 'VIP Premium',
+      price: '400.000',
+      period: 'bulan',
+      features: [
+        'Semua Fitur Bulanan',
+        'Personal Trainer (2 Sesi/Bulan)',
+        'Konsultasi Gizi',
+        'Gratis Handuk & Minuman Protein',
+        'Booking Kelas Prioritas',
+      ],
+      highlighted: false,
+    },
+  ];
+
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('packages')
+          .select('*')
+          .eq('is_active', true)
+          .order('sort_order', { ascending: true });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          const mappedPackages = data.map(pkg => ({
+            name: pkg.name,
+            price: new Intl.NumberFormat('id-ID').format(pkg.price),
+            period: pkg.duration_days === 1 ? 'kunjungan' : `${pkg.duration_days} hari`,
+            features: pkg.features || [],
+            highlighted: pkg.color === 'amber' || pkg.color === 'purple',
+            color: pkg.color
+          }));
+          setDbPackages(mappedPackages);
+        } else {
+          setDbPackages(fallbackPackages);
+        }
+      } catch (error) {
+        console.error('Error fetching packages:', error);
+        setDbPackages(fallbackPackages);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPackages();
+  }, []);
+
+  const packages = dbPackages || fallbackPackages;
     {
       name: 'Harian',
       price: '50.000',
@@ -60,63 +136,69 @@ export default function PackagesPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-[24px] max-w-[1000px] mx-auto items-center">
-            {packages.map((pkg) => (
-              <div
-                key={pkg.name}
-                className={`relative rounded-[24px] p-[32px] transition-all duration-300 ${
-                  pkg.highlighted 
-                    ? 'bg-gradient-to-b from-[var(--color-primary)] to-[var(--color-primary-focus)] text-white shadow-2xl shadow-[var(--color-primary)]/20 scale-100 md:scale-105 z-10' 
-                    : 'bg-[var(--color-surface-1)] text-[var(--color-ink)] hairline-border hover:bg-[var(--color-surface-2)] z-0'
-                }`}
-              >
-                {pkg.highlighted && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-950 px-[16px] py-[6px] rounded-full text-[12px] font-bold uppercase tracking-widest shadow-lg">
-                    Paling Laris
-                  </div>
-                )}
-
-                <h2 className={`text-[24px] font-bold mb-[8px] ${pkg.highlighted ? 'text-white' : 'text-[var(--color-ink)]'}`}>
-                  {pkg.name}
-                </h2>
-
-                <div className="mb-[32px] flex items-end gap-1">
-                  <span className="text-[16px] font-medium mb-2">Rp</span>
-                  <span className={`text-[48px] font-extrabold leading-none tracking-[-0.04em] ${pkg.highlighted ? 'text-white' : 'text-[var(--color-ink)]'}`}>
-                    {pkg.price}
-                  </span>
-                  <span className={`text-[15px] mb-2 ${pkg.highlighted ? 'text-white/80' : 'text-[var(--color-ink-subtle)]'}`}>
-                    /{pkg.period}
-                  </span>
-                </div>
-
-                <ul className="space-y-[16px] mb-[40px]">
-                  {pkg.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-[12px]">
-                      <div className={`mt-[2px] w-[20px] h-[20px] rounded-full flex items-center justify-center shrink-0 ${
-                        pkg.highlighted ? 'bg-white/20 text-white' : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
-                      }`}>
-                        <Check size={12} strokeWidth={3} />
-                      </div>
-                      <span className={`text-[15px] ${pkg.highlighted ? 'text-white/90' : 'text-[var(--color-ink-muted)]'}`}>
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  className={`w-full py-[14px] rounded-[12px] font-semibold text-[15px] transition-transform hover:scale-[1.02] active:scale-100 ${
-                    pkg.highlighted
-                      ? 'bg-white text-[var(--color-primary)] shadow-lg'
-                      : 'bg-[var(--color-surface-3)] text-[var(--color-ink)] hover:bg-[var(--color-primary)] hover:text-white'
+          {loading ? (
+            <div className="flex justify-center items-center py-20 w-full col-span-1 md:col-span-3">
+              <Loader2 className="animate-spin text-[var(--color-primary)] w-12 h-12" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-[24px] max-w-[1000px] mx-auto items-center">
+              {packages.map((pkg) => (
+                <div
+                  key={pkg.name}
+                  className={`relative rounded-[24px] p-[32px] transition-all duration-300 ${
+                    pkg.highlighted 
+                      ? 'bg-gradient-to-b from-[var(--color-primary)] to-[var(--color-primary-focus)] text-white shadow-2xl shadow-[var(--color-primary)]/20 scale-100 md:scale-105 z-10' 
+                      : 'bg-[var(--color-surface-1)] text-[var(--color-ink)] hairline-border hover:bg-[var(--color-surface-2)] z-0'
                   }`}
                 >
-                  Pilih Paket {pkg.name}
-                </button>
-              </div>
-            ))}
-          </div>
+                  {pkg.highlighted && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-950 px-[16px] py-[6px] rounded-full text-[12px] font-bold uppercase tracking-widest shadow-lg">
+                      Paling Laris
+                    </div>
+                  )}
+
+                  <h2 className={`text-[24px] font-bold mb-[8px] ${pkg.highlighted ? 'text-white' : 'text-[var(--color-ink)]'}`}>
+                    {pkg.name}
+                  </h2>
+
+                  <div className="mb-[32px] flex items-end gap-1">
+                    <span className="text-[16px] font-medium mb-2">Rp</span>
+                    <span className={`text-[48px] font-extrabold leading-none tracking-[-0.04em] ${pkg.highlighted ? 'text-white' : 'text-[var(--color-ink)]'}`}>
+                      {pkg.price}
+                    </span>
+                    <span className={`text-[15px] mb-2 ${pkg.highlighted ? 'text-white/80' : 'text-[var(--color-ink-subtle)]'}`}>
+                      /{pkg.period}
+                    </span>
+                  </div>
+
+                  <ul className="space-y-[16px] mb-[40px]">
+                    {pkg.features.map((feature, idx) => (
+                      <li key={idx} className="flex items-start gap-[12px]">
+                        <div className={`mt-[2px] w-[20px] h-[20px] rounded-full flex items-center justify-center shrink-0 ${
+                          pkg.highlighted ? 'bg-white/20 text-white' : 'bg-[var(--color-primary)]/10 text-[var(--color-primary)]'
+                        }`}>
+                          <Check size={12} strokeWidth={3} />
+                        </div>
+                        <span className={`text-[15px] ${pkg.highlighted ? 'text-white/90' : 'text-[var(--color-ink-muted)]'}`}>
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    className={`w-full py-[14px] rounded-[12px] font-semibold text-[15px] transition-transform hover:scale-[1.02] active:scale-100 ${
+                      pkg.highlighted
+                        ? 'bg-white text-[var(--color-primary)] shadow-lg'
+                        : 'bg-[var(--color-surface-3)] text-[var(--color-ink)] hover:bg-[var(--color-primary)] hover:text-white'
+                    }`}
+                  >
+                    Pilih Paket {pkg.name}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
