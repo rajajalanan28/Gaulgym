@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth-context';
@@ -88,34 +90,7 @@ export default function PackagesPage() {
   }, []);
 
   const packages = dbPackages || fallbackPackages;
-    {
-      name: 'Harian',
-      price: '50.000',
-      period: 'kunjungan',
-      features: ['Akses Bebas Alat Gym', 'Ruang Ganti & Loker', 'Free WiFi'],
-      highlighted: false,
-    },
-    {
-      name: 'Bulanan',
-      price: '150.000',
-      period: 'bulan',
-      features: ['Semua Fitur Harian', 'Bebas Kunjungan Tanpa Batas', 'Akses Semua Kelas (Yoga, Zumba)', 'Akses Sauna'],
-      highlighted: true,
-    },
-    {
-      name: 'VIP Premium',
-      price: '400.000',
-      period: 'bulan',
-      features: [
-        'Semua Fitur Bulanan',
-        'Personal Trainer (2 Sesi/Bulan)',
-        'Konsultasi Gizi',
-        'Gratis Handuk & Minuman Protein',
-        'Booking Kelas Prioritas',
-      ],
-      highlighted: false,
-    },
-  ];
+
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
