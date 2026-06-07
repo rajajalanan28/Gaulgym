@@ -19,6 +19,7 @@ interface MemberData {
   status: "active" | "inactive" | "expired";
   photoUrl: string | null;
   user_id: string | null;
+  display_id: string | null;
 }
 
 interface PackageData {
@@ -191,6 +192,7 @@ export default function MembersPage() {
             status: activeSubs.length > 0 ? 'active' : (expiredSub ? 'expired' : 'inactive'),
             photoUrl: m.photo_url || null,
             user_id: m.user_id || null,
+            display_id: m.display_id || null,
           };
         });
 
@@ -234,6 +236,24 @@ export default function MembersPage() {
         });
 
       if (error) throw error;
+
+      // Send WhatsApp Notification
+      try {
+        await fetch('/api/fonnte/send-welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone: selectedMember.phone,
+            name: selectedMember.name,
+            displayId: selectedMember.display_id,
+            packageName: selectedPkg.name,
+            endDate: endDate.toISOString(),
+          })
+        });
+      } catch (err) {
+        console.error("Failed to send WA welcome:", err);
+        // Don't throw error to user if only WA fails, they still bought the package
+      }
 
       // Close modal & Refresh Data
       setSelectedMember(null);
