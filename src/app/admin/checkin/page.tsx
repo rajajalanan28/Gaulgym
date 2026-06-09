@@ -69,9 +69,9 @@ export default function CheckInPage() {
     setIsProcessing(true);
     
     try {
-      // 1. Cari Member by display_id OR qr_code
+      // 1. Cari Member by display_id, qr_code, OR phone number
       // Use separate queries to avoid injection via string interpolation in .or()
-      const sanitizedQuery = memberIdQuery.replace(/[^a-zA-Z0-9\-_]/g, '');
+      const sanitizedQuery = memberIdQuery.replace(/[^a-zA-Z0-9\-_+]/g, '');
       const { data: membersByDisplayId } = await supabase
         .from('members')
         .select('*')
@@ -82,7 +82,37 @@ export default function CheckInPage() {
         .select('*')
         .eq('qr_code', sanitizedQuery);
 
-      const members = [...(membersByDisplayId || []), ...(membersByQrCode || [])];
+      // Also search by phone number (allow original input with special chars for phone)
+      const phoneQuery = memberIdQuery.replace(/[^0-9+]/g, '');
+      let membersByPhone: any[] = [];
+      if (phoneQuery.length >= 8) {
+        const { data } = await supabase
+          .from('members')
+          .select('*')
+          .eq('phone', memberIdQuery.trim());
+        membersByPhone = data || [];
+        
+        // Also try without leading 0 -> +62 and vice versa
+        if (membersByPhone.length === 0) {
+          let altPhone = '';
+          if (phoneQuery.startsWith('0')) {
+            altPhone = '+62' + phoneQuery.substring(1);
+          } else if (phoneQuery.startsWith('62')) {
+            altPhone = '0' + phoneQuery.substring(2);
+          } else if (phoneQuery.startsWith('+62')) {
+            altPhone = '0' + phoneQuery.substring(3);
+          }
+          if (altPhone) {
+            const { data: altData } = await supabase
+              .from('members')
+              .select('*')
+              .eq('phone', altPhone);
+            membersByPhone = altData || [];
+          }
+        }
+      }
+
+      const members = [...(membersByDisplayId || []), ...(membersByQrCode || []), ...membersByPhone];
       // Deduplicate by id
       const uniqueMembers = members.filter((m, i, arr) => arr.findIndex(x => x.id === m.id) === i);
 
@@ -470,13 +500,13 @@ export default function CheckInPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-[var(--color-surface-1)] w-full max-w-md rounded-[24px] p-[32px] border border-[var(--color-hairline)] shadow-2xl">
             <h3 className="text-[20px] font-bold text-[var(--color-ink)] mb-[8px] tracking-[-0.01em]">Input Manual Check-in</h3>
-            <p className="text-[14px] text-[var(--color-ink-muted)] mb-[24px]">Masukkan ID Member / Scan ID QR (contoh: MBR-123 atau UUID)</p>
+            <p className="text-[14px] text-[var(--color-ink-muted)] mb-[24px]">Masukkan ID Member, No. HP, atau Scan ID QR</p>
             
             <form onSubmit={handleManualEntrySubmit}>
               <input
                 type="text"
                 autoFocus
-                placeholder="ID Member..."
+                placeholder="ID Member / No. HP..."
                 value={manualInput}
                 onChange={(e) => setManualInput(e.target.value)}
                 className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring mb-[24px] font-medium text-[16px]"
