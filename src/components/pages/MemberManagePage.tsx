@@ -215,7 +215,8 @@ export default function MembersPage() {
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
           status: 'active',
-          payment_method: paymentMethod
+          payment_method: paymentMethod,
+          payment_status: 'paid'
         });
 
       if (error) throw error;
