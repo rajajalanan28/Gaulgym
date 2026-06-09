@@ -5,7 +5,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
 import { getAdminStats, supabase } from '@/lib/supabase';
-
+import Link from 'next/link';
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({ totalMembers: 0, checkinsToday: 0, newMembers: 0 });
@@ -110,8 +110,8 @@ export default function AdminDashboard() {
         <div>
           <h2 className="text-[15px] font-medium text-[var(--color-ink)] mb-[16px]">Menu Utama</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[16px]">
-            <button
-              onClick={() => window.location.href = '/admin/checkin'}
+            <Link
+              href="/admin/checkin"
               className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[12px] p-[20px] text-left flex flex-col gap-[8px] focus-ring"
             >
               <span className="text-[var(--color-primary)] bg-[var(--color-primary)]/10 p-[8px] rounded-[8px] w-fit">
@@ -119,10 +119,10 @@ export default function AdminDashboard() {
               </span>
               <span className="text-[16px] font-medium text-[var(--color-ink)] mt-[4px]">Scan Check-in</span>
               <span className="text-[13px] text-[var(--color-ink-subtle)]">Scan QR code kedatangan</span>
-            </button>
+            </Link>
             
-            <button
-              onClick={() => window.location.href = '/admin/member'}
+            <Link
+              href="/admin/member"
               className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[12px] p-[20px] text-left flex flex-col gap-[8px] focus-ring"
             >
               <span className="text-[var(--color-primary)] bg-[var(--color-primary)]/10 p-[8px] rounded-[8px] w-fit">
@@ -130,10 +130,10 @@ export default function AdminDashboard() {
               </span>
               <span className="text-[16px] font-medium text-[var(--color-ink)] mt-[4px]">Data Member</span>
               <span className="text-[13px] text-[var(--color-ink-subtle)]">Kelola dan daftar member gym</span>
-            </button>
+            </Link>
 
-            <button
-              onClick={() => window.location.href = '/admin/pos'}
+            <Link
+              href="/admin/pos"
               className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[12px] p-[20px] text-left flex flex-col gap-[8px] focus-ring"
             >
               <span className="text-green-500 bg-green-500/10 p-[8px] rounded-[8px] w-fit">
@@ -141,10 +141,10 @@ export default function AdminDashboard() {
               </span>
               <span className="text-[16px] font-medium text-[var(--color-ink)] mt-[4px]">Kasir (POS)</span>
               <span className="text-[13px] text-[var(--color-ink-subtle)]">Jual minuman & suplemen</span>
-            </button>
+            </Link>
 
-            <button
-              onClick={() => window.location.href = '/admin/inventory'}
+            <Link
+              href="/admin/inventory"
               className="bg-[var(--color-surface-1)] hover:bg-[var(--color-surface-2)] transition-colors hairline-border rounded-[12px] p-[20px] text-left flex flex-col gap-[8px] focus-ring"
             >
               <span className="text-orange-500 bg-orange-500/10 p-[8px] rounded-[8px] w-fit">
@@ -152,7 +152,7 @@ export default function AdminDashboard() {
               </span>
               <span className="text-[16px] font-medium text-[var(--color-ink)] mt-[4px]">Data Barang</span>
               <span className="text-[13px] text-[var(--color-ink-subtle)]">Daftar stok dan harga jualan</span>
-            </button>
+            </Link>
           </div>
         </div>
       </div>

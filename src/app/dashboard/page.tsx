@@ -146,43 +146,43 @@ export default function OwnerDashboard() {
                 icon={<Tag size={20} />}
                 title="Manajemen Harga"
                 subtitle="Atur paket membership"
-                onClick={() => router.push('/dashboard/packages')}
+                href="/dashboard/packages"
               />
               <MenuItem
                 icon={<Users size={20} />}
                 title="Manajemen Member"
                 subtitle="Kelola seluruh member gym"
-                onClick={() => router.push('/owner/member')}
+                href="/owner/member"
               />
               <MenuItem
                 icon={<Tag size={20} />}
                 title="Manajemen Produk"
                 subtitle="Atur produk kasir & stok"
-                onClick={() => router.push('/owner/products')}
+                href="/owner/products"
               />
               <MenuItem
                 icon={<DollarSign size={20} />}
                 title="Laporan Keuangan"
                 subtitle="Lihat pendapatan dan analitik"
-                onClick={() => router.push('/owner/reports')}
+                href="/owner/reports"
               />
               <MenuItem
                 icon={<UserCheck size={20} />}
                 title="Manajemen Admin"
                 subtitle="Kelola kasir di semua gym"
-                onClick={() => router.push('/owner/admin')}
+                href="/owner/admin"
               />
               <MenuItem
                 icon={<span className="text-green-500"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span>}
                 title="Kasir (POS)"
                 subtitle="Jual minuman & suplemen"
-                onClick={() => router.push('/admin/pos')}
+                href="/admin/pos"
               />
               <MenuItem
                 icon={<span className="text-[var(--color-primary)]"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><polyline points="14 2 14 8 20 8"/><path d="m3 15 2 2 4-4"/></svg></span>}
                 title="Scan Check-in"
                 subtitle="Scan QR code kedatangan"
-                onClick={() => router.push('/admin/checkin')}
+                href="/admin/checkin"
               />
             </div>
           </div>

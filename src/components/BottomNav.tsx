@@ -3,7 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, Tag, Users, UserCheck, User, Globe, ShoppingCart } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
-
+import Link from 'next/link';
 export function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -44,9 +44,9 @@ export function BottomNav() {
           const isActive = pathname === link.path || pathname?.startsWith(link.path + '/');
           
           return (
-            <button
+            <Link
               key={link.path}
-              onClick={() => router.push(link.path)}
+              href={link.path}
               className={`flex flex-col items-center justify-center w-full h-full gap-1 transition-colors ${
                 isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)]'
               }`}
@@ -57,7 +57,7 @@ export function BottomNav() {
               <span className={`text-[10px] font-medium ${isActive ? 'font-bold' : ''}`}>
                 {link.name}
               </span>
-            </button>
+            </Link>
           );
         })}
       </div>
