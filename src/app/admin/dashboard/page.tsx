@@ -14,26 +14,14 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     async function loadStats() {
-      // Dalam implementasi nyata, admin seharusnya punya gym_id di object user mereka.
-      // Kita asumsikan user.gym_id sudah di-set saat login untuk Admin.
-      // Jika tidak ada, kita fallback dengan ID sembarangan untuk sementara (akan kosong).
-      let gymId = user?.gymId;
-      
-      if (!gymId) {
-        const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
-        if (firstGym) gymId = firstGym.id;
-      }
-      
-      if (!gymId) gymId = 'dummy-gym-id';
-      
       try {
-        const { data: statsData, error: statsError } = await getAdminStats(gymId);
+        const { data: statsData, error: statsError } = await getAdminStats();
         if (statsError) throw statsError;
         if (statsData) setStats(statsData);
 
         // Fetch shift status
         const { getCurrentActiveShiftAction } = await import('@/app/actions/shifts');
-        const shiftRes = await getCurrentActiveShiftAction(gymId, user?.id || '');
+        const shiftRes = await getCurrentActiveShiftAction(user?.id || '');
         if (shiftRes.success && shiftRes.data) {
           setActiveShift(shiftRes.data);
         } else {
@@ -65,7 +53,7 @@ export default function AdminDashboard() {
         
         <div className="mb-[32px]">
           <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Admin Dashboard</h1>
-          <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola cabang gym Anda dari sini.</p>
+          <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Sistem Manajemen Gaul Gym.</p>
         </div>
 
         {!loading && (

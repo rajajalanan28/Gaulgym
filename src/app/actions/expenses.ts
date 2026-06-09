@@ -11,14 +11,13 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 
 export async function addExpenseAction(formData: FormData) {
   try {
-    const gymId = formData.get('gymId') as string;
     const amountStr = formData.get('amount') as string;
     const category = formData.get('category') as string;
     const description = formData.get('description') as string;
     const date = formData.get('date') as string;
     const createdBy = formData.get('createdBy') as string;
 
-    if (!gymId || !amountStr || !category || !date || !createdBy) {
+    if (!amountStr || !category || !date || !createdBy) {
       return { error: 'Semua field wajib diisi' };
     }
 
@@ -27,7 +26,6 @@ export async function addExpenseAction(formData: FormData) {
     const { data, error } = await supabaseAdmin
       .from('expenses')
       .insert({
-        gym_id: gymId,
         amount,
         category,
         description,
@@ -45,13 +43,12 @@ export async function addExpenseAction(formData: FormData) {
   }
 }
 
-export async function deleteExpenseAction(id: string, gymId: string) {
+export async function deleteExpenseAction(id: string) {
   try {
     const { error } = await supabaseAdmin
       .from('expenses')
       .delete()
-      .eq('id', id)
-      .eq('gym_id', gymId);
+      .eq('id', id);
 
     if (error) throw error;
     return { success: true };
@@ -61,12 +58,11 @@ export async function deleteExpenseAction(id: string, gymId: string) {
   }
 }
 
-export async function getExpenseCategoriesAction(gymId: string) {
+export async function getExpenseCategoriesAction() {
   try {
     const { data, error } = await supabaseAdmin
       .from('expenses')
-      .select('category')
-      .eq('gym_id', gymId);
+      .select('category');
 
     if (error) throw error;
 
@@ -77,12 +73,11 @@ export async function getExpenseCategoriesAction(gymId: string) {
   }
 }
 
-export async function getExpensesAction(gymId: string, startDate?: string, endDate?: string) {
+export async function getExpensesAction(startDate?: string, endDate?: string) {
   try {
     let query = supabaseAdmin
       .from('expenses')
       .select('*')
-      .eq('gym_id', gymId)
       .order('date', { ascending: false })
       .order('created_at', { ascending: false });
 

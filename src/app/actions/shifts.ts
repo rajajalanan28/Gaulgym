@@ -9,13 +9,12 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { autoRefreshToken: false, persistSession: false }
 });
 
-export async function openShiftAction(gymId: string, adminId: string, startingCash: number) {
+export async function openShiftAction(adminId: string, startingCash: number) {
   try {
-    // Check if there's already an open shift for this admin in this gym
+    // Check if there's already an open shift for this admin
     const { data: existing, error: checkError } = await supabaseAdmin
       .from('shifts')
       .select('*')
-      .eq('gym_id', gymId)
       .eq('admin_id', adminId)
       .eq('status', 'open')
       .single();
@@ -27,7 +26,6 @@ export async function openShiftAction(gymId: string, adminId: string, startingCa
     const { data, error } = await supabaseAdmin
       .from('shifts')
       .insert({
-        gym_id: gymId,
         admin_id: adminId,
         starting_cash: startingCash,
         status: 'open'
@@ -66,14 +64,13 @@ export async function closeShiftAction(shiftId: string, endingCash: number, expe
   }
 }
 
-export async function getCurrentActiveShiftAction(gymId: string, adminId?: string) {
+export async function getCurrentActiveShiftAction(adminId?: string) {
   try {
     // If adminId is provided, get THEIR active shift.
-    // If not, maybe just return any open shift for the gym? Usually it's per admin.
+    // If not, maybe just return any open shift. Usually it's per admin.
     let query = supabaseAdmin
       .from('shifts')
       .select('*')
-      .eq('gym_id', gymId)
       .eq('status', 'open');
 
     if (adminId) {

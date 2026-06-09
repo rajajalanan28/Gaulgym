@@ -28,11 +28,10 @@ export async function registerMemberAction(formData: FormData) {
     const email = formData.get('email') as string;
     const name = formData.get('name') as string;
     const phone = formData.get('phone') as string;
-    const gymId = formData.get('gymId') as string;
     const photoBase64 = formData.get('photoBase64') as string;
     
-    if (!email || !name || !gymId) {
-      return { error: 'Nama, Email, dan Gym ID wajib diisi' };
+    if (!email || !name) {
+      return { error: 'Nama dan Email wajib diisi' };
     }
 
     if (!supabaseServiceKey) {
@@ -51,8 +50,6 @@ export async function registerMemberAction(formData: FormData) {
     if (existingUser) {
       // User already exists, use their ID
       userId = existingUser.id;
-      // Optional: Update their gym_id if it's null
-      await supabaseAdmin.from('users').update({ gym_id: gymId }).eq('id', userId);
     } else {
       const tempPassword = generateSecurePassword();
 
@@ -79,7 +76,6 @@ export async function registerMemberAction(formData: FormData) {
           name,
           role: 'Member',
           phone,
-          gym_id: gymId,
           is_active: true
         });
 
@@ -128,7 +124,6 @@ export async function registerMemberAction(formData: FormData) {
       .from('members')
       .insert({
         user_id: userId,
-        gym_id: gymId,
         display_id: displayId,
         name,
         email,

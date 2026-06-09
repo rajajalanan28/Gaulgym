@@ -55,16 +55,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
 
-    const { userId, ownerId, memberId, gymId } = await request.json();
+    const { userId, ownerId, memberId } = await request.json();
 
-    if (!userId || !ownerId || !memberId || !gymId) {
+    if (!userId || !ownerId || !memberId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Verify requester is Owner
     const { data: requester } = await supabaseAdmin
       .from('users')
-      .select('role, gym_id')
+      .select('role')
       .eq('id', user.id)
       .single();
       
@@ -72,22 +72,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Forbidden - Owner only' }, { status: 403 });
     }
 
-    // C-6/H-18: Validate the target gym belongs to the requester (Owner)
-    const { data: ownerGym } = await supabaseAdmin
-      .from('gyms')
-      .select('id')
-      .eq('id', gymId)
-      .eq('owner_id', user.id)
-      .single();
-
-    if (!ownerGym) {
-      return NextResponse.json({ error: 'Forbidden - You do not own this gym' }, { status: 403 });
-    }
-
-    // Validate the target user belongs to the specified gym
+    // Validate the target user exists
     const { data: targetUser } = await supabaseAdmin
       .from('users')
-      .select('id, gym_id')
+      .select('id')
       .eq('id', userId)
       .single();
 
@@ -95,14 +83,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Target user not found' }, { status: 404 });
     }
 
-    if (targetUser.gym_id !== gymId) {
-      return NextResponse.json({ error: 'Forbidden - Target user does not belong to your gym' }, { status: 403 });
-    }
-
-    // Update user role to Admin and assign owner_id and gym_id
+    // Update user role to Admin and assign owner_id
     const { error: updateError } = await supabaseAdmin
       .from('users')
-      .update({ role: 'Admin', owner_id: ownerId, gym_id: gymId })
+      .update({ role: 'Admin', owner_id: ownerId })
       .eq('id', userId);
 
     if (updateError) throw updateError;

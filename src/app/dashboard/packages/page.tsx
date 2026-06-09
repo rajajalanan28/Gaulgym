@@ -4,12 +4,11 @@ import { useState, useEffect } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
-import { supabase, getGymsByOwner } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { Package, Plus, Edit2, Check, X, Trash2, Tag, Loader2 } from "lucide-react";
 
 interface DbPackage {
   id: string;
-  gym_id: string;
   name: string;
   description: string;
   duration_days: number;
@@ -33,7 +32,6 @@ export default function PackagesManagementPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [packages, setPackages] = useState<DbPackage[]>([]);
-  const [gymId, setGymId] = useState<string>('');
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -57,16 +55,9 @@ export default function PackagesManagementPage() {
     if (!user) return;
     try {
       setLoading(true);
-      const { data: gyms, error: gymsError } = await getGymsByOwner(user.id);
-      if (gymsError) throw gymsError;
-      if (!gyms || gyms.length === 0) return;
-      const primaryGymId = gyms[0].id;
-      setGymId(primaryGymId);
-
       const { data, error } = await supabase
         .from('packages')
         .select('*')
-        .eq('gym_id', primaryGymId)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
@@ -116,11 +107,9 @@ export default function PackagesManagementPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!gymId) return;
     setIsSubmitting(true);
     
     const payload = {
-      gym_id: gymId,
       name: formData.name,
       description: formData.description,
       duration_days: formData.duration_days,

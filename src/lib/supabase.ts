@@ -16,33 +16,15 @@ export interface DbUser {
   name: string
   role: 'Owner' | 'Admin' | 'Member'
   phone?: string
-  gym_id?: string
-  owner_id?: string
   created_at: string
   last_login_at?: string
   is_active: boolean
 }
 
-export interface DbGym {
-  id: string
-  owner_id: string
-  name: string
-  address: string
-  description?: string
-  photo_url?: string
-  is_active: boolean
-  opening_time: string
-  closing_time: string
-  closed_days?: string[]
-  phone?: string
-  email?: string
-  created_at: string
-}
 
 export interface DbMember {
   id: string
   user_id: string
-  gym_id: string
   display_id: string
   name: string
   email: string
@@ -57,7 +39,6 @@ export interface DbMember {
 export interface DbSubscription {
   id: string
   member_id: string
-  gym_id: string
   package_id: string
   package_name: string
   start_date: string
@@ -75,7 +56,6 @@ export interface DbSubscription {
 
 export interface DbPackage {
   id: string
-  gym_id: string
   name: string
   description?: string
   duration_days: number
@@ -92,7 +72,6 @@ export interface DbAttendance {
   id: string
   member_id: string
   member_name: string
-  gym_id: string
   date: string
   check_in: string
   check_out?: string
@@ -105,7 +84,6 @@ export interface DbAttendance {
 
 export interface DbExpense {
   id: string
-  gym_id: string
   amount: number
   category: string
   description?: string
@@ -116,7 +94,6 @@ export interface DbExpense {
 
 export interface DbShift {
   id: string
-  gym_id: string
   admin_id: string
   start_time: string
   end_time?: string
@@ -144,27 +121,11 @@ export async function getUserWithRole(email: string) {
   }
 }
 
-export async function getGymsByOwner(ownerId: string) {
-  try {
-    const { data, error } = await supabase
-      .from('gyms')
-      .select('*')
-      .eq('owner_id', ownerId)
-      .order('created_at', { ascending: false })
-    
-    if (error) return { data: null, error }
-    return { data: data as DbGym[], error: null }
-  } catch (error) {
-    return { data: null, error }
-  }
-}
-
-export async function getMembersByGym(gymId: string) {
+export async function getAllMembers() {
   try {
     const { data, error } = await supabase
       .from('members')
       .select('*')
-      .eq('gym_id', gymId)
       .order('name', { ascending: true })
     
     if (error) return { data: null, error }
@@ -174,12 +135,11 @@ export async function getMembersByGym(gymId: string) {
   }
 }
 
-export async function getAttendanceByDate(gymId: string, date: string) {
+export async function getAttendanceByDate(date: string) {
   try {
     const { data, error } = await supabase
       .from('attendance')
       .select('*')
-      .eq('gym_id', gymId)
       .eq('date', date)
       .order('check_in', { ascending: false })
     
@@ -192,40 +152,21 @@ export async function getAttendanceByDate(gymId: string, date: string) {
 
 export async function getOwnerStats(ownerId: string) {
   try {
-    const { data: gyms, error: gymsError } = await getGymsByOwner(ownerId);
-    if (gymsError || !gyms) return { data: null, error: gymsError || new Error('Failed to fetch gyms') };
-    
-    // Admin count depends only on ownerId, not gymIds
     const { count: adminCount, error: adminError } = await supabase
       .from('users')
       .select('*', { count: 'exact', head: true })
-      .eq('role', 'Admin')
-      .eq('owner_id', ownerId);
+      .eq('role', 'Admin');
 
     if (adminError) return { data: null, error: adminError };
-
-    const gymIds = gyms.map((g: DbGym) => g.id);
-
-    if (gymIds.length === 0) {
-      return { 
-        data: { 
-          totalGyms: 0, 
-          totalMembers: 0, 
-          totalAdmin: adminCount || 0, 
-          totalRevenue: 0 
-        }, 
-        error: null 
-      };
-    }
 
     const [
       { count: memberCount, error: memberError },
       { data: subs, error: subsError },
       { data: sales, error: salesError }
     ] = await Promise.all([
-      supabase.from('members').select('*', { count: 'exact', head: true }).in('gym_id', gymIds),
-      supabase.from('subscriptions').select('amount').in('gym_id', gymIds),
-      supabase.from('sales_transactions').select('total_amount').in('gym_id', gymIds)
+      supabase.from('members').select('*', { count: 'exact', head: true }),
+      supabase.from('subscriptions').select('amount'),
+      supabase.from('sales_transactions').select('total_amount')
     ]);
 
     if (memberError) return { data: null, error: memberError };
@@ -238,7 +179,7 @@ export async function getOwnerStats(ownerId: string) {
 
     return {
       data: {
-        totalGyms: gyms.length,
+        totalGyms: 1, // Hardcoded to 1
         totalMembers: memberCount || 0,
         totalAdmin: adminCount || 0,
         totalRevenue: revenue,
@@ -250,13 +191,8 @@ export async function getOwnerStats(ownerId: string) {
   }
 }
 
-export async function getOwnerRevenueChart(ownerId: string) {
+export async function getOwnerRevenueChart() {
   try {
-    const { data: gyms, error: gymsError } = await supabase.from('gyms').select('id').eq('owner_id', ownerId);
-    if (gymsError || !gyms || gyms.length === 0) return { data: [], error: null };
-
-    const gymIds = gyms.map((g) => g.id);
-
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const startDate = sevenDaysAgo.toISOString().split('T')[0];
@@ -264,7 +200,6 @@ export async function getOwnerRevenueChart(ownerId: string) {
     const { data: transactions, error } = await supabase
       .from('sales_transactions')
       .select('amount, created_at, type')
-      .in('gym_id', gymIds)
       .gte('created_at', startDate);
 
     if (error) throw error;
@@ -303,7 +238,7 @@ export async function getOwnerRevenueChart(ownerId: string) {
   }
 }
 
-export async function getAdminStats(gymId: string) {
+export async function getAdminStats() {
   try {
     const today = new Date().toISOString().split('T')[0];
 
@@ -316,9 +251,9 @@ export async function getAdminStats(gymId: string) {
       { count: checkinCount, error: checkinError },
       { count: newMemberCount, error: newMemberError }
     ] = await Promise.all([
-      supabase.from('members').select('*', { count: 'exact', head: true }).eq('gym_id', gymId),
-      supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('gym_id', gymId).eq('date', today).eq('status', 'checked_in'),
-      supabase.from('members').select('*', { count: 'exact', head: true }).eq('gym_id', gymId).gte('join_date', thirtyDaysAgo.toISOString().split('T')[0])
+      supabase.from('members').select('*', { count: 'exact', head: true }),
+      supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('date', today).eq('status', 'checked_in'),
+      supabase.from('members').select('*', { count: 'exact', head: true }).gte('join_date', thirtyDaysAgo.toISOString().split('T')[0])
     ]);
 
     if (memberError) return { data: null, error: memberError };

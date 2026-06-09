@@ -6,14 +6,13 @@ import { Banknote, Lock, Unlock, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface ShiftManagerProps {
-  gymId: string;
   adminId: string;
   children: React.ReactNode;
 }
 
 import { supabase } from '@/lib/supabase';
 
-export function ShiftManager({ gymId, adminId, children }: ShiftManagerProps) {
+export function ShiftManager({ adminId, children }: ShiftManagerProps) {
   const [loading, setLoading] = useState(true);
   const [activeShift, setActiveShift] = useState<any>(null);
   
@@ -34,7 +33,7 @@ export function ShiftManager({ gymId, adminId, children }: ShiftManagerProps) {
 
   const loadShift = async () => {
     setLoading(true);
-    const res = await getCurrentActiveShiftAction(gymId, adminId);
+    const res = await getCurrentActiveShiftAction(adminId);
     if (res.success && res.data) {
       setActiveShift(res.data);
       
@@ -43,7 +42,7 @@ export function ShiftManager({ gymId, adminId, children }: ShiftManagerProps) {
       try {
         const [posRes, subRes, expRes] = await Promise.all([
           supabase.from('sales_transactions').select('total_amount').eq('admin_id', adminId).gte('created_at', shiftStartTime),
-          supabase.from('subscriptions').select('amount').eq('gym_id', gymId).gte('created_at', shiftStartTime),
+          supabase.from('subscriptions').select('amount').gte('created_at', shiftStartTime),
           supabase.from('expenses').select('amount').eq('created_by', adminId).gte('created_at', shiftStartTime)
         ]);
 
@@ -70,10 +69,10 @@ export function ShiftManager({ gymId, adminId, children }: ShiftManagerProps) {
   };
 
   useEffect(() => {
-    if (gymId && adminId) {
+    if (adminId) {
       loadShift();
     }
-  }, [gymId, adminId]);
+  }, [adminId]);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
     const val = e.target.value.replace(/[^0-9]/g, '');
@@ -89,7 +88,7 @@ export function ShiftManager({ gymId, adminId, children }: ShiftManagerProps) {
     e.preventDefault();
     setOpeningSubmitting(true);
     const amount = Number(openingCash.replace(/[^0-9]/g, ''));
-    const res = await openShiftAction(gymId, adminId, amount);
+    const res = await openShiftAction(adminId, amount);
     setOpeningSubmitting(false);
     
     if (res.success) {

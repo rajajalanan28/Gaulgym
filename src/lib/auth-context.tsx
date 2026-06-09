@@ -10,7 +10,6 @@ interface DbUser {
   email: string;
   name: string;
   role: string;
-  gym_id?: string;
 }
 
 interface PostgrestError {
@@ -24,7 +23,6 @@ export interface AuthUser {
   email: string;
   name: string;
   role: 'Owner' | 'Admin' | 'Member';
-  gymId?: string;
   emailConfirmedAt?: string | null;
 }
 
@@ -32,7 +30,7 @@ interface AuthContextType {
   user: AuthUser | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
   loginWithGoogle: () => Promise<void>;
-  register: (name: string, email: string, password: string, role?: string, gymId?: string) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
+  register: (name: string, email: string, password: string, role?: string) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -94,7 +92,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.email,
           name: data.name,
           role: data.role as AuthUser['role'],
-          gymId: data.gym_id,
           emailConfirmedAt: emailConfirmedAt,
         });
       }
@@ -182,15 +179,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: userData.email,
         name: userData.name,
         role: userData.role as AuthUser['role'],
-        gymId: userData.gym_id,
         emailConfirmedAt: authData.user.email_confirmed_at || null,
       };
       setUserAndCache(authUser);
 
       // Set cookie for middleware
       document.cookie = `x-user-role-cache=${encodeURIComponent(JSON.stringify({
-        role: authUser.role,
-        gym_id: authUser.gymId
+        role: authUser.role
       }))}; path=/; max-age=86400; SameSite=Lax`;
       // S-8: Return warning about email verification
       const warnings: string[] = [];
@@ -215,7 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // M-2: Allow the role parameter to be used if provided, with validation
-  const register = async (name: string, email: string, password: string, role: string = 'Member', gymId?: string) => {
+  const register = async (name: string, email: string, password: string, role: string = 'Member') => {
     try {
       setLoading(true);
 
@@ -230,7 +225,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           data: {
             name,
             role: finalRole,
-            gym_id: gymId,
           },
         },
       });
@@ -238,48 +232,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authError) throw authError;
 
       if (authData.user) {
-        // H-15: Don't auto-assign to arbitrary first gym if gymId is not provided
-        const targetGymId = gymId || undefined;
 
         const { error: profileError } = await supabase.from('users').insert({
           id: authData.user.id,
           email,
           name,
           role: finalRole,
-          gym_id: targetGymId,
           is_active: true,
         });
 
         if (profileError) throw profileError;
 
-        // Only insert into members table if a specific gym was provided
-        if (targetGymId) {
-          const randomBytes = new Uint8Array(4);
-          crypto.getRandomValues(randomBytes);
-          const displayId = 'GG-' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 6).toUpperCase();
-          await supabase.from('members').insert({
-            user_id: authData.user.id,
-            gym_id: targetGymId,
-            name,
-            email,
-            display_id: displayId,
-            join_date: new Date().toISOString().split('T')[0]
-          });
-        }
+        // M-16: Auto-create member record without gymId scoping
+        const randomBytes = new Uint8Array(4);
+        crypto.getRandomValues(randomBytes);
+        const displayId = 'GG-' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 6).toUpperCase();
+        await supabase.from('members').insert({
+          user_id: authData.user.id,
+          name,
+          email,
+          display_id: displayId,
+          join_date: new Date().toISOString().split('T')[0]
+        });
 
         const authUser: AuthUser = {
           id: authData.user.id,
           email,
           name,
           role: finalRole as AuthUser['role'],
-          gymId: targetGymId,
           emailConfirmedAt: authData.user.email_confirmed_at || null,
         };
         setUserAndCache(authUser);
         // Set cookie for middleware
         document.cookie = `x-user-role-cache=${encodeURIComponent(JSON.stringify({
-          role: authUser.role,
-          gym_id: authUser.gymId
+          role: authUser.role
         }))}; path=/; max-age=86400; SameSite=Lax`;
         return { success: true, user: authUser };
       }

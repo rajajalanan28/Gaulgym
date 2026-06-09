@@ -21,7 +21,6 @@ interface Product {
 export default function ProductManagementPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const [gymId, setGymId] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -39,41 +38,15 @@ export default function ProductManagementPage() {
 
   useEffect(() => {
     if (user?.id) {
-      fetchGymIdAndProducts();
+      fetchProducts();
     }
   }, [user]);
 
-  const fetchGymIdAndProducts = async () => {
-    try {
-      setLoading(true);
-      // Fetch gym id
-      const { data: gyms, error } = await supabase
-        .from('gyms')
-        .select('id')
-        .eq('owner_id', user!.id)
-        .limit(1);
-        
-      if (error) throw error;
-        
-      if (gyms && gyms.length > 0) {
-        setGymId(gyms[0].id);
-        await fetchProducts(gyms[0].id);
-      } else {
-        // No gym found for this owner
-        setLoading(false);
-      }
-    } catch (error) {
-      console.error('Error fetching gym:', error);
-      setLoading(false);
-    }
-  };
-
-  const fetchProducts = async (gId: string) => {
+  const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('gym_id', gId)
         .order('name');
         
       if (error) throw error;
@@ -86,7 +59,6 @@ export default function ProductManagementPage() {
   };
 
   const handleSeedProducts = async () => {
-    if (!gymId) return;
     try {
       setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -96,14 +68,13 @@ export default function ProductManagementPage() {
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token || ''}`
-        },
-        body: JSON.stringify({ gymId })
+        }
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       
       alert('Berhasil membuat produk contoh!');
-      fetchProducts(gymId);
+      fetchProducts();
     } catch (error: any) {
       alert('Gagal membuat produk contoh: ' + error.message);
       setLoading(false);
@@ -127,12 +98,10 @@ export default function ProductManagementPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!gymId) return;
     
     setIsSubmitting(true);
     try {
       const payload = {
-        gym_id: gymId,
         name: formData.name,
         price: parseInt(formData.price),
         stock: parseInt(formData.stock)
@@ -152,7 +121,7 @@ export default function ProductManagementPage() {
       }
 
       setIsModalOpen(false);
-      fetchProducts(gymId);
+      fetchProducts();
     } catch (error: any) {
       alert('Terjadi kesalahan: ' + error.message);
     } finally {

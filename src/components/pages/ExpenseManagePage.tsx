@@ -13,7 +13,6 @@ export default function ExpenseManagePage() {
   const [loading, setLoading] = useState(true);
   const [expenses, setExpenses] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [activeGymId, setActiveGymId] = useState<string | null>(null);
   
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -30,21 +29,10 @@ export default function ExpenseManagePage() {
     if (!user) return;
     try {
       setLoading(true);
-      let gId = user.gymId;
-      if (!gId && user.role === 'Owner') {
-        const { data } = await supabase.from('gyms').select('id').eq('owner_id', user.id).single();
-        if (data) gId = data.id;
-      }
-
-      if (!gId) {
-        setLoading(false);
-        return;
-      }
-      setActiveGymId(gId);
 
       const [expRes, catRes] = await Promise.all([
-        getExpensesAction(gId),
-        getExpenseCategoriesAction(gId)
+        getExpensesAction(),
+        getExpenseCategoriesAction()
       ]);
 
       if (expRes.success) setExpenses(expRes.data);
@@ -77,7 +65,7 @@ export default function ExpenseManagePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeGymId || !user) return;
+    if (!user) return;
     
     const finalCategory = formData.category === 'Lainnya' ? formData.customCategory : formData.category;
     if (!finalCategory) {
@@ -87,7 +75,6 @@ export default function ExpenseManagePage() {
 
     setSubmitting(true);
     const fd = new FormData();
-    fd.append('gymId', activeGymId);
     fd.append('amount', formData.amount);
     fd.append('category', finalCategory);
     fd.append('date', formData.date);
@@ -107,9 +94,8 @@ export default function ExpenseManagePage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!activeGymId) return;
     if (confirm('Apakah Anda yakin ingin menghapus pengeluaran ini?')) {
-      const res = await deleteExpenseAction(id, activeGymId);
+      const res = await deleteExpenseAction(id);
       if (res.success) {
         loadData();
       } else {

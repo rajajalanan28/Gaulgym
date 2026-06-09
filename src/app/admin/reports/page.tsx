@@ -11,7 +11,6 @@ import { TrendingUp, Calendar, Filter, Download, ArrowDownCircle, ArrowUpCircle 
 export default function AdminReportsPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [gymId, setGymId] = useState('');
   
   // Data States
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -35,37 +34,17 @@ export default function AdminReportsPage() {
 
     try {
       setLoading(true);
-      
-      let gId = user.gymId;
-      if (!gId) {
-        if (user.role === 'Owner') {
-          const { data: gym } = await supabase.from('gyms').select('id').eq('owner_id', user.id).single();
-          if (gym) gId = gym.id;
-        } else {
-          const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
-          if (firstGym) gId = firstGym.id;
-        }
-      }
-      
-      if (!gId) {
-        setLoading(false);
-        return;
-      }
-      
-      setGymId(gId);
 
       // Fetch subscriptions (income for this gym)
       const { data: subsData } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('gym_id', gId)
         .order('created_at', { ascending: false });
 
       // Fetch sales transactions (income)
       const { data: salesData } = await supabase
         .from('sales_transactions')
         .select('*')
-        .eq('gym_id', gId)
         .order('created_at', { ascending: false });
 
       // Check if aborted

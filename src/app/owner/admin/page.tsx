@@ -53,13 +53,12 @@ export default function AdminPage() {
   }, [user]);
 
   const loadMembers = async () => {
-    if (!user?.gymId) return;
+    if (!user) return;
     setLoadingMembers(true);
     try {
       const { data, error } = await supabase
         .from('members')
         .select('*')
-        .eq('gym_id', user.gymId)
         .order('name', { ascending: true });
         
       if (error) throw error;
@@ -96,8 +95,7 @@ export default function AdminPage() {
         body: JSON.stringify({
           userId: selectedMember.user_id,
           ownerId: user.id,
-          memberId: selectedMember.id,
-          gymId: user.gymId
+          memberId: selectedMember.id
         })
       });
 

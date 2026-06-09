@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
-import { supabase, getGymsByOwner } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts';
 import { DollarSign, TrendingUp, Calendar, Filter, Users, Download, Plus, X, Loader2, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 
@@ -29,7 +29,6 @@ const getLocalDateString = () => {
 export default function ReportsPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [gymId, setGymId] = useState('');
   
   // Data States
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -56,43 +55,25 @@ export default function ReportsPage() {
   const loadData = async () => {
     if (!user) return;
     try {
-      setLoading(true);
-      const { data: gyms, error: gymsError } = await getGymsByOwner(user.id);
-      if (gymsError || !gyms || gyms.length === 0) {
-        setLoading(false);
-        return;
-      }
-      
-      const primaryGymId = gyms[0].id;
-      setGymId(primaryGymId);
-
-      // 1. Fetch active members count for ARPM
       const { count: membersCount } = await supabase
         .from('members')
-        .select('*', { count: 'exact', head: true })
-        .eq('gym_id', primaryGymId);
+        .select('*', { count: 'exact', head: true });
       
       setActiveMembersCount(membersCount || 0);
 
-      // 2. Fetch all subscriptions (Income)
       const { data: subsData } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('gym_id', primaryGymId)
         .order('created_at', { ascending: false });
 
-      // 3. Fetch sales transactions (Income)
       const { data: salesData } = await supabase
         .from('sales_transactions')
         .select('*, users(name)')
-        .eq('gym_id', primaryGymId)
         .order('created_at', { ascending: false });
 
-      // 4. Fetch expenses (Expense)
       const { data: expensesData } = await supabase
         .from('expenses')
         .select('*, auth_users:created_by(raw_user_meta_data)')
-        .eq('gym_id', primaryGymId)
         .order('created_at', { ascending: false });
 
       // Format & Merge Data
@@ -223,12 +204,10 @@ export default function ReportsPage() {
 
   const handleExpenseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !gymId) return;
-    
+    if (!user) return;
     try {
       setIsSubmittingExpense(true);
       const { error } = await supabase.from('expenses').insert({
-        gym_id: gymId,
         amount: Number(expenseForm.amount),
         category: expenseForm.category,
         description: expenseForm.description,

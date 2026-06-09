@@ -41,35 +41,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Forbidden: Owner only' }, { status: 403 });
     }
 
-    const { gymId } = await request.json();
 
-    if (!gymId) {
-      return NextResponse.json(
-        { error: 'gymId is required' },
-        { status: 400 }
-      );
-    }
 
-    // H-17: Validate that the requesting owner actually owns the target gym
-    const { data: ownedGym } = await supabaseAdmin
-      .from('gyms')
-      .select('id')
-      .eq('id', gymId)
-      .eq('owner_id', user.id)
-      .single();
-
-    if (!ownedGym) {
-      return NextResponse.json(
-        { error: 'Forbidden: You do not own this gym' },
-        { status: 403 }
-      );
-    }
-
-    // Check if the gym already has products
     const { data: existingProducts, error: checkError } = await supabaseAdmin
       .from('products')
       .select('id')
-      .eq('gym_id', gymId)
       .limit(1);
 
     if (checkError) {
@@ -85,7 +61,6 @@ export async function POST(request: Request) {
 
     // Insert placeholder products
     const productsToInsert = PLACEHOLDER_PRODUCTS.map((product) => ({
-      gym_id: gymId,
       name: product.name,
       price: product.price,
       stock: product.stock,

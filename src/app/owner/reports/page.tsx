@@ -16,23 +16,16 @@ export default function ReportsPage() {
 
   useEffect(() => {
     if (authLoading || !user) return;
-    fetchData(user.gymId);
+    fetchData();
   }, [user, authLoading]);
 
-  const fetchData = async (gymId: string | undefined) => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      if (!gymId) {
-        console.error("Gym ID tidak ditemukan!");
-        setLoading(false);
-        return;
-      }
 
-      // Fetch POS Transactions
       const { data: posData, error: posError } = await supabase
         .from('sales_transactions')
         .select('created_at, total_amount')
-        .eq('gym_id', gymId)
         .order('created_at', { ascending: true });
         
       if (posError) throw posError;
@@ -44,7 +37,6 @@ export default function ReportsPage() {
           created_at,
           amount
         `)
-        .eq('gym_id', gymId)
         .order('created_at', { ascending: true });
 
       if (subError) throw subError;
@@ -53,7 +45,6 @@ export default function ReportsPage() {
       const { data: expData, error: expError } = await supabase
         .from('expenses')
         .select('date, amount')
-        .eq('gym_id', gymId)
         .order('date', { ascending: true });
 
       if (expError) throw expError;

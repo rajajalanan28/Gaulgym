@@ -20,7 +20,7 @@ const Tag = dynamic(() => import('lucide-react').then(m => ({ default: m.Tag }))
 export default function OwnerDashboard() {
   const { user } = useAuth();
   const router = useRouter();
-  const [stats, setStats] = useState({ totalGyms: 0, totalMembers: 0, totalAdmin: 0, totalRevenue: 0 });
+  const [stats, setStats] = useState({ totalMembers: 0, totalAdmin: 0, totalRevenue: 0 });
   const [chartData, setChartData] = useState<{name: string, Pendapatan: number}[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +30,7 @@ export default function OwnerDashboard() {
         try {
           const [statsRes, chartRes] = await Promise.all([
             getOwnerStats(user.id),
-            getOwnerRevenueChart(user.id)
+            getOwnerRevenueChart()
           ]);
           
           if (statsRes.error) throw statsRes.error;
@@ -62,7 +62,7 @@ export default function OwnerDashboard() {
           <div className="mb-[32px]">
             <WelcomeCard
               title={`Selamat datang kembali, ${user?.name || 'Owner'}!`}
-              subtitle="Berikut adalah ringkasan jaringan gym Anda"
+              subtitle="Berikut adalah ringkasan Gaul Gym"
             />
           </div>
 
@@ -151,7 +151,7 @@ export default function OwnerDashboard() {
               <MenuItem
                 icon={<Users size={20} />}
                 title="Manajemen Member"
-                subtitle="Kelola seluruh member gym"
+                subtitle="Kelola seluruh member"
                 href="/owner/member"
               />
               <MenuItem
@@ -169,7 +169,7 @@ export default function OwnerDashboard() {
               <MenuItem
                 icon={<UserCheck size={20} />}
                 title="Manajemen Admin"
-                subtitle="Kelola kasir di semua gym"
+                subtitle="Kelola semua akun admin"
                 href="/owner/admin"
               />
               <MenuItem

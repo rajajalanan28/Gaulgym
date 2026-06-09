@@ -31,39 +31,19 @@ export default function POSPage() {
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'QRIS'>('Cash');
   const [showSuccess, setShowSuccess] = useState(false);
-  const [activeGymId, setActiveGymId] = useState<string | null>(null);
-
   useEffect(() => {
     const init = async () => {
       if (!user) return;
-      
-      let gId = user.gymId;
-      if (user.role === 'Owner') {
-        const { data } = await supabase.from('gyms').select('id').eq('owner_id', user.id).single();
-        if (data) gId = data.id;
-      }
-
-      if (!gId) {
-        const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
-        if (firstGym) gId = firstGym.id;
-      }
-      
-      if (gId) {
-        setActiveGymId(gId);
-        fetchProducts(gId);
-      } else {
-        setLoading(false);
-      }
+      fetchProducts();
     };
     init();
   }, [user]);
 
-  const fetchProducts = async (gId: string) => {
+  const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('gym_id', gId)
         .eq('is_active', true)
         .order('name');
         
@@ -111,7 +91,7 @@ export default function POSPage() {
   };
 
   const processPayment = async () => {
-    if (!activeGymId || !user?.id || cart.length === 0) return;
+    if (!user?.id || cart.length === 0) return;
     
     setProcessing(true);
     try {
@@ -119,7 +99,6 @@ export default function POSPage() {
       const { data: trxData, error: trxError } = await supabase
         .from('sales_transactions')
         .insert({
-          gym_id: activeGymId,
           admin_id: user.id,
           total_amount: totalAmount,
           payment_method: paymentMethod
@@ -155,7 +134,7 @@ export default function POSPage() {
       // Success
       setCart([]);
       setShowSuccess(true);
-      if (activeGymId) await fetchProducts(activeGymId); // Refresh products to get new stock
+      await fetchProducts(); // Refresh products to get new stock
       setTimeout(() => setShowSuccess(false), 3000);
       
     } catch (error) {
@@ -171,8 +150,8 @@ export default function POSPage() {
       <div className="p-4 pb-28 md:p-[48px] max-w-[1400px] mx-auto min-h-screen bg-[var(--color-canvas)] text-white">
         <DashboardHeader />
         
-        {activeGymId && user?.id ? (
-          <ShiftManager gymId={activeGymId} adminId={user.id}>
+        {user?.id ? (
+          <ShiftManager adminId={user.id}>
             <div className="mb-8">
               <h1 className="text-[28px] font-semibold text-gray-100 flex items-center gap-3">
                 <ShoppingCart className="text-[var(--color-primary)]" size={28} />

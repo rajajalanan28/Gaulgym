@@ -35,38 +35,19 @@ export default function InventoryPage() {
   const [editingStockId, setEditingStockId] = useState<string | null>(null);
   const [editStockValue, setEditStockValue] = useState<string>('');
 
-  const [activeGymId, setActiveGymId] = useState<string | null>(null);
-
   useEffect(() => {
     const init = async () => {
       if (!user) return;
-      let gId = user.gymId;
-      if (user.role === 'Owner') {
-        const { data } = await supabase.from('gyms').select('id').eq('owner_id', user.id).single();
-        if (data) gId = data.id;
-      }
-
-      if (!gId) {
-        const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
-        if (firstGym) gId = firstGym.id;
-      }
-      
-      if (gId) {
-        setActiveGymId(gId);
-        fetchProducts(gId);
-      } else {
-        setLoading(false);
-      }
+      fetchProducts();
     };
     init();
   }, [user]);
 
-  const fetchProducts = async (gId: string) => {
+  const fetchProducts = async () => {
     try {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('gym_id', gId)
         .order('name');
         
       if (error) throw error;
@@ -97,7 +78,7 @@ export default function InventoryPage() {
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.gymId || user.role !== 'Owner') return;
+    if (!user || user.role !== 'Owner') return;
     
     setSubmitting(true);
     try {
@@ -107,7 +88,7 @@ export default function InventoryPage() {
       if (newProductImage) {
         const fileExt = newProductImage.name.split('.').pop();
         const fileName = `${crypto.randomUUID()}_${Date.now()}.${fileExt}`;
-        const filePath = `${user.gymId}/${fileName}`;
+        const filePath = `gaulgym/${fileName}`;
 
         const { error: uploadError, data: uploadData } = await supabase.storage
           .from('product-images')
@@ -127,7 +108,6 @@ export default function InventoryPage() {
       const { error } = await supabase
         .from('products')
         .insert({
-          gym_id: activeGymId,
           name: newProductName,
           price: parseInt(newProductPrice.replace(/\D/g, '')),
           stock: parseInt(newProductStock.replace(/\D/g, '')) || 0,
@@ -144,7 +124,7 @@ export default function InventoryPage() {
       setNewProductImage(null);
       setImagePreview(null);
       setShowForm(false);
-      if (activeGymId) await fetchProducts(activeGymId);
+      await fetchProducts();
     } catch (error: any) {
       console.error('Error adding product:', error);
       alert(error.message || 'Gagal menambah barang');
@@ -163,7 +143,7 @@ export default function InventoryPage() {
         .eq('id', id);
         
       if (error) throw error;
-      if (activeGymId) await fetchProducts(activeGymId);
+      await fetchProducts();
     } catch (error) {
       console.error('Error updating product status:', error);
     }
@@ -184,7 +164,7 @@ export default function InventoryPage() {
         
       if (error) throw error;
       setEditingStockId(null);
-      if (activeGymId) await fetchProducts(activeGymId);
+      await fetchProducts();
     } catch (error) {
       console.error("Error updating stock:", error);
       alert("Gagal update stok");

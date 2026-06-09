@@ -39,7 +39,6 @@ export default function MembersPage() {
   const [packages, setPackages] = useState<PackageData[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [activeGymId, setActiveGymId] = useState<string>('');
 
   // Modal states
   const [selectedMember, setSelectedMember] = useState<MemberData | null>(null);
@@ -125,29 +124,12 @@ export default function MembersPage() {
 
   async function fetchData(signal?: AbortSignal) {
     if (!user) return;
-    
-    let gymId = user.gymId;
-    if (user.role === 'Owner' && !gymId) {
-      const { data: gym } = await supabase.from('gyms').select('id').eq('owner_id', user.id).single();
-      if (gym) gymId = gym.id;
-    }
-    
-    // Fallback if still null, although we just implemented auto-assignment to first gym
-    if (!gymId) {
-      const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
-      if (firstGym) gymId = firstGym.id;
-    }
-
-    if (!gymId) gymId = 'dummy-gym-id';
-    
-    setActiveGymId(gymId);
 
     try {
       // 1. Ambil data members
       const { data: membersData, error: memError } = await supabase
         .from('members')
-        .select('*')
-        .eq('gym_id', gymId);
+        .select('*');
       
       if (signal?.aborted) return;
         
@@ -157,7 +139,6 @@ export default function MembersPage() {
       const { data: subsData, error: subError } = await supabase
         .from('subscriptions')
         .select('*')
-        .eq('gym_id', gymId)
         .in('status', ['active', 'expired']);
       
       if (signal?.aborted) return;
@@ -167,8 +148,7 @@ export default function MembersPage() {
       // 3. Ambil data packages
       const { data: pkgData, error: pkgError } = await supabase
         .from('packages')
-        .select('*')
-        .eq('gym_id', gymId);
+        .select('*');
 
       if (signal?.aborted) return;
 
@@ -226,7 +206,6 @@ export default function MembersPage() {
         .from('subscriptions')
         .insert({
           member_id: selectedMember.id,
-          gym_id: activeGymId || 'dummy-gym-id',
           package_id: selectedPkg.id,
           package_name: selectedPkg.name,
           amount: selectedPkg.price,
@@ -290,8 +269,7 @@ export default function MembersPage() {
           body: JSON.stringify({
             userId: member.user_id,
             ownerId: user.id,
-            memberId: member.id,
-            gymId: activeGymId
+            memberId: member.id
           })
         });
 

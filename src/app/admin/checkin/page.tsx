@@ -40,14 +40,12 @@ export default function CheckInPage() {
   // Fetch recent checkins today
   const loadRecentCheckins = useCallback(async () => {
     if (!user) return;
-    const gymId = user.gymId || 'dummy-gym-id';
     const today = new Date().toISOString().split('T')[0];
 
     try {
       const { data, error } = await supabase
         .from('attendance')
         .select('*')
-        .eq('gym_id', gymId)
         .eq('date', today)
         .order('check_in', { ascending: false })
         .limit(5);
@@ -68,7 +66,6 @@ export default function CheckInPage() {
 
   const processCheckin = useCallback(async (memberIdQuery: string) => {
     if (!user) return;
-    const gymId = user.gymId || 'dummy-gym-id';
     setIsProcessing(true);
     
     try {
@@ -78,13 +75,11 @@ export default function CheckInPage() {
       const { data: membersByDisplayId } = await supabase
         .from('members')
         .select('*')
-        .eq('gym_id', gymId)
         .eq('display_id', sanitizedQuery);
 
       const { data: membersByQrCode } = await supabase
         .from('members')
         .select('*')
-        .eq('gym_id', gymId)
         .eq('qr_code', sanitizedQuery);
 
       const members = [...(membersByDisplayId || []), ...(membersByQrCode || [])];
@@ -139,7 +134,6 @@ export default function CheckInPage() {
         .insert({
           member_id: member.id,
           member_name: member.name,
-          gym_id: gymId,
           date: today,
           check_in: now,
           check_in_by: 'Admin',

@@ -22,29 +22,6 @@ export default function NewMemberPage() {
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
 
-  const [activeGymId, setActiveGymId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const init = async () => {
-      if (!user) return;
-      
-      let gId = user.gymId;
-      if (user.role === 'Owner' && !gId) {
-        // Fetch owner's gym, handle multiple rows just in case
-        const { data } = await supabase.from('gyms').select('id').eq('owner_id', user.id).limit(1).single();
-        if (data) gId = data.id;
-      }
-      
-      // Fallback: if owner doesn't have a gym assigned yet or owner_id doesn't match
-      if (!gId) {
-        const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
-        if (firstGym) gId = firstGym.id;
-      }
-      
-      setActiveGymId(gId || null);
-    };
-    init();
-  }, [user]);
 
   // Start camera on mount, stop when component unmounts
   useEffect(() => {
@@ -108,10 +85,6 @@ export default function NewMemberPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!activeGymId) {
-      setError("Gym ID tidak ditemukan. Pastikan akun ini terkait dengan sebuah Gym.");
-      return;
-    }
     
     if (!photoBase64) {
       setError("Silakan ambil foto wajah member terlebih dahulu!");
@@ -123,7 +96,6 @@ export default function NewMemberPage() {
     setSuccess(false);
 
     const formData = new FormData(e.currentTarget);
-    formData.append('gymId', activeGymId);
     formData.append('photoBase64', photoBase64);
     
     const result = await registerMemberAction(formData);

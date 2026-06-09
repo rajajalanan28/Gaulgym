@@ -23,7 +23,6 @@ const ROLE_CACHE_TTL_SECONDS = 300; // 5 minutes
 
 interface RoleCachePayload {
   role: string;
-  gym_id: string | null;
   /** Timestamp (ms) when the cache was written. */
   ts: number;
 }
@@ -136,7 +135,6 @@ export async function middleware(request: NextRequest) {
 
     if (cached) {
       userRole = cached.role;
-      userGymId = cached.gym_id;
     } else if (supabaseServiceKey) {
       // Cache miss or expired — fetch from DB using service role key (bypasses RLS).
       const adminAuthClient = createClient(supabaseUrl, supabaseServiceKey, {
@@ -145,18 +143,16 @@ export async function middleware(request: NextRequest) {
       
       const { data: userData } = await adminAuthClient
         .from('users')
-        .select('role, gym_id')
+        .select('role')
         .eq('id', session.user.id)
         .single();
 
       userRole = userData?.role;
-      userGymId = userData?.gym_id ?? null;
 
       // Write the result into a short-lived cookie for subsequent requests.
       if (userRole) {
         const payload: RoleCachePayload = {
           role: userRole,
-          gym_id: userGymId,
           ts: Date.now(),
         };
         response.cookies.set({
@@ -179,66 +175,14 @@ export async function middleware(request: NextRequest) {
         : '/member/dashboard';
       return NextResponse.redirect(new URL(redirectPath, request.url));
     }
-
-    // H-11: Gym-scoping — ensure non-Owner users can only access routes for their own gym.
-    // Owners may manage multiple gyms so they are allowed broader access,
-    // but Admins and Members must only access resources scoped to their gym_id.
-    // If the URL contains a gym_id segment (e.g. /admin/gym/<gym_id>/...),
-    // validate it matches the user's gym_id.
-    if (userRole !== 'Owner' && userGymId) {
-      const gymIdInPath = extractGymIdFromPath(pathname);
-      if (gymIdInPath && gymIdInPath !== userGymId) {
-        // Admin/Member is trying to access a gym that isn't theirs — redirect.
-        const redirectPath = userRole === 'Admin' ? '/admin/dashboard' : '/member/dashboard';
-        return NextResponse.redirect(new URL(redirectPath, request.url));
-      }
-    }
-
-    // H-11: For Owners, verify they actually own the gym referenced in the URL.
-    // This prevents Owner A from accessing Owner B's gym routes.
-    if (userRole === 'Owner') {
-      const gymIdInPath = extractGymIdFromPath(pathname);
-      if (gymIdInPath) {
-        const { data: gymData } = await supabase
-          .from('gyms')
-          .select('id')
-          .eq('id', gymIdInPath)
-          .eq('owner_id', session.user.id)
-          .single();
-
-        if (!gymData) {
-          // Owner does not own this gym — redirect to their own dashboard.
-          return NextResponse.redirect(new URL('/owner/dashboard', request.url));
-        }
-      }
-    }
+    
+    // Gym scoping checks have been removed. 
+    // Single-tenant architecture means all authenticated Admins/Owners access the single logical gym.
   }
 
   return response;
 }
 
-/**
- * Extracts a gym UUID from the URL path if present.
- * Looks for a UUID segment that follows a "gym" or "gyms" segment,
- * or any UUID-shaped path segment in known positions.
- *
- * Supports patterns like:
- *   /admin/gym/<uuid>/...
- *   /owner/gyms/<uuid>/...
- */
-function extractGymIdFromPath(pathname: string): string | null {
-  const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-  const segments = pathname.split('/').filter(Boolean);
-  for (let i = 0; i < segments.length; i++) {
-    if (/^gyms?$/i.test(segments[i]) && i + 1 < segments.length) {
-      const next = segments[i + 1];
-      if (uuidRegex.test(next)) {
-        return next.toLowerCase();
-      }
-    }
-  }
-  return null;
-}
 
 export const config = {
   matcher: [

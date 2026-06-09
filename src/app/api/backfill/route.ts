@@ -36,31 +36,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Forbidden: Owner only' }, { status: 403 });
     }
 
-    // H-16: Require gym_id as a parameter instead of picking arbitrary gym
-    const { gymId } = await request.json();
 
-    if (!gymId) {
-      return NextResponse.json({ error: 'gymId is required' }, { status: 400 });
-    }
-
-    // S-14: Validate that the requesting owner actually owns this gym
-    const { data: ownedGym } = await supabaseAdmin
-      .from('gyms')
-      .select('id')
-      .eq('id', gymId)
-      .eq('owner_id', user.id)
-      .single();
-
-    if (!ownedGym) {
-      return NextResponse.json({ error: 'Forbidden: You do not own this gym' }, { status: 403 });
-    }
-
-    // Backfill members for this specific gym only
+    // Backfill members
     const { data: users, error: fetchError } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('role', 'Member')
-      .eq('gym_id', gymId);
+      .eq('role', 'Member');
 
     if (fetchError) throw fetchError;
 
@@ -69,10 +50,9 @@ export async function POST(request: Request) {
       const { data: m } = await supabaseAdmin.from('members').select('id').eq('user_id', u.id).single();
       if (!m) {
         const displayId = generateSecureDisplayId();
-        await supabaseAdmin.from('members').insert({
-          user_id: u.id,
-          gym_id: gymId,
-          name: u.name || 'User',
+          await supabaseAdmin.from('members').insert({
+            user_id: u.id,
+            name: u.name || 'User',
           email: u.email,
           display_id: displayId,
           join_date: new Date().toISOString().split('T')[0]
@@ -81,13 +61,12 @@ export async function POST(request: Request) {
       }
     }
 
-    // Fix admins: only fix admins that belong to this owner's gym
+    // Fix admins: only fix admins
     let adminCount = 0;
     const { data: admins } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('role', 'Admin')
-      .eq('gym_id', gymId);
+      .eq('role', 'Admin');
 
     if (admins) {
       for (const admin of admins) {
