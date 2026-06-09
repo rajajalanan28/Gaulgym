@@ -1159,7 +1159,6 @@ export default function MembersPage() {
               </div>
             </div>
           </div>
-          </div>
         )}
 
         {/* Modal Enlarged QR */}
