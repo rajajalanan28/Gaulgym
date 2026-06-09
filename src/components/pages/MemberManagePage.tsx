@@ -37,6 +37,7 @@ export default function MembersPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [members, setMembers] = useState<MemberData[]>([]);
   const [packages, setPackages] = useState<PackageData[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -382,11 +383,53 @@ export default function MembersPage() {
     window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(text)}`, '_blank');
   };
 
+  const today = new Date();
+  const next7Days = new Date();
+  next7Days.setDate(today.getDate() + 7);
+
+  const stats = React.useMemo(() => {
+    let active = 0;
+    let expiring = 0;
+    let expired = 0;
+    
+    members.forEach(m => {
+      if (m.status === 'active') {
+        active++;
+        if (m.activeSubscriptionEndDate) {
+          const endDate = new Date(m.activeSubscriptionEndDate);
+          if (endDate <= next7Days && endDate >= today) {
+            expiring++;
+          }
+        }
+      } else if (m.status === 'expired') {
+        expired++;
+      }
+    });
+
+    return { total: members.length, active, expiring, expired };
+  }, [members]);
+
   const filteredMembers = members.filter(
-    (member) =>
-      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.phone.includes(searchTerm)
+    (member) => {
+      const matchSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          member.phone.includes(searchTerm);
+                          
+      let matchFilter = true;
+      if (filterStatus === 'active') matchFilter = member.status === 'active';
+      else if (filterStatus === 'expired') matchFilter = member.status === 'expired';
+      else if (filterStatus === 'expiring_soon') {
+        if (member.status !== 'active') matchFilter = false;
+        else if (member.activeSubscriptionEndDate) {
+          const endDate = new Date(member.activeSubscriptionEndDate);
+          matchFilter = endDate <= next7Days && endDate >= today;
+        } else {
+          matchFilter = false;
+        }
+      }
+
+      return matchSearch && matchFilter;
+    }
   );
 
   const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
@@ -459,14 +502,44 @@ export default function MembersPage() {
           </div>
         </div>
 
-        <div className="mb-[16px]">
+        {/* Stats Widgets */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-[24px]">
+          <div className="bg-[var(--color-surface-1)] p-4 rounded-xl border border-[var(--color-hairline)] flex flex-col justify-center cursor-pointer hover:border-[var(--color-primary)] transition" onClick={() => setFilterStatus('all')}>
+            <p className="text-[13px] text-[var(--color-ink-subtle)] font-medium">Total Member</p>
+            <p className="text-[24px] font-bold text-[var(--color-ink)]">{stats.total}</p>
+          </div>
+          <div className="bg-[var(--color-surface-1)] p-4 rounded-xl border border-[var(--color-hairline)] flex flex-col justify-center cursor-pointer hover:border-green-500 transition" onClick={() => setFilterStatus('active')}>
+            <p className="text-[13px] text-green-600 font-medium">Aktif</p>
+            <p className="text-[24px] font-bold text-green-500">{stats.active}</p>
+          </div>
+          <div className="bg-[var(--color-surface-1)] p-4 rounded-xl border border-[var(--color-hairline)] flex flex-col justify-center cursor-pointer hover:border-orange-500 transition" onClick={() => setFilterStatus('expiring_soon')}>
+            <p className="text-[13px] text-orange-600 font-medium">Akan Habis (7 Hari)</p>
+            <p className="text-[24px] font-bold text-orange-500">{stats.expiring}</p>
+          </div>
+          <div className="bg-[var(--color-surface-1)] p-4 rounded-xl border border-[var(--color-hairline)] flex flex-col justify-center cursor-pointer hover:border-red-500 transition" onClick={() => setFilterStatus('expired')}>
+            <p className="text-[13px] text-red-600 font-medium">Expired</p>
+            <p className="text-[24px] font-bold text-red-500">{stats.expired}</p>
+          </div>
+        </div>
+
+        <div className="mb-[16px] flex flex-col sm:flex-row gap-3">
           <input
             type="text"
             placeholder="Cari nama, email, atau telepon..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full max-w-md px-[12px] py-[8px] rounded-md bg-[var(--color-surface-1)] text-[var(--color-ink)] hairline-border focus-ring placeholder:text-[var(--color-ink-subtle)] text-[14px]"
+            className="w-full sm:max-w-md px-[16px] py-[10px] rounded-lg bg-[var(--color-surface-1)] text-[var(--color-ink)] border border-[var(--color-hairline)] focus-ring placeholder:text-[var(--color-ink-subtle)] text-[14px]"
           />
+          <select
+            value={filterStatus}
+            onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+            className="px-[16px] py-[10px] bg-[var(--color-surface-1)] text-[var(--color-ink)] rounded-lg border border-[var(--color-hairline)] focus-ring text-[14px] min-w-[150px]"
+          >
+            <option value="all">Semua Status</option>
+            <option value="active">Aktif</option>
+            <option value="expiring_soon">Akan Habis (7 Hari)</option>
+            <option value="expired">Expired</option>
+          </select>
         </div>
 
         <div className="bg-[var(--color-surface-1)] hairline-border rounded-[12px] overflow-hidden">
