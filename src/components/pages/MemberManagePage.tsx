@@ -243,9 +243,9 @@ export default function MembersPage() {
       setSelectedPackageId("");
       fetchData();
       
-    } catch (err) {
+    } catch (err: any) {
       console.error("Gagal memperpanjang paket:", err);
-      alert("Terjadi kesalahan saat memperpanjang paket.");
+      alert("Terjadi kesalahan saat memperpanjang paket: " + (err.message || JSON.stringify(err)));
     } finally {
       setIsSubmitting(false);
     }
