@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
-import { Sidebar } from '@/components/Sidebar';
 import { RevenueChart } from '@/components/charts/RevenueChart';
 import { supabase } from '@/lib/supabase';
 import { Loader2, TrendingUp, DollarSign, Package, Wallet } from 'lucide-react';
@@ -127,13 +127,12 @@ export default function ReportsPage() {
   if (authLoading) return <div className="min-h-screen bg-[var(--color-canvas)] flex items-center justify-center"><Loader2 className="animate-spin text-[var(--color-primary)]" size={32} /></div>;
 
   return (
-    <div className="flex h-screen bg-[var(--color-canvas)] overflow-hidden text-white">
-      <Sidebar />
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        <DashboardHeader />
-        
-        <main className="flex-1 overflow-y-auto p-4 md:p-[32px]">
-          <div className="max-w-[1200px] mx-auto space-y-8">
+    <ProtectedRoute allowedRoles={['Owner', 'Admin']}>
+      <div className="min-h-screen bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white p-4 pb-28 md:p-[48px]">
+        <div className="max-w-[1200px] mx-auto">
+          <DashboardHeader />
+          
+          <div className="mt-[32px] space-y-8">
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-3">
                 <TrendingUp className="text-[var(--color-primary)]" />
@@ -200,8 +199,8 @@ export default function ReportsPage() {
               </>
             )}
           </div>
-        </main>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }
