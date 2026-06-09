@@ -9,6 +9,7 @@ import { PlusCircle, X, Loader2, Shield, Camera, IdCard, MessageCircle, User, Ed
 import { useRouter } from "next/navigation";
 import { updateMemberPhotoAction, deleteMemberAction, resetMemberPasswordAction, cleanupOrphanedAuthUsersAction, editMemberAction, editSubscriptionEndDateAction } from "@/app/actions/user";
 import Link from "next/link";
+import { QRCodeSVG } from "qrcode.react";
 interface MemberData {
   id: string;
   name: string;
@@ -1036,31 +1037,63 @@ export default function MembersPage() {
 
               {/* Content */}
               <div className="p-6">
-                <div className="bg-gradient-to-br from-[var(--color-surface-2)] to-[var(--color-surface-1)] p-6 rounded-2xl border border-[var(--color-primary)]/20 shadow-inner mb-6 relative overflow-hidden">
-                  <div className="absolute -right-10 -top-10 w-40 h-40 bg-[var(--color-primary)]/10 rounded-full blur-2xl"></div>
-                  <div className="flex gap-6 items-center relative z-10">
-                    <div className="shrink-0 relative group">
-                      {photoBase64 || memberCardModal.photoUrl ? (
-                        <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-[var(--color-surface-1)] shadow-lg">
-                          <img src={photoBase64 || sanitizeUrl(memberCardModal.photoUrl) || ''} alt={memberCardModal.name} className="w-full h-full object-cover" />
-                        </div>
-                      ) : (
-                        <div className="w-28 h-28 rounded-full bg-[var(--color-surface-3)] border-4 border-[var(--color-surface-1)] shadow-lg flex items-center justify-center text-4xl font-bold text-[var(--color-primary)]">
-                          {memberCardModal.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                {/* The Membership Card */}
+                <div className="bg-[#0b1014] rounded-xl border border-gray-800 p-6 relative overflow-hidden h-[240px] flex flex-col justify-between shadow-2xl">
+                  {/* Background decorative elements to mimic the circuit/mandala pattern */}
+                  <div className="absolute top-0 right-0 w-full h-full opacity-30 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 100%, rgba(34, 197, 94, 0.15) 0%, transparent 50%), radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.05) 0%, transparent 40%)' }}></div>
+                  <div className="absolute -bottom-20 -right-10 w-64 h-64 border border-green-500/20 rounded-full opacity-50 blur-[1px]"></div>
+                  <div className="absolute -bottom-10 -right-20 w-48 h-48 border border-green-500/30 rounded-full opacity-50 blur-[1px]"></div>
+                  
+                  {/* Top Bar: Logo & QR */}
+                  <div className="flex justify-between items-start z-10 relative">
+                    <div className="flex items-center gap-3">
+                      <img src="/logo.png" alt="Gaul Gym" className="w-10 h-10 object-contain drop-shadow-md" />
+                      <span className="text-white font-bold tracking-[0.25em] text-sm">GAUL GYM</span>
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-white mb-1">{memberCardModal.name}</h3>
-                      <p className="text-gray-400 text-sm mb-3">{memberCardModal.email}</p>
-                      <div className="inline-block px-3 py-1 bg-[var(--color-primary)]/20 text-[var(--color-primary)] text-xs font-bold rounded-full uppercase tracking-wide border border-[var(--color-primary)]/30">
-                        {memberCardModal.membershipType || 'Member'}
+                    <div className="bg-white p-1.5 rounded-lg shadow-sm">
+                      <QRCodeSVG value={memberCardModal.display_id || memberCardModal.id} size={54} />
+                    </div>
+                  </div>
+
+                  {/* Middle: Profile */}
+                  <div className="flex items-center gap-4 z-10 relative -mt-2">
+                     {photoBase64 || memberCardModal.photoUrl ? (
+                       <img src={photoBase64 || sanitizeUrl(memberCardModal.photoUrl) || ''} alt={memberCardModal.name} className="w-[68px] h-[68px] rounded-full border-2 border-[#5c6bc0] object-cover shadow-md" />
+                     ) : (
+                       <div className="w-[68px] h-[68px] rounded-full bg-gray-800 border-2 border-[#5c6bc0] flex items-center justify-center text-white text-2xl font-bold shadow-md">
+                         {memberCardModal.name.charAt(0).toUpperCase()}
+                       </div>
+                     )}
+                     <div>
+                       <h3 className="text-white font-bold text-[22px] tracking-wide mb-0.5">{memberCardModal.name}</h3>
+                       <p className="text-gray-400 text-[13px] font-mono tracking-widest">*****{memberCardModal.phone ? memberCardModal.phone.slice(-4) : '0000'}</p>
+                     </div>
+                  </div>
+
+                  {/* Bottom: Info */}
+                  <div className="flex justify-between items-end z-10 relative">
+                    <div className="flex-1">
+                      <p className="text-gray-500 text-[9px] tracking-[0.15em] uppercase mb-1">Paket Aktif</p>
+                      <p className="text-gray-300 text-[15px] italic font-medium">{memberCardModal.membershipType || 'Belum Ada Paket Aktif'}</p>
+                    </div>
+                    <div className="flex gap-8 text-right">
+                      <div>
+                        <p className="text-gray-500 text-[9px] tracking-[0.15em] uppercase mb-1">Join Date</p>
+                        <p className="text-gray-300 text-[13px] font-mono tracking-wider">
+                          {memberCardModal.joinDate ? new Date(memberCardModal.joinDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-- -- ----'}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500 text-[9px] tracking-[0.15em] uppercase mb-1">Valid Thru</p>
+                        <p className="text-gray-300 text-[13px] font-mono tracking-wider">
+                          {memberCardModal.activeSubscriptionEndDate ? new Date(memberCardModal.activeSubscriptionEndDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, ' / ') : '--/--/----'}
+                        </p>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-[var(--color-surface-2)] rounded-2xl p-5 border border-white/5">
+                <div className="mt-6 bg-[var(--color-surface-2)] rounded-2xl p-5 border border-white/5">
                   <h4 className="text-sm font-semibold text-gray-300 mb-4 text-center">
                     {photoBase64 || memberCardModal.photoUrl ? 'Update Foto Wajah' : 'Ambil Foto Wajah'}
                   </h4>
