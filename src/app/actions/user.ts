@@ -91,7 +91,6 @@ export async function registerMemberAction(formData: FormData) {
           email,
           name,
           role: 'Member',
-          phone,
           is_active: true
         });
 
