@@ -29,10 +29,18 @@ export default function NewMemberPage() {
       if (!user) return;
       
       let gId = user.gymId;
-      if (user.role === 'Owner') {
-        const { data } = await supabase.from('gyms').select('id').eq('owner_id', user.id).single();
+      if (user.role === 'Owner' && !gId) {
+        // Fetch owner's gym, handle multiple rows just in case
+        const { data } = await supabase.from('gyms').select('id').eq('owner_id', user.id).limit(1).single();
         if (data) gId = data.id;
       }
+      
+      // Fallback: if owner doesn't have a gym assigned yet or owner_id doesn't match
+      if (!gId) {
+        const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
+        if (firstGym) gId = firstGym.id;
+      }
+      
       setActiveGymId(gId || null);
     };
     init();
