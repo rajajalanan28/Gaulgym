@@ -96,6 +96,21 @@ export default function AuthCallbackPage() {
 
       } catch (e: any) {
         console.error('Error in auth callback:', e);
+        
+        // Auto-fix PKCE cache issues
+        if (e.message && (e.message.includes('PKCE') || e.message.includes('code verifier'))) {
+          if (typeof window !== 'undefined') {
+            Object.keys(localStorage).forEach(key => {
+              if (key.startsWith('sb-')) localStorage.removeItem(key);
+            });
+          }
+          setError('Cache login lama terdeteksi. Sedang membersihkan otomatis...');
+          timeoutId = setTimeout(() => {
+            router.push('/login');
+          }, 1500);
+          return;
+        }
+
         setError(e.message || 'Terjadi kesalahan saat memproses login.');
         timeoutId = setTimeout(() => {
           router.push('/login');
