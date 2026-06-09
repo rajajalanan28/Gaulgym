@@ -250,6 +250,35 @@ export async function deleteMemberAction(userId: string) {
   }
 }
 
+export async function editMemberAction(userId: string, newName: string, newPhone: string) {
+  try {
+    if (!userId || !newName) return { error: 'Data tidak lengkap' };
+
+    // Update auth metadata (optional, but good practice)
+    await supabaseAdmin.auth.admin.updateUserById(userId, {
+      user_metadata: { name: newName }
+    });
+
+    const { error: userError } = await supabaseAdmin
+      .from('users')
+      .update({ name: newName })
+      .eq('id', userId);
+
+    if (userError) return { error: 'Gagal update nama user' };
+
+    const { error: memberError } = await supabaseAdmin
+      .from('members')
+      .update({ name: newName, phone: newPhone })
+      .eq('user_id', userId);
+
+    if (memberError) return { error: 'Gagal update data member' };
+
+    return { success: true, message: 'Data member berhasil diubah' };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
 export async function resetMemberPasswordAction(userId: string, newPassword?: string) {
   try {
     if (!userId) return { error: 'ID user tidak valid' };

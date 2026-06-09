@@ -5,9 +5,9 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
-import { PlusCircle, X, Loader2, Shield, Camera, IdCard, MessageCircle, User } from "lucide-react";
+import { PlusCircle, X, Loader2, Shield, Camera, IdCard, MessageCircle, User, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { updateMemberPhotoAction, deleteMemberAction, resetMemberPasswordAction, cleanupOrphanedAuthUsersAction } from "@/app/actions/user";
+import { updateMemberPhotoAction, deleteMemberAction, resetMemberPasswordAction, cleanupOrphanedAuthUsersAction, editMemberAction } from "@/app/actions/user";
 import Link from "next/link";
 interface MemberData {
   id: string;
@@ -42,12 +42,15 @@ export default function MembersPage() {
 
   // Modal states
   const [selectedMember, setSelectedMember] = useState<MemberData | null>(null);
-  const [selectedPackageId, setSelectedPackageId] = useState("");
+  const [memberCardModal, setMemberCardModal] = useState<MemberData | null>(null);
+  const [editingMember, setEditingMember] = useState<MemberData | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [selectedPackageId, setSelectedPackageId] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Member Card Modal States
-  const [memberCardModal, setMemberCardModal] = useState<MemberData | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -365,6 +368,23 @@ export default function MembersPage() {
   const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
   const paginatedMembers = filteredMembers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember || !editingMember.user_id) return;
+    setIsSubmitting(true);
+    try {
+      const res = await editMemberAction(editingMember.user_id, editName, editPhone);
+      if (res.error) throw new Error(res.error);
+      alert('Data member berhasil diubah!');
+      setEditingMember(null);
+      fetchMembers();
+    } catch (err: any) {
+      alert('Gagal mengubah data: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const sanitizeUrl = (url: string | null) => {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:image/')) return url;
@@ -480,6 +500,12 @@ export default function MembersPage() {
                       <PlusCircle size={14} /> Perpanjang
                     </button>
                     <button 
+                      onClick={() => { setEditingMember(member); setEditName(member.name); setEditPhone(member.phone); }}
+                      className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-gray-500/10 text-gray-500 hover:bg-gray-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                    >
+                      <Edit size={14} /> Edit
+                    </button>
+                    <button 
                       onClick={() => setMemberCardModal(member)}
                       className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-blue-500/10 text-blue-500 hover:bg-blue-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
                     >
@@ -579,6 +605,15 @@ export default function MembersPage() {
                           </button>
 
                           <button 
+                            onClick={() => { setEditingMember(member); setEditName(member.name); setEditPhone(member.phone); }}
+                            className="flex items-center gap-1 bg-gray-500/10 text-gray-500 hover:bg-gray-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                            title="Edit Member"
+                          >
+                            <Edit size={16} />
+                            <span>Edit</span>
+                          </button>
+
+                          <button 
                             onClick={() => setMemberCardModal(member)}
                             className="flex items-center gap-1 bg-blue-500/10 text-blue-500 hover:bg-blue-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
                             title="Kartu Member"
@@ -666,6 +701,67 @@ export default function MembersPage() {
             </div>
           )}
         </div>
+
+        {/* Modal Edit Member */}
+        {editingMember && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-[var(--color-surface-1)] hairline-border w-full max-w-md rounded-[20px] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              <div className="px-[24px] py-[20px] border-b border-[var(--color-hairline)] flex justify-between items-center bg-[var(--color-surface-2)]">
+                <h2 className="text-[18px] font-bold text-[var(--color-ink)]">Edit Member</h2>
+                <button 
+                  onClick={() => setEditingMember(null)}
+                  className="text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-[24px] overflow-y-auto">
+                <form id="form-edit-member" onSubmit={handleEditSubmit} className="space-y-[20px]">
+                  <div>
+                    <label className="block text-[13px] font-medium mb-[8px] text-[var(--color-ink)]">Nama Lengkap</label>
+                    <input
+                      type="text"
+                      required
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[13px] font-medium mb-[8px] text-[var(--color-ink)]">No. WhatsApp</label>
+                    <input
+                      type="text"
+                      required
+                      value={editPhone}
+                      onChange={(e) => setEditPhone(e.target.value)}
+                      className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px]"
+                    />
+                  </div>
+                </form>
+              </div>
+
+              <div className="px-[24px] py-[20px] border-t border-[var(--color-hairline)] bg-[var(--color-surface-2)] flex justify-end gap-3 mt-auto">
+                <button
+                  type="button"
+                  onClick={() => setEditingMember(null)}
+                  className="px-[16px] py-[10px] rounded-[10px] font-medium text-[var(--color-ink-muted)] hover:text-[var(--color-ink)] transition-colors text-[14px]"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  form="form-edit-member"
+                  disabled={isSubmitting || !editName || !editPhone}
+                  className="px-[24px] py-[10px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white rounded-[10px] font-semibold transition-colors flex items-center gap-2 text-[14px] disabled:opacity-50"
+                >
+                  {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Edit size={16} />}
+                  Simpan Perubahan
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Modal Perpanjang Paket */}
         {selectedMember && (
