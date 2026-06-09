@@ -40,49 +40,74 @@ export async function registerMemberAction(formData: FormData) {
       return { error: 'Sistem belum dikonfigurasi sepenuhnya. SUPABASE_SERVICE_ROLE_KEY belum diset.' };
     }
 
-    // 1. Check if user already exists
-    const { data: existingUser } = await supabaseAdmin
-      .from('users')
-      .select('id, name, role')
-      .eq('email', email)
-      .single();
-
+    let baseEmail = email;
+    let finalEmail = email;
+    let suffix = 1;
     let userId = '';
+    let isNewUser = false;
 
-    if (existingUser) {
-      if (existingUser.role === 'Owner' || existingUser.role === 'Admin') {
-        return { error: `Email ini sudah digunakan oleh akun ${existingUser.role}. Silakan gunakan email lain.` };
+    while (suffix < 50) {
+      // 1. Check if user already exists in public.users
+      const { data: existingUser } = await supabaseAdmin
+        .from('users')
+        .select('id, name, role')
+        .eq('email', finalEmail)
+        .single();
+
+      if (existingUser) {
+        // Can we reuse it? Only if it's a Member without an active profile.
+        if (existingUser.role !== 'Owner' && existingUser.role !== 'Admin') {
+          const { data: existingMember } = await supabaseAdmin
+            .from('members')
+            .select('id')
+            .eq('user_id', existingUser.id)
+            .single();
+            
+          if (!existingMember) {
+            // Yes, reuse it!
+            userId = existingUser.id;
+            break; // Exit loop
+          }
+        }
+        // Conflict (either Owner/Admin or Member with profile), continue to next suffix
+      } else {
+        // Not in public.users, try creating in Auth
+        const tempPassword = (formData.get('password') as string) || 'Gaulgym123!';
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email: finalEmail,
+          password: tempPassword,
+          email_confirm: true,
+          user_metadata: { name }
+        });
+
+        if (authError) {
+          if (authError.message.includes('already been registered') || authError.message.includes('already exists')) {
+            // Orphaned auth user, continue to next suffix
+          } else {
+            return { error: authError.message };
+          }
+        } else {
+          // Success! User created in auth
+          userId = authData.user.id;
+          isNewUser = true;
+          break; // Exit loop
+        }
       }
       
-      const { data: existingMember } = await supabaseAdmin
-        .from('members')
-        .select('id')
-        .eq('user_id', existingUser.id)
-        .single();
-        
-      if (existingMember) {
-        return { error: 'Email ini sudah terdaftar sebagai member aktif. Silakan gunakan email lain.' };
-      }
+      // Increment suffix and try again
+      suffix++;
+      const usernamePart = baseEmail.split('@')[0];
+      const domainPart = baseEmail.split('@')[1];
+      finalEmail = `${usernamePart}-${suffix}@${domainPart}`;
+    }
 
-      // User already exists (e.g. registered via app but no member profile yet), use their ID
-      userId = existingUser.id;
-    } else {
-      const tempPassword = (formData.get('password') as string) || 'Gaulgym123!';
+    if (!userId) {
+      return { error: 'Gagal membuat username unik setelah mencoba 50 kali. Silakan gunakan nama lain.' };
+    }
 
-      // Create user in Supabase Auth using Admin API
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: { name }
-      });
+    email = finalEmail;
 
-      if (authError) {
-        return { error: authError.message };
-      }
-
-      userId = authData.user.id;
-
+    if (isNewUser) {
       // Insert into public.users table
       const { error: userError } = await supabaseAdmin
         .from('users')
