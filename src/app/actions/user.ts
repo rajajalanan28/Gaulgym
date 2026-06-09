@@ -185,6 +185,18 @@ export async function deleteMemberAction(userId: string) {
   try {
     if (!userId) return { error: 'ID user tidak valid' };
 
+    // Prevent deleting an Owner or Admin!
+    const { data: userToDelete } = await supabaseAdmin.from('users').select('role').eq('id', userId).single();
+    
+    if (userToDelete && (userToDelete.role === 'Owner' || userToDelete.role === 'Admin')) {
+       // Just delete their member record, do NOT delete their auth account!
+       const { error: deleteMemberError } = await supabaseAdmin.from('members').delete().eq('user_id', userId);
+       if (deleteMemberError) {
+         return { error: 'Gagal menghapus data member: ' + deleteMemberError.message };
+       }
+       return { success: true, message: 'Hanya menghapus dari daftar member. Akun Owner/Admin tetap aman.' };
+    }
+
     // Delete from auth.users (will cascade if foreign keys are set up correctly)
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 

@@ -315,6 +315,11 @@ export default function MembersPage() {
     if (confirm(`PERINGATAN KERAS: Anda yakin ingin MENGHAPUS member ${member.name}?\n\nSemua data langganan dan kehadiran member ini juga akan terhapus!\n\nTindakan ini tidak bisa dibatalkan!`)) {
       try {
         if (member.user_id) {
+          if (member.user_id === user?.id) {
+            if (!confirm(`Tunggu dulu! Ini adalah akun Anda sendiri.\n\nMenghapus ini HANYA akan menghapus Anda dari daftar member (dan data langganan/kehadiran), akun Owner/Admin Anda TIDAK akan terhapus.\n\nLanjutkan?`)) {
+              return;
+            }
+          }
           const res = await deleteMemberAction(member.user_id);
           if (res.error) throw new Error(res.error);
         } else {
