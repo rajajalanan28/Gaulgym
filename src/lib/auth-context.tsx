@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // H-5: Use useCallback to prevent stale closures on fetchUserProfile
-  const fetchUserProfile = useCallback(async (userId: string, emailConfirmedAt: string | null = null, retries = 3) => {
+  const fetchUserProfile = useCallback(async function fetchProfile(userId: string, emailConfirmedAt: string | null = null, retries = 3): Promise<void> {
     try {
       const fetchPromise = supabase
         .from('users')
@@ -76,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error || !data) {
         if (error?.code === 'PGRST116' && retries > 0) {
           await new Promise(resolve => setTimeout(resolve, 1000));
-          return fetchUserProfile(userId, emailConfirmedAt, retries - 1);
+          return fetchProfile(userId, emailConfirmedAt, retries - 1);
         }
         // If it's a timeout or network error, don't throw, just exit and use cache
         if (error?.message?.includes('Timeout') || error?.message?.includes('network') || error?.message?.includes('fetch')) {
