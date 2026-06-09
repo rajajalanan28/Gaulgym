@@ -152,37 +152,32 @@ export async function getAttendanceByDate(date: string) {
 
 export async function getOwnerStats(ownerId: string) {
   try {
-    const { count: adminCount, error: adminError } = await supabase
-      .from('users')
-      .select('*', { count: 'exact', head: true })
-      .eq('role', 'Admin');
-
-    if (adminError) return { data: null, error: adminError };
-
+    // ALL queries in parallel - no sequential blocking
     const [
+      { count: adminCount, error: adminError },
       { count: memberCount, error: memberError },
       { data: subs, error: subsError },
       { data: sales, error: salesError }
     ] = await Promise.all([
+      supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'Admin'),
       supabase.from('members').select('*', { count: 'exact', head: true }),
       supabase.from('subscriptions').select('amount'),
       supabase.from('sales_transactions').select('total_amount')
     ]);
 
-    if (memberError) return { data: null, error: memberError };
-    if (subsError) return { data: null, error: subsError };
-    if (salesError) return { data: null, error: salesError };
+    if (adminError || memberError || subsError || salesError) {
+      return { data: null, error: adminError || memberError || subsError || salesError };
+    }
 
-    const subsRevenue = subs?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
-    const salesRevenue = sales?.reduce((acc, curr) => acc + (curr.total_amount || 0), 0) || 0;
-    const revenue = subsRevenue + salesRevenue;
+    const subsRevenue = subs?.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0) || 0;
+    const salesRevenue = sales?.reduce((acc, curr) => acc + (Number(curr.total_amount) || 0), 0) || 0;
 
     return {
       data: {
-        totalGyms: 1, // Hardcoded to 1
+        totalGyms: 1,
         totalMembers: memberCount || 0,
         totalAdmin: adminCount || 0,
-        totalRevenue: revenue,
+        totalRevenue: subsRevenue + salesRevenue,
       },
       error: null
     };
@@ -195,14 +190,25 @@ export async function getOwnerRevenueChart() {
   try {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const startDate = sevenDaysAgo.toISOString().split('T')[0];
+    const startDate = sevenDaysAgo.toISOString();
 
-    const { data: transactions, error } = await supabase
-      .from('sales_transactions')
-      .select('amount, created_at, type')
-      .gte('created_at', startDate);
+    // Fetch both sales AND subscriptions in parallel for complete revenue picture
+    const [
+      { data: salesData, error: salesError },
+      { data: subsData, error: subsError }
+    ] = await Promise.all([
+      supabase
+        .from('sales_transactions')
+        .select('total_amount, created_at')
+        .gte('created_at', startDate),
+      supabase
+        .from('subscriptions')
+        .select('amount, created_at')
+        .gte('created_at', startDate)
+    ]);
 
-    if (error) throw error;
+    if (salesError) throw salesError;
+    if (subsError) throw subsError;
 
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
     const groupedData: Record<string, number> = {};
@@ -215,17 +221,23 @@ export async function getOwnerRevenueChart() {
       groupedData[dayName] = 0;
     }
 
-    if (transactions) {
-      transactions.forEach(t => {
-        if (t.type === 'income') {
-          const d = new Date(t.created_at);
-          const dayName = days[d.getDay()];
-          if (groupedData[dayName] !== undefined) {
-            groupedData[dayName] += (t.amount || 0);
-          }
-        }
-      });
-    }
+    // Add sales revenue
+    salesData?.forEach(t => {
+      const d = new Date(t.created_at);
+      const dayName = days[d.getDay()];
+      if (groupedData[dayName] !== undefined) {
+        groupedData[dayName] += (Number(t.total_amount) || 0);
+      }
+    });
+
+    // Add subscription revenue
+    subsData?.forEach(t => {
+      const d = new Date(t.created_at);
+      const dayName = days[d.getDay()];
+      if (groupedData[dayName] !== undefined) {
+        groupedData[dayName] += (Number(t.amount) || 0);
+      }
+    });
 
     const chartData = Object.keys(groupedData).map(key => ({
       name: key,
