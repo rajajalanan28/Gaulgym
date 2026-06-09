@@ -20,6 +20,8 @@ export default function AdminPage() {
   const { user } = useAuth();
   const [adminList, setAdminList] = useState<AdminMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   
   // Modal State
   const [showAddModal, setShowAddModal] = useState(false);
@@ -143,6 +145,9 @@ export default function AdminPage() {
     m.email?.toLowerCase().includes(searchMember.toLowerCase())
   );
 
+  const totalPages = Math.ceil(adminList.length / ITEMS_PER_PAGE);
+  const paginatedAdmins = adminList.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   return (
     <ProtectedRoute allowedRoles={['Owner']}>
       <div className="p-4 pb-28 md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
@@ -169,8 +174,8 @@ export default function AdminPage() {
               Array(3).fill(0).map((_, i) => (
                 <div key={i} className="h-32 bg-[var(--color-surface-2)] animate-pulse rounded-xl border border-[var(--color-hairline)]"></div>
               ))
-            ) : adminList.length > 0 ? (
-              adminList.map((admin) => (
+            ) : paginatedAdmins.length > 0 ? (
+              paginatedAdmins.map((admin) => (
                 <div key={admin.id} className="bg-[var(--color-surface-2)] p-4 rounded-xl border border-[var(--color-hairline)] flex flex-col gap-3">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-3">
@@ -232,8 +237,8 @@ export default function AdminPage() {
                       <td colSpan={6} className="px-[24px] py-[16px]"><div className="h-5 bg-[var(--color-hairline)] animate-pulse rounded w-full"></div></td>
                     </tr>
                   ))
-                ) : adminList.length > 0 ? (
-                  adminList.map((admin) => (
+                ) : paginatedAdmins.length > 0 ? (
+                  paginatedAdmins.map((admin) => (
                     <tr key={admin.id} className="border-b border-[var(--color-hairline)] hover:bg-[var(--color-surface-2)] transition-colors">
                       <td className="px-[24px] py-[16px]">
                         <div className="flex items-center gap-[12px]">
@@ -279,6 +284,31 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-[24px] py-[16px] border-t border-[var(--color-hairline)] bg-[var(--color-surface-1)]">
+              <span className="text-[13px] text-[var(--color-ink-subtle)]">
+                Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, adminList.length)} dari {adminList.length}
+              </span>
+              <div className="flex gap-[8px]">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-[12px] py-[6px] text-[13px] font-medium rounded-md bg-[var(--color-surface-2)] text-[var(--color-ink)] hairline-border disabled:opacity-40 hover:bg-[var(--color-surface-3)] transition-colors"
+                >
+                  Prev
+                </button>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-[12px] py-[6px] text-[13px] font-medium rounded-md bg-[var(--color-surface-2)] text-[var(--color-ink)] hairline-border disabled:opacity-40 hover:bg-[var(--color-surface-3)] transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
