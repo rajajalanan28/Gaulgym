@@ -187,6 +187,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
       setUserAndCache(authUser);
 
+      // Set cookie for middleware
+      document.cookie = `x-user-role-cache=${encodeURIComponent(JSON.stringify({
+        role: authUser.role,
+        gym_id: authUser.gymId
+      }))}; path=/; max-age=86400; SameSite=Lax`;
       // S-8: Return warning about email verification
       const warnings: string[] = [];
       if (!authData.user.email_confirmed_at) {
@@ -271,6 +276,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           emailConfirmedAt: authData.user.email_confirmed_at || null,
         };
         setUserAndCache(authUser);
+        // Set cookie for middleware
+        document.cookie = `x-user-role-cache=${encodeURIComponent(JSON.stringify({
+          role: authUser.role,
+          gym_id: authUser.gymId
+        }))}; path=/; max-age=86400; SameSite=Lax`;
         return { success: true, user: authUser };
       }
 

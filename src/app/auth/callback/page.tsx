@@ -10,16 +10,30 @@ export default function AuthCallbackPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
     const handleCallback = async () => {
       try {
-        // Get the session that Supabase automatically parsed from the URL hash
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get('code');
+        
+        if (code) {
+          const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchangeError) throw exchangeError;
+        }
+
+        // Get the session that Supabase automatically parsed from the URL hash or PKCE exchange
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) throw sessionError;
         
         if (!session?.user) {
           // If no session is found, it might still be parsing or there's an error.
-          // Wait a bit and check onAuthStateChange
+          // Wait a bit and redirect to login
+          timeoutId = setTimeout(() => {
+            setError('Sesi tidak ditemukan atau kedaluwarsa. Mengalihkan ke halaman login...');
+            setTimeout(() => router.push('/login'), 2000);
+          }, 3000);
           return;
         }
 
@@ -89,13 +103,17 @@ export default function AuthCallbackPage() {
       } catch (e: any) {
         console.error('Error in auth callback:', e);
         setError(e.message || 'Terjadi kesalahan saat memproses login.');
-        setTimeout(() => {
+        timeoutId = setTimeout(() => {
           router.push('/login');
         }, 3000);
       }
     };
 
     handleCallback();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, [router]);
 
   return (

@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { PlusCircle, X, Loader2, Shield, Camera, IdCard, MessageCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { updateMemberPhotoAction } from "@/app/actions/user";
-
+import Link from "next/link";
 interface MemberData {
   id: string;
   name: string;
@@ -361,12 +361,12 @@ export default function MembersPage() {
             <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Members</h1>
             <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola data member dan perpanjang keanggotaan (Offline Kasir)</p>
           </div>
-          <a
+          <Link
             href={user?.role === 'Owner' ? "/owner/member/new" : "/admin/member/new"}
             className="inline-flex items-center justify-center bg-[var(--color-primary)] text-white font-medium px-4 py-2.5 rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors shadow-lg shadow-[var(--color-primary)]/20"
           >
             + Daftarkan Member
-          </a>
+          </Link>
         </div>
 
         <div className="mb-[16px]">
