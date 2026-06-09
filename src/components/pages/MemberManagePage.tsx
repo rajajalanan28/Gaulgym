@@ -38,6 +38,7 @@ export default function MembersPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest");
   const [members, setMembers] = useState<MemberData[]>([]);
   const [packages, setPackages] = useState<PackageData[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -432,8 +433,38 @@ export default function MembersPage() {
     }
   );
 
-  const totalPages = Math.ceil(filteredMembers.length / ITEMS_PER_PAGE);
-  const paginatedMembers = filteredMembers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const sortedMembers = React.useMemo(() => {
+    let result = [...filteredMembers];
+    switch (sortOrder) {
+      case "name_asc":
+        result.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name_desc":
+        result.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "expire_asc":
+        result.sort((a, b) => {
+          if (!a.activeSubscriptionEndDate) return 1;
+          if (!b.activeSubscriptionEndDate) return -1;
+          return new Date(a.activeSubscriptionEndDate).getTime() - new Date(b.activeSubscriptionEndDate).getTime();
+        });
+        break;
+      case "expire_desc":
+        result.sort((a, b) => {
+          if (!a.activeSubscriptionEndDate) return 1;
+          if (!b.activeSubscriptionEndDate) return -1;
+          return new Date(b.activeSubscriptionEndDate).getTime() - new Date(a.activeSubscriptionEndDate).getTime();
+        });
+        break;
+      case "newest":
+      default:
+        break;
+    }
+    return result;
+  }, [filteredMembers, sortOrder]);
+
+  const totalPages = Math.ceil(sortedMembers.length / ITEMS_PER_PAGE);
+  const paginatedMembers = sortedMembers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -539,6 +570,17 @@ export default function MembersPage() {
             <option value="active">Aktif</option>
             <option value="expiring_soon">Akan Habis (7 Hari)</option>
             <option value="expired">Expired</option>
+          </select>
+          <select
+            value={sortOrder}
+            onChange={(e) => { setSortOrder(e.target.value); setCurrentPage(1); }}
+            className="px-[16px] py-[10px] bg-[var(--color-surface-1)] text-[var(--color-ink)] rounded-lg border border-[var(--color-hairline)] focus-ring text-[14px] min-w-[150px]"
+          >
+            <option value="newest">Terbaru</option>
+            <option value="name_asc">A - Z</option>
+            <option value="name_desc">Z - A</option>
+            <option value="expire_asc">Tercepat Expired</option>
+            <option value="expire_desc">Terlama Expired</option>
           </select>
         </div>
 
