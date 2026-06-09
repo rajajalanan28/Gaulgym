@@ -1051,7 +1051,7 @@ export default function MembersPage() {
               {/* Content */}
               <div className="p-6">
                 {/* The Membership Card */}
-                <div className="bg-[#0b1014] rounded-xl border border-gray-800 p-6 relative overflow-hidden h-[240px] flex flex-col justify-between shadow-2xl">
+                <div className="bg-[#0b1014] rounded-xl border border-gray-800 p-6 relative overflow-hidden min-h-[240px] flex flex-col justify-between gap-6 shadow-2xl">
                   {/* Background decorative elements to mimic the circuit/mandala pattern */}
                   <div className="absolute top-0 right-0 w-full h-full opacity-30 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 100%, rgba(34, 197, 94, 0.15) 0%, transparent 50%), radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.05) 0%, transparent 40%)' }}></div>
                   <div className="absolute -bottom-20 -right-10 w-64 h-64 border border-green-500/20 rounded-full opacity-50 blur-[1px]"></div>
@@ -1091,7 +1091,7 @@ export default function MembersPage() {
                   <div className="flex justify-between items-end z-10 relative gap-2">
                     <div className="flex-1 min-w-0 pr-2">
                       <p className="text-gray-500 text-[9px] tracking-[0.15em] uppercase mb-1">Paket Aktif</p>
-                      <p className="text-gray-300 text-[13px] leading-tight italic font-medium line-clamp-2" title={memberCardModal.membershipType || 'Belum Ada Paket Aktif'}>
+                      <p className="text-gray-300 text-[13px] leading-tight italic font-medium" title={memberCardModal.membershipType || 'Belum Ada Paket Aktif'}>
                         {memberCardModal.membershipType || 'Belum Ada Paket Aktif'}
                       </p>
                     </div>
