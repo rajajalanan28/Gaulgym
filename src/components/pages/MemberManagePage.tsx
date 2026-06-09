@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
@@ -389,7 +389,7 @@ export default function MembersPage() {
   const next7Days = new Date();
   next7Days.setDate(today.getDate() + 7);
 
-  const stats = React.useMemo(() => {
+  const stats = useMemo(() => {
     let active = 0;
     let expiring = 0;
     let expired = 0;
@@ -434,7 +434,7 @@ export default function MembersPage() {
     }
   );
 
-  const sortedMembers = React.useMemo(() => {
+  const sortedMembers = useMemo(() => {
     let result = [...filteredMembers];
     switch (sortOrder) {
       case "name_asc":
