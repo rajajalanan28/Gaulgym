@@ -324,3 +324,19 @@ export async function cleanupOrphanedAuthUsersAction() {
     return { error: err.message };
   }
 }
+
+export async function editSubscriptionEndDateAction(subscriptionId: string, newEndDate: string) {
+  try {
+    if (!subscriptionId || !newEndDate) return { error: 'Data tidak lengkap' };
+    
+    const { error } = await supabaseAdmin
+      .from('subscriptions')
+      .update({ end_date: newEndDate })
+      .eq('id', subscriptionId);
+      
+    if (error) return { error: `Gagal mengubah tanggal: ${error.message}` };
+    return { success: true, message: 'Tanggal expired berhasil diubah' };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}

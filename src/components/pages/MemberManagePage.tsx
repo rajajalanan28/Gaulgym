@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { PlusCircle, X, Loader2, Shield, Camera, IdCard, MessageCircle, User, Edit } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { updateMemberPhotoAction, deleteMemberAction, resetMemberPasswordAction, cleanupOrphanedAuthUsersAction, editMemberAction } from "@/app/actions/user";
+import { updateMemberPhotoAction, deleteMemberAction, resetMemberPasswordAction, cleanupOrphanedAuthUsersAction, editMemberAction, editSubscriptionEndDateAction } from "@/app/actions/user";
 import Link from "next/link";
 interface MemberData {
   id: string;
@@ -20,6 +20,8 @@ interface MemberData {
   photoUrl: string | null;
   user_id: string | null;
   display_id: string | null;
+  activeSubscriptionId?: string;
+  activeSubscriptionEndDate?: string;
 }
 
 interface PackageData {
@@ -46,6 +48,8 @@ export default function MembersPage() {
   const [editingMember, setEditingMember] = useState<MemberData | null>(null);
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
+  const [editDateModal, setEditDateModal] = useState<MemberData | null>(null);
+  const [newEndDate, setNewEndDate] = useState<string>("");
   const [selectedPackageId, setSelectedPackageId] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -176,6 +180,8 @@ export default function MembersPage() {
             photoUrl: m.photo_url || null,
             user_id: m.user_id || null,
             display_id: m.display_id || null,
+            activeSubscriptionId: activeSubs.length > 0 ? activeSubs[0].id : undefined,
+            activeSubscriptionEndDate: activeSubs.length > 0 ? activeSubs[0].end_date : undefined,
           };
         });
 
@@ -247,6 +253,23 @@ export default function MembersPage() {
     } catch (err: any) {
       console.error("Gagal memperpanjang paket:", err);
       alert("Terjadi kesalahan saat memperpanjang paket: " + (err.message || JSON.stringify(err)));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditDateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editDateModal?.activeSubscriptionId || !newEndDate) return;
+    setIsSubmitting(true);
+    try {
+      const res = await editSubscriptionEndDateAction(editDateModal.activeSubscriptionId, new Date(newEndDate).toISOString());
+      if (res.error) throw new Error(res.error);
+      alert('Tanggal expired berhasil diubah!');
+      setEditDateModal(null);
+      fetchData();
+    } catch (err: any) {
+      alert('Gagal mengubah tanggal: ' + err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -500,6 +523,17 @@ export default function MembersPage() {
                     >
                       <PlusCircle size={14} /> Perpanjang
                     </button>
+                    {user?.role === 'Owner' && member.status === 'active' && member.activeSubscriptionId && (
+                      <button 
+                        onClick={() => {
+                          setEditDateModal(member);
+                          setNewEndDate(member.activeSubscriptionEndDate ? new Date(member.activeSubscriptionEndDate).toISOString().split('T')[0] : '');
+                        }}
+                        className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-yellow-500/10 text-yellow-600 hover:bg-yellow-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                      >
+                        <Edit size={14} /> Edit Tgl
+                      </button>
+                    )}
                     <button 
                       onClick={() => { setEditingMember(member); setEditName(member.name); setEditPhone(member.phone); }}
                       className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-gray-500/10 text-gray-500 hover:bg-gray-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
@@ -604,6 +638,20 @@ export default function MembersPage() {
                             <PlusCircle size={16} />
                             <span>Perpanjang</span>
                           </button>
+
+                          {user?.role === 'Owner' && member.status === 'active' && member.activeSubscriptionId && (
+                            <button 
+                              onClick={() => {
+                                setEditDateModal(member);
+                                setNewEndDate(member.activeSubscriptionEndDate ? new Date(member.activeSubscriptionEndDate).toISOString().split('T')[0] : '');
+                              }}
+                              className="flex items-center gap-1 bg-yellow-500/10 text-yellow-600 hover:bg-yellow-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                              title="Edit Expired Date"
+                            >
+                              <Edit size={16} />
+                              <span>Edit Tgl</span>
+                            </button>
+                          )}
 
                           <button 
                             onClick={() => { setEditingMember(member); setEditName(member.name); setEditPhone(member.phone); }}
@@ -954,6 +1002,60 @@ export default function MembersPage() {
                       </div>
                     )}
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Edit Tanggal */}
+        {editDateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-[var(--color-surface-1)] hairline-border w-full max-w-sm rounded-[20px] shadow-2xl overflow-hidden flex flex-col">
+              <div className="px-[24px] py-[20px] border-b border-[var(--color-hairline)] flex justify-between items-center bg-[var(--color-surface-2)]">
+                <h2 className="text-[18px] font-bold text-[var(--color-ink)]">Edit Tanggal Expired</h2>
+                <button 
+                  onClick={() => setEditDateModal(null)}
+                  className="text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-[24px]">
+                <form id="form-edit-date" onSubmit={handleEditDateSubmit} className="space-y-[20px]">
+                  <div>
+                    <label className="block text-[13px] font-medium mb-[8px] text-[var(--color-ink)]">
+                      Member: {editDateModal.name}
+                    </label>
+                    <label className="block text-[13px] font-medium mb-[8px] text-[var(--color-ink)]">Tanggal Baru</label>
+                    <input 
+                      type="date"
+                      required
+                      value={newEndDate}
+                      onChange={(e) => setNewEndDate(e.target.value)}
+                      className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px]"
+                    />
+                  </div>
+                </form>
+
+                <div className="mt-8 flex gap-[12px] border-t border-[var(--color-hairline)] pt-[20px]">
+                  <button 
+                    type="button"
+                    onClick={() => setEditDateModal(null)}
+                    className="flex-1 px-[24px] py-[10px] border border-[var(--color-hairline)] text-[var(--color-ink)] rounded-[10px] font-semibold hover:bg-[var(--color-surface-2)] transition-colors text-[14px]"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    form="form-edit-date"
+                    disabled={isSubmitting || !newEndDate}
+                    className="flex-1 px-[24px] py-[10px] bg-yellow-500 hover:bg-yellow-600 text-white rounded-[10px] font-semibold transition-colors flex items-center justify-center gap-2 text-[14px] disabled:opacity-50"
+                  >
+                    {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Edit size={16} />}
+                    Simpan
+                  </button>
                 </div>
               </div>
             </div>
