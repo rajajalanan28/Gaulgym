@@ -193,7 +193,7 @@ export default function MembersPage() {
             membershipType: activeSubs.length > 0 
               ? Array.from(new Set(activeSubs.map((s:any) => s.package_name))).join(', ') 
               : (expiredSub?.package_name || '-'),
-            joinDate: new Date(m.created_at).toLocaleDateString('id-ID'),
+            joinDate: m.created_at,
             status: activeSubs.length > 0 ? 'active' : (expiredSub ? 'expired' : 'inactive'),
             photoUrl: m.photo_url || null,
             user_id: m.user_id || null,
