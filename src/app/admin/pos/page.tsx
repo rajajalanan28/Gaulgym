@@ -95,41 +95,27 @@ export default function POSPage() {
     
     setProcessing(true);
     try {
-      // 1. Insert Transaction
-      const { data: trxData, error: trxError } = await supabase
-        .from('sales_transactions')
-        .insert({
-          admin_id: user.id,
-          total_amount: totalAmount,
-          payment_method: paymentMethod
-        })
-        .select()
-        .single();
-        
-      if (trxError) throw trxError;
-      
-      // 2. Insert Items
-      const itemsToInsert = cart.map(item => ({
-        transaction_id: trxData.id,
-        product_id: item.id,
+      const itemsPayload = cart.map(item => ({
+        id: item.id,
         quantity: item.quantity,
         price: item.price
       }));
-      
-      const { error: itemsError } = await supabase
-        .from('sales_items')
-        .insert(itemsToInsert);
-        
-      if (itemsError) throw itemsError;
 
-      // 3. Deduct Stock
-      await Promise.all(cart.map(item => {
-        const newStock = item.stock - item.quantity;
-        return supabase
-          .from('products')
-          .update({ stock: newStock > 0 ? newStock : 0 })
-          .eq('id', item.id);
-      }));
+      const { data: result, error } = await supabase.rpc('process_pos_transaction', {
+        p_admin_id: user.id,
+        p_total_amount: totalAmount,
+        p_payment_method: paymentMethod,
+        p_items: itemsPayload
+      });
+
+      if (error) {
+        // Fallback for when RPC is not yet created
+        if (error.code === '42883' || error.message?.includes('function process_pos_transaction does not exist')) {
+          alert('Fungsi process_pos_transaction belum dibuat di Supabase. Silakan jalankan file setup_pos_rpc.sql di SQL Editor Supabase terlebih dahulu.');
+          return;
+        }
+        throw error;
+      }
       
       // Success
       setCart([]);

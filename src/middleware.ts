@@ -102,7 +102,7 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
 
   let isProtectedRoute = false;
@@ -116,7 +116,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  if (!session) {
+  if (!user) {
     if (isProtectedRoute) {
       // Clear stale role cache on logout
       response.cookies.delete(ROLE_CACHE_COOKIE);
@@ -144,7 +144,7 @@ export async function middleware(request: NextRequest) {
       const { data: userData } = await adminAuthClient
         .from('users')
         .select('role')
-        .eq('id', session.user.id)
+        .eq('id', user.id)
         .single();
 
       userRole = userData?.role;

@@ -3,9 +3,16 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const FONNTE_TOKEN = process.env.FONNTE_TOKEN || '';
+    const CRON_SECRET = process.env.CRON_SECRET || '';
 
     if (!FONNTE_TOKEN) {
       return NextResponse.json({ error: 'Fonnte token not configured' }, { status: 500 });
+    }
+
+    // Check Authorization
+    const authHeader = request.headers.get('Authorization');
+    if (!CRON_SECRET || authHeader !== `Bearer ${CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { phone, name, displayId, packageName, endDate } = await request.json();

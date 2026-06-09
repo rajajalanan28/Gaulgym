@@ -187,7 +187,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Set cookie for middleware
       document.cookie = `x-user-role-cache=${encodeURIComponent(JSON.stringify({
-        role: authUser.role
+        role: authUser.role,
+        ts: Date.now()
       }))}; path=/; max-age=86400; SameSite=Lax`;
       // S-8: Return warning about email verification
       const warnings: string[] = [];
@@ -267,7 +268,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserAndCache(authUser);
         // Set cookie for middleware
         document.cookie = `x-user-role-cache=${encodeURIComponent(JSON.stringify({
-          role: authUser.role
+          role: authUser.role,
+          ts: Date.now()
         }))}; path=/; max-age=86400; SameSite=Lax`;
         return { success: true, user: authUser };
       }

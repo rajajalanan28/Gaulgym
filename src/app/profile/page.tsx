@@ -10,6 +10,7 @@ import { Lock, User, Mail, ShieldCheck, Loader2 } from 'lucide-react';
 export default function ProfilePage() {
   const { user } = useAuth();
   
+  const [oldPassword, setOldPassword] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,6 +18,10 @@ export default function ProfilePage() {
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!oldPassword) {
+      setMessage({ text: 'Masukkan password lama Anda', type: 'error' });
+      return;
+    }
     if (password !== confirmPassword) {
       setMessage({ text: 'Password dan konfirmasi password tidak cocok!', type: 'error' });
       return;
@@ -30,6 +35,15 @@ export default function ProfilePage() {
     setMessage({ text: '', type: '' });
 
     try {
+      // S-5: Verify old password first by signing in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user?.email || '',
+        password: oldPassword,
+      });
+
+      if (signInError) throw new Error('Password lama salah');
+
+      // Proceed to update password
       const { error } = await supabase.auth.updateUser({
         password: password
       });
@@ -37,6 +51,7 @@ export default function ProfilePage() {
       if (error) throw error;
       
       setMessage({ text: 'Password berhasil diubah!', type: 'success' });
+      setOldPassword('');
       setPassword('');
       setConfirmPassword('');
     } catch (err: any) {
@@ -100,6 +115,18 @@ export default function ProfilePage() {
             )}
 
             <form onSubmit={handleUpdatePassword} className="space-y-[20px]">
+              <div>
+                <label className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)]">Password Lama</label>
+                <input 
+                  type="password" 
+                  required 
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                  className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px]" 
+                  placeholder="Masukkan password lama"
+                />
+              </div>
+
               <div>
                 <label className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)]">Password Baru</label>
                 <input 
