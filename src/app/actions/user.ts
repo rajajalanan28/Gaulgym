@@ -180,3 +180,44 @@ export async function updateMemberPhotoAction(memberId: string, userId: string, 
     return { error: err.message };
   }
 }
+
+export async function deleteMemberAction(userId: string) {
+  try {
+    if (!userId) return { error: 'ID user tidak valid' };
+
+    // Delete from auth.users (will cascade if foreign keys are set up correctly)
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+
+    if (deleteError) {
+      console.error('Error deleting user:', deleteError);
+      return { error: `Gagal menghapus user: ${deleteError.message}` };
+    }
+
+    return { success: true, message: 'Member berhasil dihapus' };
+  } catch (err: any) {
+    console.error('Delete member error:', err);
+    return { error: err.message || 'Terjadi kesalahan sistem' };
+  }
+}
+
+export async function resetMemberPasswordAction(userId: string, newPassword?: string) {
+  try {
+    if (!userId) return { error: 'ID user tidak valid' };
+    
+    const targetPassword = newPassword || 'Gaulgym123!';
+
+    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userId, {
+      password: targetPassword
+    });
+
+    if (updateError) {
+      console.error('Error resetting password:', updateError);
+      return { error: `Gagal mereset password: ${updateError.message}` };
+    }
+
+    return { success: true, message: 'Password berhasil direset', newPassword: targetPassword };
+  } catch (err: any) {
+    console.error('Reset password error:', err);
+    return { error: err.message || 'Terjadi kesalahan sistem' };
+  }
+}

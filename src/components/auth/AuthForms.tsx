@@ -196,7 +196,7 @@ function AuthFormsContent() {
               <form onSubmit={handleLoginSubmit} className="space-y-[20px]" noValidate>
                 <div>
                   <label htmlFor="login-email" className="block text-[13px] font-medium mb-[8px] text-[var(--color-ink-subtle)] ml-[2px]">
-                    Username / Email
+                    Username
                   </label>
                   <div className={inputContainerClass}>
                     <User className={iconClass} />
@@ -205,7 +205,7 @@ function AuthFormsContent() {
                       type="text"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="contoh: ucok atau budi@email.com"
+                      placeholder="contoh: ucok"
                       required
                       className={inputClass}
                     />
@@ -304,7 +304,7 @@ function AuthFormsContent() {
                   {formErrors.name && <p className="text-[12px] mt-[6px] ml-[2px] text-red-400">{formErrors.name}</p>}
                 </div>
                 <div>
-                  <label htmlFor="reg-username" className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)] ml-[2px]">Email</label>
+                  <label htmlFor="reg-username" className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)] ml-[2px]">Username</label>
                   <div className={inputContainerClass}>
                     <Mail className={iconClass} />
                     <input
@@ -312,7 +312,7 @@ function AuthFormsContent() {
                       type="text"
                       value={regData.username}
                       onChange={(e) => { setRegData({ ...regData, username: e.target.value }); if (formErrors.username) setFormErrors({ ...formErrors, username: undefined }); }}
-                      placeholder="contoh: ucok@email.com"
+                      placeholder="contoh: ucok"
                       className={`${inputClass} ${formErrors.username ? 'border-red-500/50 focus:border-red-500 focus:shadow-[0_0_0_4px_rgba(239,68,68,0.1)]' : ''}`}
                       aria-invalid={!!formErrors.username}
                     />

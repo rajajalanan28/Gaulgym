@@ -240,7 +240,7 @@ export default function NewMemberPage() {
 
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-medium text-gray-300">Username / Email</label>
+                    <label className="block text-sm font-medium text-gray-300">Username</label>
                   </div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -251,7 +251,7 @@ export default function NewMemberPage() {
                       name="email"
                       required
                       className="w-full bg-[var(--color-surface-2)] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-colors"
-                      placeholder="Contoh: ucok atau budi@gmail.com"
+                      placeholder="Contoh: ucok"
                     />
                   </div>
                 </div>

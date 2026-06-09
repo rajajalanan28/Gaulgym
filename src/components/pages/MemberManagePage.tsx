@@ -5,9 +5,9 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
-import { PlusCircle, X, Loader2, Shield, Camera, IdCard, MessageCircle } from "lucide-react";
+import { PlusCircle, X, Loader2, Shield, Camera, IdCard, MessageCircle, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { updateMemberPhotoAction } from "@/app/actions/user";
+import { updateMemberPhotoAction, deleteMemberAction, resetMemberPasswordAction } from "@/app/actions/user";
 import Link from "next/link";
 interface MemberData {
   id: string;
@@ -286,6 +286,51 @@ export default function MembersPage() {
     }
   };
 
+  const handleResetPassword = async (member: MemberData) => {
+    if (!member.user_id) {
+      alert("Member ini belum memiliki akun login.");
+      return;
+    }
+    
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+    let randomPassword = '';
+    for (let i = 0; i < 10; i++) {
+      randomPassword += chars[Math.floor(Math.random() * chars.length)];
+    }
+    randomPassword += '!1aA'; // Ensure complexity
+    
+    if (confirm(`Anda yakin ingin mereset password untuk ${member.name}?\n\nPassword baru akan dibuat otomatis.`)) {
+      try {
+        const res = await resetMemberPasswordAction(member.user_id, randomPassword);
+        if (res.error) throw new Error(res.error);
+        
+        alert(`Password berhasil direset!\n\nUsername: ${member.email.replace('@gaulgym.com', '')}\nPassword Baru: ${res.newPassword}\n\nSilakan berikan password ini ke member.`);
+      } catch (err: any) {
+        alert("Gagal mereset password: " + err.message);
+      }
+    }
+  };
+
+  const handleDeleteMember = async (member: MemberData) => {
+    if (confirm(`PERINGATAN KERAS: Anda yakin ingin MENGHAPUS member ${member.name}?\n\nSemua data langganan dan kehadiran member ini juga akan terhapus!\n\nTindakan ini tidak bisa dibatalkan!`)) {
+      try {
+        if (member.user_id) {
+          const res = await deleteMemberAction(member.user_id);
+          if (res.error) throw new Error(res.error);
+        } else {
+          // If no auth user, just delete from members table
+          const { error } = await supabase.from('members').delete().eq('id', member.id);
+          if (error) throw error;
+        }
+        
+        alert('Member berhasil dihapus!');
+        fetchData();
+      } catch (err: any) {
+        alert("Gagal menghapus member: " + err.message + "\n\n(Pastikan ON DELETE CASCADE sudah disetup di Supabase)");
+      }
+    }
+  };
+
   const handleWhatsApp = (member: MemberData) => {
     if (!member.phone) {
       alert("Member ini tidak memiliki nomor telepon.");
@@ -362,7 +407,7 @@ export default function MembersPage() {
             <table className="w-full min-w-[800px]">
               <thead>
                 <tr className="border-b border-[var(--color-hairline)] bg-[var(--color-surface-2)]">
-                  {['Nama', 'Email', 'Telepon', 'Paket Aktif', 'Status', 'Aksi'].map(h => (
+                  {['Nama', 'Username', 'Telepon', 'Paket Aktif', 'Status', 'Aksi'].map(h => (
                     <th key={h} className="px-[16px] py-[14px] text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
@@ -393,7 +438,7 @@ export default function MembersPage() {
                           <span className="text-[14px] font-medium text-[var(--color-ink)]">{member.name}</span>
                         </div>
                       </td>
-                      <td className="px-[16px] py-[16px] text-[14px] text-[var(--color-ink-muted)]">{member.email}</td>
+                      <td className="px-[16px] py-[16px] text-[14px] text-[var(--color-ink-muted)] font-mono">{member.email.replace('@gaulgym.com', '')}</td>
                       <td className="px-[16px] py-[16px] text-[14px] text-[var(--color-ink-muted)]">{member.phone}</td>
                       <td className="px-[16px] py-[16px] text-[14px] text-[var(--color-ink-muted)]">{member.membershipType}</td>
                       <td className="px-[16px] py-[16px]">
@@ -442,6 +487,24 @@ export default function MembersPage() {
                               <span>Kirim WA</span>
                             </button>
                           )}
+
+                          <button 
+                            onClick={() => handleResetPassword(member)}
+                            className="flex items-center gap-1 bg-orange-500/10 text-orange-500 hover:bg-orange-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                            title="Reset Password"
+                          >
+                            <User size={16} />
+                            <span>Reset Pwd</span>
+                          </button>
+
+                          <button 
+                            onClick={() => handleDeleteMember(member)}
+                            className="flex items-center gap-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                            title="Hapus Member"
+                          >
+                            <X size={16} />
+                            <span>Hapus</span>
+                          </button>
                         </div>
                       </td>
                     </tr>
