@@ -98,17 +98,22 @@ export default function NewMemberPage() {
     const formData = new FormData(e.currentTarget);
     formData.append('photoBase64', photoBase64);
     
-    const result = await registerMemberAction(formData);
-    
-    setLoading(false);
-    
-    if (result.error) {
-      setError(result.error);
-    } else if (result.success) {
-      setSuccess(true);
-      setTimeout(() => {
-        router.push(user?.role === 'Owner' ? '/owner/member' : '/admin/member');
-      }, 2000);
+    try {
+      const result = await registerMemberAction(formData);
+      
+      if (result.error) {
+        setError(result.error);
+      } else if (result.success) {
+        setSuccess(true);
+        setTimeout(() => {
+          router.push(user?.role === 'Owner' ? '/owner/member' : '/admin/member');
+        }, 2000);
+      }
+    } catch (err: any) {
+      console.error('Registration failed:', err);
+      setError('Terjadi kesalahan jaringan atau server. Mohon coba lagi.');
+    } finally {
+      setLoading(false);
     }
   };
 

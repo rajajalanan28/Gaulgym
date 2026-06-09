@@ -17,10 +17,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 import { v4 as uuidv4 } from 'uuid';
 
 function generateSecurePassword() {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
-  const randomValues = new Uint8Array(12);
-  crypto.getRandomValues(randomValues);
-  return Array.from(randomValues).map(x => chars[x % chars.length]).join('');
+  return uuidv4().substring(0, 12) + '!1aA'; // Ensure complexity
 }
 
 export async function registerMemberAction(formData: FormData) {
@@ -86,9 +83,7 @@ export async function registerMemberAction(formData: FormData) {
     }
 
     // 2. Generate a random display ID for the member
-    const randomBytes = new Uint8Array(4);
-    crypto.getRandomValues(randomBytes);
-    const displayId = 'GG-' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 6).toUpperCase();
+    const displayId = 'GG-' + uuidv4().replace(/-/g, '').substring(0, 6).toUpperCase();
     const qrCode = uuidv4();
 
     // 4. Handle Photo Upload
