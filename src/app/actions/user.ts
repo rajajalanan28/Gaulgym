@@ -17,7 +17,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 import { v4 as uuidv4 } from 'uuid';
 
 function generateSecurePassword() {
-  return uuidv4().substring(0, 12) + '!1aA'; // Ensure complexity
+  return 'Gaulgym123!'; // Default password for new members
 }
 
 export async function registerMemberAction(formData: FormData) {
