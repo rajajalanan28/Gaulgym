@@ -43,14 +43,28 @@ export async function registerMemberAction(formData: FormData) {
     // 1. Check if user already exists
     const { data: existingUser } = await supabaseAdmin
       .from('users')
-      .select('id, name')
+      .select('id, name, role')
       .eq('email', email)
       .single();
 
     let userId = '';
 
     if (existingUser) {
-      // User already exists, use their ID
+      if (existingUser.role === 'Owner' || existingUser.role === 'Admin') {
+        return { error: `Email ini sudah digunakan oleh akun ${existingUser.role}. Silakan gunakan email lain.` };
+      }
+      
+      const { data: existingMember } = await supabaseAdmin
+        .from('members')
+        .select('id')
+        .eq('user_id', existingUser.id)
+        .single();
+        
+      if (existingMember) {
+        return { error: 'Email ini sudah terdaftar sebagai member aktif. Silakan gunakan email lain.' };
+      }
+
+      // User already exists (e.g. registered via app but no member profile yet), use their ID
       userId = existingUser.id;
     } else {
       const tempPassword = (formData.get('password') as string) || 'Gaulgym123!';
