@@ -704,14 +704,12 @@ export default function MembersPage() {
                     >
                       <Shield size={14} /> Jadi Admin
                     </button>
-                    {(member.status === 'expired' || member.status === 'inactive') && (
-                      <button 
-                        onClick={() => handleWhatsApp(member)}
-                        className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-green-500/10 text-green-500 hover:bg-green-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
-                      >
-                        <MessageCircle size={14} /> Kirim WA
-                      </button>
-                    )}
+                    <button 
+                      onClick={() => handleWhatsApp(member)}
+                      className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-green-500/10 text-green-500 hover:bg-green-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                    >
+                      <MessageCircle size={14} /> Kirim WA
+                    </button>
                     <button 
                       onClick={() => handleResetPassword(member)}
                       className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-orange-500/10 text-orange-500 hover:bg-orange-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
