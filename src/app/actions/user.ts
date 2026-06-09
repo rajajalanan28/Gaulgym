@@ -246,3 +246,27 @@ export async function resetMemberPasswordAction(userId: string, newPassword?: st
     return { error: err.message || 'Terjadi kesalahan sistem' };
   }
 }
+
+export async function cleanupOrphanedAuthUsersAction() {
+  try {
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.listUsers();
+    if (authError) return { error: authError.message };
+
+    const { data: publicUsers, error: dbError } = await supabaseAdmin.from('users').select('id');
+    if (dbError) return { error: dbError.message };
+
+    const publicIds = new Set(publicUsers.map(u => u.id));
+    let deletedCount = 0;
+
+    for (const u of authData.users) {
+      if (!publicIds.has(u.id)) {
+        await supabaseAdmin.auth.admin.deleteUser(u.id);
+        deletedCount++;
+      }
+    }
+
+    return { success: true, message: `Berhasil membersihkan ${deletedCount} cache user yang nyangkut.` };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}

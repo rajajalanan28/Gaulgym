@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
 import { PlusCircle, X, Loader2, Shield, Camera, IdCard, MessageCircle, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { updateMemberPhotoAction, deleteMemberAction, resetMemberPasswordAction } from "@/app/actions/user";
+import { updateMemberPhotoAction, deleteMemberAction, resetMemberPasswordAction, cleanupOrphanedAuthUsersAction } from "@/app/actions/user";
 import Link from "next/link";
 interface MemberData {
   id: string;
@@ -389,12 +389,30 @@ export default function MembersPage() {
             <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Members</h1>
             <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola data member dan perpanjang keanggotaan</p>
           </div>
-          <Link
-            href={user?.role === 'Owner' ? "/owner/member/new" : "/admin/member/new"}
-            className="inline-flex items-center justify-center bg-[var(--color-primary)] text-white font-medium px-4 py-2.5 rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors shadow-lg shadow-[var(--color-primary)]/20"
-          >
-            + Daftarkan Member
-          </Link>
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                if (confirm('Fitur ini akan membersihkan sisa data member yang error/dihapus manual (supaya email/username bisa dipakai lagi). Lanjutkan?')) {
+                  try {
+                    const res = await cleanupOrphanedAuthUsersAction();
+                    if (res.error) alert('Gagal: ' + res.error);
+                    else alert(res.message);
+                  } catch (err: any) {
+                    alert('Error: ' + err.message);
+                  }
+                }
+              }}
+              className="inline-flex items-center justify-center bg-[var(--color-surface-2)] text-[var(--color-ink)] border border-[var(--color-hairline)] font-medium px-4 py-2.5 rounded-lg hover:bg-[var(--color-surface-3)] transition-colors text-[13px]"
+            >
+              Bersihkan Cache User
+            </button>
+            <Link
+              href={user?.role === 'Owner' ? "/owner/member/new" : "/admin/member/new"}
+              className="inline-flex items-center justify-center bg-[var(--color-primary)] text-white font-medium px-4 py-2.5 rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors shadow-lg shadow-[var(--color-primary)]/20 text-[13px]"
+            >
+              + Daftarkan Member
+            </Link>
+          </div>
         </div>
 
         <div className="mb-[16px]">
