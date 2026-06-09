@@ -1088,21 +1088,23 @@ export default function MembersPage() {
                   </div>
 
                   {/* Bottom: Info */}
-                  <div className="flex justify-between items-end z-10 relative">
-                    <div className="flex-1">
+                  <div className="flex justify-between items-end z-10 relative gap-2">
+                    <div className="flex-1 min-w-0 pr-2">
                       <p className="text-gray-500 text-[9px] tracking-[0.15em] uppercase mb-1">Paket Aktif</p>
-                      <p className="text-gray-300 text-[15px] italic font-medium">{memberCardModal.membershipType || 'Belum Ada Paket Aktif'}</p>
+                      <p className="text-gray-300 text-[13px] leading-tight italic font-medium line-clamp-2" title={memberCardModal.membershipType || 'Belum Ada Paket Aktif'}>
+                        {memberCardModal.membershipType || 'Belum Ada Paket Aktif'}
+                      </p>
                     </div>
-                    <div className="flex gap-8 text-right">
+                    <div className="flex gap-4 sm:gap-6 text-right shrink-0">
                       <div>
                         <p className="text-gray-500 text-[9px] tracking-[0.15em] uppercase mb-1">Join Date</p>
-                        <p className="text-gray-300 text-[13px] font-mono tracking-wider">
+                        <p className="text-gray-300 text-[12px] sm:text-[13px] font-mono tracking-wider">
                           {memberCardModal.joinDate ? new Date(memberCardModal.joinDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-- -- ----'}
                         </p>
                       </div>
                       <div>
                         <p className="text-gray-500 text-[9px] tracking-[0.15em] uppercase mb-1">Valid Thru</p>
-                        <p className="text-gray-300 text-[13px] font-mono tracking-wider">
+                        <p className="text-gray-300 text-[12px] sm:text-[13px] font-mono tracking-wider">
                           {memberCardModal.activeSubscriptionEndDate ? new Date(memberCardModal.activeSubscriptionEndDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).replace(/ /g, ' / ') : '--/--/----'}
                         </p>
                       </div>
