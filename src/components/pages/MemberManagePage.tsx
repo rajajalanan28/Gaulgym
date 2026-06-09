@@ -214,8 +214,7 @@ export default function MembersPage() {
           amount: selectedPkg.price,
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
-          status: 'active',
-          payment_method: paymentMethod
+          status: 'active'
         });
 
       if (error) throw error;
