@@ -122,6 +122,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'INITIAL_SESSION') return; // Let getSession handle the initial load to prevent race conditions
+
       if (session?.user) {
         await fetchUserProfile(session.user.id, session.user.email_confirmed_at || null);
       } else {
