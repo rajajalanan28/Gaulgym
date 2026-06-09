@@ -377,7 +377,7 @@ export default function MembersPage() {
       if (res.error) throw new Error(res.error);
       alert('Data member berhasil diubah!');
       setEditingMember(null);
-      fetchMembers();
+      fetchData();
     } catch (err: any) {
       alert('Gagal mengubah data: ' + err.message);
     } finally {
