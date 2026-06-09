@@ -430,7 +430,9 @@ export default function MembersPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-[15px] font-bold text-[var(--color-ink)] truncate">{member.name}</div>
-                        <div className="text-[12px] text-[var(--color-ink-muted)] font-mono truncate">{member.email.replace('@gaulgym.com', '')}</div>
+                        <div className="text-[12px] text-[var(--color-ink-muted)] font-mono truncate">
+                          <span className="text-[10px] uppercase tracking-wider opacity-70">Username:</span> {member.email.replace('@gaulgym.com', '')}
+                        </div>
                       </div>
                     </div>
                     <span
