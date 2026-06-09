@@ -48,6 +48,7 @@ export default function MembersPage() {
   // Modal states
   const [selectedMember, setSelectedMember] = useState<MemberData | null>(null);
   const [memberCardModal, setMemberCardModal] = useState<MemberData | null>(null);
+  const [enlargedQr, setEnlargedQr] = useState<string | null>(null);
   const [editingMember, setEditingMember] = useState<MemberData | null>(null);
   const [editName, setEditName] = useState("");
   const [editPhone, setEditPhone] = useState("");
@@ -1050,7 +1051,11 @@ export default function MembersPage() {
                       <img src="/logo.png" alt="Gaul Gym" className="w-10 h-10 object-contain drop-shadow-md" />
                       <span className="text-white font-bold tracking-[0.25em] text-sm">GAUL GYM</span>
                     </div>
-                    <div className="bg-white p-1.5 rounded-lg shadow-sm">
+                    <div 
+                      onClick={() => setEnlargedQr(memberCardModal.display_id || memberCardModal.id)}
+                      className="bg-white p-1.5 rounded-lg shadow-sm cursor-pointer hover:scale-105 transition-transform"
+                      title="Perbesar QR Code"
+                    >
                       <QRCodeSVG value={memberCardModal.display_id || memberCardModal.id} size={54} />
                     </div>
                   </div>
@@ -1154,8 +1159,26 @@ export default function MembersPage() {
               </div>
             </div>
           </div>
+          </div>
         )}
 
+        {/* Modal Enlarged QR */}
+        {enlargedQr && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setEnlargedQr(null)}>
+            <div className="bg-white p-6 rounded-3xl shadow-2xl flex flex-col items-center gap-4 animate-fade-in" onClick={e => e.stopPropagation()}>
+              <h3 className="text-gray-800 font-bold text-lg">Scan QR Code</h3>
+              <div className="p-4 border-4 border-gray-100 rounded-2xl">
+                <QRCodeSVG value={enlargedQr} size={250} />
+              </div>
+              <button 
+                onClick={() => setEnlargedQr(null)}
+                className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        )}
         {/* Modal Edit Tanggal */}
         {editDateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
