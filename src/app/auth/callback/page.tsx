@@ -20,7 +20,13 @@ export default function AuthCallbackPage() {
         
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-          if (exchangeError) throw exchangeError;
+          if (exchangeError) {
+            // Check if we actually have a session despite the exchange error (e.g., already exchanged or SSR middleware synced it)
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+              throw exchangeError;
+            }
+          }
         }
 
         // Get the session that Supabase automatically parsed from the URL hash or PKCE exchange
