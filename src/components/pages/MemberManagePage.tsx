@@ -830,16 +830,14 @@ export default function MembersPage() {
                             <span>Jadikan Admin</span>
                           </button>
 
-                          {(member.status === 'expired' || member.status === 'inactive') && (
-                            <button 
-                              onClick={() => handleWhatsApp(member)}
-                              className="flex items-center gap-1 bg-green-500/10 text-green-500 hover:bg-green-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
-                              title="Kirim WA Jatuh Tempo"
-                            >
-                              <MessageCircle size={16} />
-                              <span>Kirim WA</span>
-                            </button>
-                          )}
+                          <button 
+                            onClick={() => handleWhatsApp(member)}
+                            className="flex items-center gap-1 bg-green-500/10 text-green-500 hover:bg-green-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                            title="Kirim WA"
+                          >
+                            <MessageCircle size={16} />
+                            <span>Kirim WA</span>
+                          </button>
 
                           <button 
                             onClick={() => handleResetPassword(member)}
