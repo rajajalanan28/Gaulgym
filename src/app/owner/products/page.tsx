@@ -5,7 +5,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { PlusCircle, Loader2, Edit, Trash2, Power, PowerOff, PackageSearch } from 'lucide-react';
+import { PlusCircle, Loader2, Edit, Trash2, Power, PowerOff, PackageSearch, XCircle, CheckCircle, Pencil } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface Product {
