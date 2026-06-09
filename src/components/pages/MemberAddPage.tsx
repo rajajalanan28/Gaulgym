@@ -21,6 +21,8 @@ export default function NewMemberPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [isMirrored, setIsMirrored] = useState(false);
 
 
   // Start camera on mount, stop when component unmounts
@@ -31,9 +33,13 @@ export default function NewMemberPage() {
     };
   }, []);
 
-  const startCamera = async () => {
+  const startCamera = async (mode = facingMode) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } });
       setCameraActive(true);
       setTimeout(() => {
         if (videoRef.current) {
@@ -70,6 +76,23 @@ export default function NewMemberPage() {
         const startY = (video.videoHeight - minDim) / 2;
         
         ctx.drawImage(video, startX, startY, minDim, minDim, 0, 0, 400, 400);
+        
+        // If it's mirrored, we should also mirror the canvas context before drawing, or after?
+        // Actually, let's just mirror the captured image if isMirrored is true
+        if (isMirrored) {
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = 400;
+          tempCanvas.height = 400;
+          const tCtx = tempCanvas.getContext('2d');
+          if (tCtx) {
+            tCtx.translate(400, 0);
+            tCtx.scale(-1, 1);
+            tCtx.drawImage(canvas, 0, 0);
+            ctx.clearRect(0, 0, 400, 400);
+            ctx.drawImage(tempCanvas, 0, 0);
+          }
+        }
+
         // Compress to JPEG 70% quality
         const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
         setPhotoBase64(dataUrl);
@@ -168,7 +191,8 @@ export default function NewMemberPage() {
                             autoPlay 
                             playsInline 
                             muted 
-                            className={`w-full h-full object-cover ${!cameraActive ? 'hidden' : ''}`}
+                            style={{ transform: isMirrored ? 'scaleX(-1)' : 'none' }}
+                            className={`w-full h-full object-cover transition-transform ${!cameraActive ? 'hidden' : ''}`}
                           />
                           {!cameraActive && (
                             <div className="text-center p-4">
@@ -179,26 +203,48 @@ export default function NewMemberPage() {
                         </div>
                         
                         {cameraActive ? (
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              onClick={stopCamera}
-                              className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/30 transition"
-                            >
-                              Batal
-                            </button>
-                            <button
-                              type="button"
-                              onClick={capturePhoto}
-                              className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-primary-hover)] transition shadow-lg"
-                            >
-                              Jepret Foto
-                            </button>
+                          <div className="flex flex-col gap-2 w-full mt-2">
+                            <div className="flex gap-2 justify-center mb-2">
+                              <button
+                                type="button"
+                                onClick={() => setIsMirrored(!isMirrored)}
+                                className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-[11px] font-medium transition"
+                              >
+                                {isMirrored ? 'Unmirror' : 'Mirror'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newMode = facingMode === 'user' ? 'environment' : 'user';
+                                  setFacingMode(newMode);
+                                  startCamera(newMode);
+                                }}
+                                className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-[11px] font-medium transition"
+                              >
+                                {facingMode === 'user' ? 'Kamera Belakang' : 'Kamera Depan'}
+                              </button>
+                            </div>
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                type="button"
+                                onClick={stopCamera}
+                                className="px-4 py-2 bg-red-500/20 text-red-400 rounded-lg text-sm font-medium hover:bg-red-500/30 transition"
+                              >
+                                Batal
+                              </button>
+                              <button
+                                type="button"
+                                onClick={capturePhoto}
+                                className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--color-primary-hover)] transition shadow-lg"
+                              >
+                                Jepret Foto
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <button
                             type="button"
-                            onClick={startCamera}
+                            onClick={() => startCamera()}
                             className="px-6 py-2 border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded-lg text-sm font-medium flex items-center gap-2 transition"
                           >
                             <Camera size={16} /> Nyalakan Kamera

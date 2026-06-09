@@ -61,12 +61,18 @@ export default function MembersPage() {
   // Member Card Modal States
   const [cameraActive, setCameraActive] = useState(false);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [isMirrored, setIsMirrored] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  const startCamera = async () => {
+  const startCamera = async (mode = facingMode) => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } });
       setCameraActive(true);
       // Tunggu React render video, baru set srcObject
       setTimeout(() => {
@@ -94,6 +100,12 @@ export default function MembersPage() {
       if (context) {
         canvasRef.current.width = videoRef.current.videoWidth;
         canvasRef.current.height = videoRef.current.videoHeight;
+        
+        if (isMirrored) {
+          context.translate(canvasRef.current.width, 0);
+          context.scale(-1, 1);
+        }
+        
         context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
         const base64 = canvasRef.current.toDataURL('image/jpeg');
         setPhotoBase64(base64);
@@ -1109,7 +1121,14 @@ export default function MembersPage() {
                     {!photoBase64 ? (
                       <>
                         <div className="w-48 h-48 bg-black rounded-full overflow-hidden border-2 border-[var(--color-primary)]/50 relative flex items-center justify-center">
-                          <video ref={videoRef} autoPlay playsInline muted className={`w-full h-full object-cover ${!cameraActive ? 'hidden' : ''}`} />
+                          <video 
+                            ref={videoRef} 
+                            autoPlay 
+                            playsInline 
+                            muted 
+                            style={{ transform: isMirrored ? 'scaleX(-1)' : 'none' }}
+                            className={`w-full h-full object-cover transition-transform ${!cameraActive ? 'hidden' : ''}`} 
+                          />
                           {!cameraActive && (
                             <div className="text-center p-4">
                               <Camera className="mx-auto mb-2 text-gray-500" size={32} />
@@ -1119,17 +1138,48 @@ export default function MembersPage() {
                         </div>
                         
                         {cameraActive ? (
-                          <button
-                            type="button"
-                            onClick={capturePhoto}
-                            className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-full text-sm font-semibold hover:bg-[var(--color-primary-hover)] transition shadow-lg flex items-center gap-2"
-                          >
-                            <Camera size={18} /> Jepret Foto
-                          </button>
+                          <div className="flex flex-col gap-2 mt-2 w-full">
+                            <div className="flex gap-2 justify-center mb-2">
+                              <button
+                                type="button"
+                                onClick={() => setIsMirrored(!isMirrored)}
+                                className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-[11px] font-medium transition"
+                              >
+                                {isMirrored ? 'Unmirror' : 'Mirror'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newMode = facingMode === 'user' ? 'environment' : 'user';
+                                  setFacingMode(newMode);
+                                  startCamera(newMode);
+                                }}
+                                className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-[11px] font-medium transition"
+                              >
+                                {facingMode === 'user' ? 'Kamera Belakang' : 'Kamera Depan'}
+                              </button>
+                            </div>
+                            <div className="flex gap-2 justify-center">
+                              <button
+                                type="button"
+                                onClick={stopCamera}
+                                className="px-4 py-2 border-2 border-red-500/50 text-red-400 hover:bg-red-500/10 rounded-full text-sm font-semibold flex items-center gap-2 transition"
+                              >
+                                <X size={18} /> Batal
+                              </button>
+                              <button
+                                type="button"
+                                onClick={capturePhoto}
+                                className="px-6 py-2 bg-[var(--color-primary)] text-white rounded-full text-sm font-semibold hover:bg-[var(--color-primary-hover)] transition shadow-lg flex items-center gap-2"
+                              >
+                                <Camera size={18} /> Jepret Foto
+                              </button>
+                            </div>
+                          </div>
                         ) : (
                           <button
                             type="button"
-                            onClick={startCamera}
+                            onClick={() => startCamera()}
                             className="px-6 py-2 border-2 border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded-full text-sm font-semibold flex items-center gap-2 transition"
                           >
                             <Camera size={18} /> Nyalakan Kamera
