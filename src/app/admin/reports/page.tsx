@@ -266,7 +266,34 @@ export default function AdminReportsPage() {
             </h3>
           </div>
           
-          <div className="overflow-x-auto">
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col gap-3 p-4">
+            {loading ? (
+              Array(4).fill(0).map((_, i) => (
+                <div key={i} className="h-20 bg-[var(--color-surface-2)] animate-pulse rounded-xl border border-[var(--color-hairline)]"></div>
+              ))
+            ) : transactions.length > 0 ? (
+              transactions.map((t) => (
+                <div key={t.id} className="bg-[var(--color-surface-2)] p-4 rounded-xl border border-[var(--color-hairline)] flex flex-col gap-2">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="text-[14px] font-bold text-[var(--color-ink)] mb-1">{t.title}</div>
+                      <div className="text-[12px] text-[var(--color-ink-muted)] line-clamp-2">{t.subtitle}</div>
+                    </div>
+                    <div className="flex flex-col items-end shrink-0 ml-3">
+                      <div className="text-[14px] font-bold text-green-400">+{formatCurrency(t.amount)}</div>
+                      <div className="text-[11px] text-[var(--color-ink-muted)] mt-1">{new Date(t.created_at).toLocaleDateString('id-ID', {day:'numeric', month:'short'})}</div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-[32px] text-center text-[var(--color-ink-muted)] text-[13px]">Tidak ada riwayat pemasukan</div>
+            )}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-[var(--color-surface-2)]">

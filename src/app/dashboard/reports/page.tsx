@@ -404,7 +404,44 @@ export default function ReportsPage() {
             </h3>
           </div>
           
-          <div className="overflow-x-auto">
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col gap-3 p-4">
+            {loading ? (
+              Array(4).fill(0).map((_, i) => (
+                <div key={i} className="h-24 bg-[var(--color-surface-2)] animate-pulse rounded-xl border border-[var(--color-hairline)]"></div>
+              ))
+            ) : filteredTransactions.length > 0 ? (
+              filteredTransactions.map((t) => (
+                <div key={t.id} className="bg-[var(--color-surface-2)] p-4 rounded-xl border border-[var(--color-hairline)] flex flex-col gap-2">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${t.type === 'income' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
+                          {t.type === 'income' ? 'Pemasukan' : 'Pengeluaran'}
+                        </span>
+                        <span className="text-[11px] text-[var(--color-ink-muted)]">
+                          {new Date(t.created_at).toLocaleDateString('id-ID', {day:'numeric', month:'short'})}
+                        </span>
+                      </div>
+                      <div className="text-[14px] font-bold text-[var(--color-ink)] mb-0.5 leading-tight">{t.title}</div>
+                      <div className="text-[12px] text-[var(--color-ink-muted)] line-clamp-1">{t.subtitle}</div>
+                    </div>
+                    <div className="flex flex-col items-end shrink-0 ml-3">
+                      <div className={`text-[15px] font-bold ${t.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
+                      </div>
+                      <div className="text-[10px] text-[var(--color-ink-subtle)] mt-1">Oleh: {t.created_by_name}</div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-[32px] text-center text-[var(--color-ink-muted)] text-[13px]">Tidak ada riwayat kas</div>
+            )}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-[var(--color-surface-2)]">

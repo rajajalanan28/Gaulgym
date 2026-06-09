@@ -130,7 +130,50 @@ export default function ExpenseManagePage() {
         </div>
 
         <div className="bg-[var(--color-surface-1)] border border-white/5 rounded-2xl overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col gap-3 p-4">
+            {loading ? (
+              Array(3).fill(0).map((_, i) => (
+                <div key={i} className="h-24 bg-white/5 animate-pulse rounded-xl"></div>
+              ))
+            ) : expenses.length > 0 ? (
+              expenses.map((exp) => (
+                <div key={exp.id} className="bg-[var(--color-surface-2)] p-4 rounded-xl border border-white/5 flex flex-col gap-2">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="px-2 py-1 bg-white/10 rounded-md text-[11px] font-medium text-gray-200 mb-2 inline-block">
+                        {exp.category}
+                      </span>
+                      <div className="text-sm text-gray-300 font-medium line-clamp-2">
+                        {exp.description || '-'}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 ml-4">
+                      <div className="font-bold text-red-400 text-[15px]">
+                        -{formatRp(exp.amount)}
+                      </div>
+                      <div className="text-[11px] text-gray-500 mt-1">
+                        {new Date(exp.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-2 border-t border-white/5 mt-1">
+                    <button 
+                      onClick={() => handleDelete(exp.id)} 
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-400 bg-red-400/10 hover:bg-red-400/20 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={14} /> Hapus
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-8 text-center text-gray-500 text-sm">Belum ada data pengeluaran</div>
+            )}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-[var(--color-surface-2)]">

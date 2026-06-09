@@ -205,7 +205,66 @@ export default function ProductManagementPage() {
         </div>
 
         <div className="bg-[var(--color-surface-1)] hairline-border rounded-2xl overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col gap-4 p-4">
+            {loading ? (
+              Array(4).fill(0).map((_, i) => (
+                <div key={i} className="h-32 bg-[var(--color-surface-2)] animate-pulse rounded-xl border border-[var(--color-hairline)]"></div>
+              ))
+            ) : products.length === 0 ? (
+              <div className="py-[48px] text-center text-[var(--color-ink-muted)] text-[14px]">
+                Belum ada produk. Klik tombol "Isi Produk Contoh" di atas atau tambah manual.
+              </div>
+            ) : (
+              products.map((product) => (
+                <div key={product.id} className="bg-[var(--color-surface-2)] p-4 rounded-xl border border-[var(--color-hairline)] flex flex-col gap-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="text-[15px] font-bold text-[var(--color-ink)] mb-1">{product.name}</div>
+                      <div className="text-[14px] font-bold text-[var(--color-primary)]">{formatRp(product.price)}</div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className={`px-2 py-1 rounded-md text-[10px] font-bold ${product.stock <= 5 ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-[var(--color-surface-3)] text-[var(--color-ink)] border border-[var(--color-hairline)]'}`}>
+                        Stok: {product.stock}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-3 border-t border-[var(--color-hairline)] flex flex-wrap gap-2">
+                    <button
+                      onClick={() => toggleStatus(product)}
+                      className={`flex-1 min-w-[90px] flex items-center justify-center gap-1.5 px-[10px] py-[8px] rounded-md text-[12px] font-semibold transition-colors ${
+                        product.is_active 
+                          ? 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20' 
+                          : 'bg-green-500/10 text-green-500 hover:bg-green-500/20'
+                      }`}
+                    >
+                      {product.is_active ? (
+                        <><XCircle size={14} /> Nonaktifkan</>
+                      ) : (
+                        <><CheckCircle size={14} /> Aktifkan</>
+                      )}
+                    </button>
+                    <button
+                      onClick={() => openModal(product)}
+                      className="flex-1 min-w-[90px] flex items-center justify-center gap-1.5 px-[10px] py-[8px] bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 rounded-md text-[12px] font-semibold transition-colors"
+                    >
+                      <Pencil size={14} /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="flex-1 min-w-[90px] flex items-center justify-center gap-1.5 px-[10px] py-[8px] bg-red-500/10 text-red-500 hover:bg-red-500/20 rounded-md text-[12px] font-semibold transition-colors"
+                    >
+                      <Trash2 size={14} /> Hapus
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-[var(--color-hairline)] bg-[var(--color-surface-2)]">

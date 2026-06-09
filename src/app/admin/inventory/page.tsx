@@ -290,7 +290,92 @@ export default function InventoryPage() {
           </div>
         ) : (
           <div className="bg-[var(--color-surface-1)] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
-            <div className="overflow-x-auto">
+            {/* Mobile View */}
+            <div className="md:hidden flex flex-col gap-4 p-4">
+              {products.map((item) => (
+                <div key={item.id} className="bg-[var(--color-surface-2)] p-4 rounded-xl border border-[var(--color-hairline)] flex flex-col gap-3">
+                  <div className="flex gap-3 items-start">
+                    <div className="w-16 h-16 rounded-lg bg-[var(--color-surface-1)] border border-white/10 overflow-hidden flex items-center justify-center shrink-0">
+                      {item.image_url ? (
+                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <ImageIcon className="text-gray-600" size={24} />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-bold text-[15px] text-gray-200 line-clamp-2 leading-tight mb-1">{item.name}</div>
+                      <div className="text-green-400 font-bold text-[14px]">{formatRp(item.price)}</div>
+                      <div className="mt-2">
+                        {item.is_active ? (
+                          item.stock > 0 ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-green-500/10 text-green-400 border border-green-500/20">
+                              <CheckCircle size={10} /> Tersedia
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                              Habis
+                            </span>
+                          )
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-red-500/10 text-red-400 border border-red-500/20">
+                            <XCircle size={10} /> Nonaktif
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-1 bg-[var(--color-surface-1)] p-2 rounded-lg">
+                    <span className="text-xs text-gray-400">Sisa Stok:</span>
+                    {editingStockId === item.id ? (
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="number" 
+                          value={editStockValue}
+                          onChange={(e) => setEditStockValue(e.target.value)}
+                          className="w-14 bg-[var(--color-canvas)] border border-[var(--color-primary)] rounded px-2 py-1 text-xs outline-none text-right"
+                        />
+                        <button onClick={() => saveStock(item.id)} className="text-green-500 p-1">
+                          <Check size={14} />
+                        </button>
+                        <button onClick={() => setEditingStockId(null)} className="text-gray-500 p-1">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className={`font-bold text-[14px] ${item.stock <= 0 ? 'text-red-500' : 'text-white'}`}>
+                          {item.stock}
+                        </span>
+                        {user?.role === 'Owner' && (
+                          <button onClick={() => startEditStock(item.id, item.stock)} className="text-gray-500 hover:text-[var(--color-primary)] p-1">
+                            <Edit2 size={14} />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {user?.role === 'Owner' && (
+                    <div className="pt-2 border-t border-[var(--color-hairline)] mt-1">
+                      <button
+                        onClick={() => toggleProductStatus(item.id, item.is_active)}
+                        className={`w-full py-2 rounded-lg text-xs font-bold transition-colors ${
+                          item.is_active 
+                            ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' 
+                            : 'bg-green-500/10 text-green-400 hover:bg-green-500/20'
+                        }`}
+                      >
+                        {item.is_active ? 'Nonaktifkan Produk' : 'Aktifkan Produk'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop View */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[var(--color-surface-2)]">

@@ -163,7 +163,60 @@ export default function AdminPage() {
         </div>
 
         <div className="bg-[var(--color-surface-1)] hairline-border rounded-[20px] overflow-hidden shadow-sm">
-          <div className="overflow-x-auto">
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col gap-4 p-4">
+            {loading ? (
+              Array(3).fill(0).map((_, i) => (
+                <div key={i} className="h-32 bg-[var(--color-surface-2)] animate-pulse rounded-xl border border-[var(--color-hairline)]"></div>
+              ))
+            ) : adminList.length > 0 ? (
+              adminList.map((admin) => (
+                <div key={admin.id} className="bg-[var(--color-surface-2)] p-4 rounded-xl border border-[var(--color-hairline)] flex flex-col gap-3">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] flex items-center justify-center font-bold text-[16px] shrink-0">
+                        {admin.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="text-[15px] font-bold text-[var(--color-ink)]">{admin.name}</div>
+                        <div className="text-[12px] text-[var(--color-ink-muted)]">{admin.email}</div>
+                      </div>
+                    </div>
+                    <button className="text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] p-1">
+                      <MoreVertical size={18} />
+                    </button>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="flex items-center gap-[6px] text-[11px] font-medium text-blue-400 bg-blue-500/10 px-[8px] py-[3px] rounded-full">
+                      <Shield size={12} /> {admin.role}
+                    </span>
+                    <span className="text-[11px] text-[var(--color-ink-muted)] bg-[var(--color-surface-1)] px-[8px] py-[3px] rounded-full border border-[var(--color-hairline)]">
+                      {new Date(admin.created_at).toLocaleDateString('id-ID')}
+                    </span>
+                  </div>
+
+                  <div className="pt-3 border-t border-[var(--color-hairline)] mt-1">
+                    <button 
+                      onClick={() => toggleAdminStatus(admin.id, admin.is_active)}
+                      className={`w-full py-[8px] rounded-lg text-[13px] font-semibold transition-colors flex items-center justify-center gap-2 ${admin.is_active ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : 'bg-red-500/10 text-red-500 hover:bg-red-500/20'}`}
+                    >
+                      {admin.is_active ? 'Status: Aktif (Klik untuk Nonaktif)' : 'Status: Nonaktif (Klik untuk Aktif)'}
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-[48px] text-center text-[var(--color-ink-muted)]">
+                <Shield size={40} className="mx-auto mb-3 opacity-20" />
+                <p className="text-[14px] font-medium">Belum ada admin</p>
+                <p className="text-[12px] mt-1">Angkat member terpercaya menjadi admin.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-[var(--color-surface-2)]">
