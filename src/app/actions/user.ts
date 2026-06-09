@@ -20,10 +20,17 @@ import { v4 as uuidv4 } from 'uuid';
 
 export async function registerMemberAction(formData: FormData) {
   try {
-    const email = formData.get('email') as string;
+    let email = formData.get('email') as string;
     const name = formData.get('name') as string;
     const phone = formData.get('phone') as string;
     const photoBase64 = formData.get('photoBase64') as string;
+    
+    if (email) {
+      email = email.trim().toLowerCase();
+      if (!email.includes('@')) {
+        email = `${email.replace(/\s+/g, '')}@gaulgym.com`;
+      }
+    }
     
     if (!email || !name) {
       return { error: 'Nama dan Email wajib diisi' };

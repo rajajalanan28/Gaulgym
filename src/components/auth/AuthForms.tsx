@@ -78,7 +78,10 @@ function AuthFormsContent() {
     e.preventDefault();
     setIsLoading(true);
 
-    const finalEmail = loginEmail.trim().toLowerCase();
+    let finalEmail = loginEmail.trim().toLowerCase();
+    if (!finalEmail.includes('@')) {
+      finalEmail = `${finalEmail.replace(/\s+/g, '')}@gaulgym.com`;
+    }
 
     try {
       let timeoutId: NodeJS.Timeout | undefined;
@@ -193,7 +196,7 @@ function AuthFormsContent() {
               <form onSubmit={handleLoginSubmit} className="space-y-[20px]" noValidate>
                 <div>
                   <label htmlFor="login-email" className="block text-[13px] font-medium mb-[8px] text-[var(--color-ink-subtle)] ml-[2px]">
-                    Email
+                    Username / Email
                   </label>
                   <div className={inputContainerClass}>
                     <User className={iconClass} />
@@ -202,7 +205,7 @@ function AuthFormsContent() {
                       type="text"
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
-                      placeholder="contoh: budi@email.com"
+                      placeholder="contoh: ucok atau budi@email.com"
                       required
                       className={inputClass}
                     />

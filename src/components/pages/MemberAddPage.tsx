@@ -240,32 +240,18 @@ export default function NewMemberPage() {
 
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-medium text-gray-300">Email</label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const randomString = Math.random().toString(36).substring(2, 6) + Date.now().toString(36).substring(4);
-                        const emailInput = document.querySelector('input[name="email"]') as HTMLInputElement;
-                        if (emailInput) {
-                          emailInput.value = `member_${randomString}@gaulgym.com`;
-                        }
-                      }}
-                      className="text-xs bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-3 py-1 rounded-full hover:bg-[var(--color-primary)] hover:text-white transition-all flex items-center gap-1"
-                    >
-                      <RefreshCcw size={12} />
-                      Random Email
-                    </button>
+                    <label className="block text-sm font-medium text-gray-300">Username / Email</label>
                   </div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Mail size={18} className="text-gray-500" />
                     </div>
                     <input
-                      type="email"
+                      type="text"
                       name="email"
                       required
                       className="w-full bg-[var(--color-surface-2)] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-colors"
-                      placeholder="Contoh: budi@gmail.com"
+                      placeholder="Contoh: ucok atau budi@gmail.com"
                     />
                   </div>
                 </div>
