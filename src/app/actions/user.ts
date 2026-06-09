@@ -72,7 +72,7 @@ export async function registerMemberAction(formData: FormData) {
       // Insert into public.users table
       const { error: userError } = await supabaseAdmin
         .from('users')
-        .insert({
+        .upsert({
           id: userId,
           email,
           name,
@@ -83,7 +83,7 @@ export async function registerMemberAction(formData: FormData) {
 
       if (userError) {
         console.error('Error inserting into users:', userError);
-        return { error: 'Gagal membuat profil user' };
+        return { error: `Gagal membuat profil user: ${userError.message}` };
       }
     }
 
@@ -122,7 +122,7 @@ export async function registerMemberAction(formData: FormData) {
     // 5. Insert into public.members table
     const { error: memberError } = await supabaseAdmin
       .from('members')
-      .insert({
+      .upsert({
         user_id: userId,
         display_id: displayId,
         name,
