@@ -190,14 +190,20 @@ export default function MembersPage() {
             name: m.name || '-',
             email: m.email || '-',
             phone: m.phone || '-',
-            membershipType: activeSubs.length > 0 ? activeSubs.map((s:any) => s.package_name).join(', ') : (expiredSub?.package_name || '-'),
+            membershipType: activeSubs.length > 0 
+              ? Array.from(new Set(activeSubs.map((s:any) => s.package_name))).join(', ') 
+              : (expiredSub?.package_name || '-'),
             joinDate: new Date(m.created_at).toLocaleDateString('id-ID'),
             status: activeSubs.length > 0 ? 'active' : (expiredSub ? 'expired' : 'inactive'),
             photoUrl: m.photo_url || null,
             user_id: m.user_id || null,
             display_id: m.display_id || null,
-            activeSubscriptionId: activeSubs.length > 0 ? activeSubs[0].id : undefined,
-            activeSubscriptionEndDate: activeSubs.length > 0 ? activeSubs[0].end_date : undefined,
+            activeSubscriptionId: activeSubs.length > 0 
+              ? activeSubs.reduce((latest: any, current: any) => new Date(current.end_date).getTime() > new Date(latest.end_date).getTime() ? current : latest).id 
+              : undefined,
+            activeSubscriptionEndDate: activeSubs.length > 0 
+              ? new Date(Math.max(...activeSubs.map((s: any) => new Date(s.end_date).getTime()))).toISOString() 
+              : undefined,
           };
         });
 
@@ -219,8 +225,25 @@ export default function MembersPage() {
       const selectedPkg = packages.find(p => p.id === selectedPackageId);
       if (!selectedPkg) throw new Error("Paket tidak valid");
 
-      const startDate = new Date();
-      const endDate = new Date();
+      // Cek apakah member punya langganan aktif untuk paket yang SAMA
+      const { data: existingSubs } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('member_id', selectedMember.id)
+        .eq('package_id', selectedPkg.id)
+        .eq('status', 'active')
+        .order('end_date', { ascending: false })
+        .limit(1);
+
+      let startDate = new Date();
+      if (existingSubs && existingSubs.length > 0) {
+        const latestEndDate = new Date(existingSubs[0].end_date);
+        if (latestEndDate > startDate) {
+          startDate = latestEndDate; // Stack durasi dari tanggal expired saat ini
+        }
+      }
+
+      const endDate = new Date(startDate);
       endDate.setDate(endDate.getDate() + selectedPkg.duration_days);
 
       // Biarkan subscription lama tetap aktif karena 1 member bisa punya beberapa layanan (misal: Bulanan + PT)
