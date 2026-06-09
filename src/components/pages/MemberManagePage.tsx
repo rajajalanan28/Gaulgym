@@ -382,7 +382,7 @@ export default function MembersPage() {
         <div className="mb-[24px] flex flex-col md:flex-row md:justify-between md:items-end gap-4">
           <div>
             <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Members</h1>
-            <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola data member dan perpanjang keanggotaan (Offline Kasir)</p>
+            <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola data member dan perpanjang keanggotaan</p>
           </div>
           <Link
             href={user?.role === 'Owner' ? "/owner/member/new" : "/admin/member/new"}
@@ -412,8 +412,8 @@ export default function MembersPage() {
             ) : paginatedMembers.length > 0 ? (
               paginatedMembers.map((member) => (
                 <div key={member.id} className="bg-[var(--color-surface-2)] p-4 rounded-xl border border-[var(--color-hairline)] flex flex-col gap-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--color-surface-3)] shrink-0">
                         {member.photoUrl ? (
                           <img src={sanitizeUrl(member.photoUrl)} alt={member.name} className="w-full h-full object-cover" />
@@ -423,13 +423,13 @@ export default function MembersPage() {
                           </div>
                         )}
                       </div>
-                      <div>
-                        <div className="text-[15px] font-bold text-[var(--color-ink)]">{member.name}</div>
-                        <div className="text-[12px] text-[var(--color-ink-muted)] font-mono">{member.email.replace('@gaulgym.com', '')}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[15px] font-bold text-[var(--color-ink)] truncate">{member.name}</div>
+                        <div className="text-[12px] text-[var(--color-ink-muted)] font-mono truncate">{member.email.replace('@gaulgym.com', '')}</div>
                       </div>
                     </div>
                     <span
-                      className="px-[10px] py-[4px] rounded-full text-[10px] font-semibold"
+                      className="px-[10px] py-[4px] rounded-full text-[10px] font-semibold shrink-0"
                       style={getStatusStyle(member.status)}
                     >
                       {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
