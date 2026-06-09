@@ -107,13 +107,9 @@ export async function POST(request: Request) {
 
     if (updateError) throw updateError;
 
-    // Hapus dari tabel members karena dia sekarang admin
-    const { error: deleteError } = await supabaseAdmin
-      .from('members')
-      .delete()
-      .eq('id', memberId);
-
-    if (deleteError) throw deleteError;
+    // We no longer delete from `members` table.
+    // An Admin can still be a Member if they want to workout and have subscriptions.
+    // Deleting them would crash due to foreign key constraints on subscriptions or attendance.
 
     return NextResponse.json({ success: true, message: 'Berhasil dipromosikan jadi admin.' });
   } catch (err: unknown) {

@@ -18,6 +18,8 @@ interface RevenueData {
   posRevenue: number;
   subscriptionRevenue: number;
   totalRevenue: number;
+  expense: number;
+  netProfit: number;
 }
 
 interface Props {
@@ -94,11 +96,19 @@ export function RevenueChart({ data }: Props) {
           />
           <Line 
             type="monotone" 
-            dataKey="totalRevenue" 
-            name="Total Pendapatan" 
-            stroke="#f59e0b" 
+            dataKey="expense" 
+            name="Pengeluaran" 
+            stroke="#ef4444" 
+            strokeWidth={2}
+            dot={{ r: 4, fill: '#ef4444' }} 
+          />
+          <Line 
+            type="monotone" 
+            dataKey="netProfit" 
+            name="Laba Bersih" 
+            stroke="#0ea5e9" 
             strokeWidth={3}
-            dot={{ r: 4, fill: '#f59e0b' }} 
+            dot={{ r: 4, fill: '#0ea5e9' }} 
             activeDot={{ r: 6 }} 
           />
         </ComposedChart>

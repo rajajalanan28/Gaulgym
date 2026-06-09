@@ -20,6 +20,8 @@ interface CartItem extends Product {
   quantity: number;
 }
 
+import { ShiftManager } from '@/components/ShiftManager';
+
 export default function POSPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -169,17 +171,19 @@ export default function POSPage() {
       <div className="p-4 pb-28 md:p-[48px] max-w-[1400px] mx-auto min-h-screen bg-[var(--color-canvas)] text-white">
         <DashboardHeader />
         
-        <div className="mb-8">
-          <h1 className="text-[28px] font-semibold text-gray-100 flex items-center gap-3">
-            <ShoppingCart className="text-[var(--color-primary)]" size={28} />
-            Kasir Jualan
-          </h1>
-          <p className="text-gray-400 mt-2 text-sm">
-            Klik barang untuk memasukkan ke keranjang belanja
-          </p>
-        </div>
+        {activeGymId && user?.id ? (
+          <ShiftManager gymId={activeGymId} adminId={user.id}>
+            <div className="mb-8">
+              <h1 className="text-[28px] font-semibold text-gray-100 flex items-center gap-3">
+                <ShoppingCart className="text-[var(--color-primary)]" size={28} />
+                Kasir Jualan
+              </h1>
+              <p className="text-gray-400 mt-2 text-sm">
+                Klik barang untuk memasukkan ke keranjang belanja
+              </p>
+            </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Menu Barang Kiri */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-[var(--color-surface-1)] border border-white/5 rounded-2xl p-6 min-h-[600px]">
@@ -329,7 +333,13 @@ export default function POSPage() {
               </div>
             </div>
           </div>
-        </div>
+            </div>
+          </ShiftManager>
+        ) : (
+          <div className="flex justify-center items-center h-64">
+            <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
       </div>
     </ProtectedRoute>
   );

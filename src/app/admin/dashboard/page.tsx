@@ -9,6 +9,7 @@ import { getAdminStats, supabase } from '@/lib/supabase';
 export default function AdminDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState({ totalMembers: 0, checkinsToday: 0, newMembers: 0 });
+  const [activeShift, setActiveShift] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,6 +30,16 @@ export default function AdminDashboard() {
         const { data: statsData, error: statsError } = await getAdminStats(gymId);
         if (statsError) throw statsError;
         if (statsData) setStats(statsData);
+
+        // Fetch shift status
+        const { getCurrentActiveShiftAction } = await import('@/app/actions/shifts');
+        const shiftRes = await getCurrentActiveShiftAction(gymId, user?.id || '');
+        if (shiftRes.success && shiftRes.data) {
+          setActiveShift(shiftRes.data);
+        } else {
+          setActiveShift(null);
+        }
+
       } catch (error) {
         console.error("Failed to fetch admin stats:", error);
       } finally {
@@ -56,6 +67,32 @@ export default function AdminDashboard() {
           <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Admin Dashboard</h1>
           <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola cabang gym Anda dari sini.</p>
         </div>
+
+        {!loading && (
+          <div className={`mb-6 p-4 rounded-xl border flex items-center justify-between ${activeShift ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${activeShift ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                {activeShift ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                ) : (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>
+                )}
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Status Kasir (POS)</p>
+                <p className={`font-bold ${activeShift ? 'text-green-400' : 'text-red-400'}`}>
+                  {activeShift ? 'AKTIF / BUKA' : 'TUTUP'}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => window.location.href = '/admin/pos'}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${activeShift ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white'}`}
+            >
+              {activeShift ? 'Buka POS' : 'Buka Kasir'}
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-[16px] mb-[48px]">
           {statCards.map((stat, index) => (

@@ -164,7 +164,7 @@ export default function OwnerDashboard() {
                 icon={<DollarSign size={20} />}
                 title="Laporan Keuangan"
                 subtitle="Lihat pendapatan dan analitik"
-                onClick={() => router.push('/dashboard/reports')}
+                onClick={() => router.push('/owner/reports')}
               />
               <MenuItem
                 icon={<UserCheck size={20} />}

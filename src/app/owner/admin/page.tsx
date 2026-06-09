@@ -5,7 +5,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
-import { UserPlus, Shield, MoreVertical } from "lucide-react";
+import { UserPlus, Shield, MoreVertical, Search, CheckCircle } from "lucide-react";
 
 interface AdminMember {
   id: string;
@@ -23,8 +23,11 @@ export default function AdminPage() {
   
   // Modal State
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newAdmin, setNewAdmin] = useState({ name: '', email: '', password: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [members, setMembers] = useState<any[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [searchMember, setSearchMember] = useState("");
+  const [selectedMember, setSelectedMember] = useState<any>(null);
 
   useEffect(() => {
     async function fetchAdmin() {
@@ -49,40 +52,72 @@ export default function AdminPage() {
     fetchAdmin();
   }, [user]);
 
-  const handleAddAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
+  const loadMembers = async () => {
+    if (!user?.gymId) return;
+    setLoadingMembers(true);
+    try {
+      const { data, error } = await supabase
+        .from('members')
+        .select('*')
+        .eq('gym_id', user.gymId)
+        .order('name', { ascending: true });
+        
+      if (error) throw error;
+      // Hanya tampilkan member yang punya user_id (udah daftar akun auth)
+      setMembers(data?.filter(m => m.user_id) || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  const openAddModal = () => {
+    loadMembers();
+    setSelectedMember(null);
+    setSearchMember("");
+    setShowAddModal(true);
+  };
+
+  const handlePromote = async () => {
+    if (!user || !selectedMember) return;
     setIsSubmitting(true);
     
     try {
-      // In real scenario, we should use Supabase Auth to create user.
-      // Now we use the API route that calls supabase admin API.
       const sessionResponse = await supabase.auth.getSession();
       const token = sessionResponse.data.session?.access_token;
       
-      const response = await fetch('/api/owner/create-admin', {
+      const response = await fetch('/api/owner/promote', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          email: newAdmin.email,
-          name: newAdmin.name,
-          password: newAdmin.password
+          userId: selectedMember.user_id,
+          ownerId: user.id,
+          memberId: selectedMember.id,
+          gymId: user.gymId
         })
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Gagal menambah admin');
+      if (!response.ok) throw new Error(result.error || 'Gagal mempromosikan admin');
       
-      if (result.data) {
-        setAdminList([result.data, ...adminList]);
-        setShowAddModal(false);
-        setNewAdmin({ name: '', email: '', password: '' });
-      }
+      alert('Member berhasil dipromosikan jadi Admin!');
+      
+      // Refresh admin list
+      const { data } = await supabase
+        .from('users')
+        .select('*')
+        .eq('owner_id', user.id)
+        .eq('role', 'Admin')
+        .order('created_at', { ascending: false });
+      if (data) setAdminList(data);
+      
+      setShowAddModal(false);
     } catch (err: any) {
-      alert(err.message || "Gagal menambah admin");
+      alert(err.message || "Gagal mempromosikan admin");
     } finally {
       setIsSubmitting(false);
     }
@@ -105,6 +140,11 @@ export default function AdminPage() {
     }
   };
 
+  const filteredMembers = members.filter(m => 
+    m.name.toLowerCase().includes(searchMember.toLowerCase()) || 
+    m.email?.toLowerCase().includes(searchMember.toLowerCase())
+  );
+
   return (
     <ProtectedRoute allowedRoles={['Owner']}>
       <div className="p-4 pb-28 md:p-[48px] max-w-[1200px] mx-auto min-h-screen bg-[var(--color-canvas)] selection:bg-[var(--color-primary-focus)] selection:text-white">
@@ -113,14 +153,14 @@ export default function AdminPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-[32px] gap-[16px]">
           <div>
             <h1 className="text-[28px] font-semibold text-[var(--color-ink)] tracking-[-0.02em]">Manajemen Admin</h1>
-            <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola akun Admin/Kasir untuk seluruh cabang gym Anda.</p>
+            <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola akun Admin/Kasir. Hanya bisa mengangkat dari Member terdaftar.</p>
           </div>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={openAddModal}
             className="flex items-center gap-[8px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white px-[20px] py-[12px] rounded-[12px] font-medium transition-colors shadow-lg shadow-[var(--color-primary)]/20 focus-ring"
           >
             <UserPlus size={18} />
-            Tambah Admin
+            Angkat Admin
           </button>
         </div>
 
@@ -181,7 +221,7 @@ export default function AdminPage() {
                     <td colSpan={6} className="px-[24px] py-[64px] text-center text-[var(--color-ink-muted)]">
                       <Shield size={48} className="mx-auto mb-4 opacity-20" />
                       <p className="text-[15px] font-medium">Belum ada admin</p>
-                      <p className="text-[13px] mt-1">Tambahkan admin pertama Anda untuk mengelola kasir gym.</p>
+                      <p className="text-[13px] mt-1">Angkat member terpercaya menjadi admin untuk mengelola kasir gym.</p>
                     </td>
                   </tr>
                 )}
@@ -191,66 +231,72 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Add Admin Modal */}
+      {/* Promote Admin Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[var(--color-surface-1)] w-full max-w-md rounded-[24px] p-[32px] border border-[var(--color-hairline)] shadow-2xl">
-            <h3 className="text-[20px] font-bold text-[var(--color-ink)] mb-[8px] tracking-[-0.01em]">Tambah Admin Baru</h3>
-            <p className="text-[14px] text-[var(--color-ink-muted)] mb-[24px]">Buat akun kasir/admin untuk mengelola gym.</p>
+          <div className="bg-[var(--color-surface-1)] w-full max-w-lg rounded-[24px] p-[32px] border border-[var(--color-hairline)] shadow-2xl flex flex-col max-h-[80vh]">
+            <h3 className="text-[20px] font-bold text-[var(--color-ink)] mb-[8px] tracking-[-0.01em]">Angkat Admin Baru</h3>
+            <p className="text-[14px] text-[var(--color-ink-muted)] mb-[24px]">Pilih member yang sudah memiliki akun untuk dijadikan Admin Kasir.</p>
             
-            <form onSubmit={handleAddAdmin} className="space-y-[16px]">
-              <div>
-                <label className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)]">Nama Lengkap</label>
-                <input
-                  type="text"
-                  required
-                  value={newAdmin.name}
-                  onChange={(e) => setNewAdmin({...newAdmin, name: e.target.value})}
-                  className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px]"
-                  placeholder="Budi Santoso"
-                />
-              </div>
-              <div>
-                <label className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)]">Email</label>
-                <input
-                  type="text"
-                  required
-                  value={newAdmin.email}
-                  onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})}
-                  className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px]"
-                  placeholder="budi@gaulgym.com"
-                />
-              </div>
-              <div>
-                <label className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)]">Kata Sandi Sementara</label>
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  value={newAdmin.password}
-                  onChange={(e) => setNewAdmin({...newAdmin, password: e.target.value})}
-                  className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[15px]"
-                  placeholder="Minimal 6 karakter"
-                />
-              </div>
-              
-              <div className="flex gap-[12px] pt-[16px] mt-[8px]">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="flex-1 py-[12px] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3)] text-[var(--color-ink)] rounded-[12px] font-medium transition-colors focus-ring"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1 py-[12px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white disabled:opacity-50 rounded-[12px] font-medium transition-colors focus-ring"
-                >
-                  {isSubmitting ? 'Menyimpan...' : 'Simpan Admin'}
-                </button>
-              </div>
-            </form>
+            <div className="relative mb-[16px]">
+              <Search className="absolute left-[16px] top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)] w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Cari nama atau email member..."
+                value={searchMember}
+                onChange={(e) => setSearchMember(e.target.value)}
+                className="w-full pl-[44px] pr-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring text-[14px]"
+              />
+            </div>
+
+            <div className="flex-1 overflow-y-auto pr-2 mb-[24px] space-y-[8px]">
+              {loadingMembers ? (
+                <div className="text-center py-4 text-[var(--color-ink-muted)]">Memuat data member...</div>
+              ) : filteredMembers.length > 0 ? (
+                filteredMembers.map(m => (
+                  <div 
+                    key={m.id}
+                    onClick={() => setSelectedMember(m)}
+                    className={`flex items-center justify-between p-[16px] rounded-[12px] border transition-all cursor-pointer ${selectedMember?.id === m.id ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)]' : 'bg-[var(--color-surface-2)] border-[var(--color-hairline)] hover:border-[var(--color-primary)]/50'}`}
+                  >
+                    <div className="flex items-center gap-[12px]">
+                      <div className="w-10 h-10 rounded-full bg-[var(--color-surface-3)] flex items-center justify-center font-bold text-[var(--color-ink)]">
+                        {m.name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-[15px] text-[var(--color-ink)]">{m.name}</div>
+                        <div className="text-[13px] text-[var(--color-ink-subtle)]">{m.email || m.phone}</div>
+                      </div>
+                    </div>
+                    {selectedMember?.id === m.id && (
+                      <CheckCircle className="text-[var(--color-primary)]" size={20} />
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-[24px] text-[var(--color-ink-muted)]">
+                  Tidak ada member yang ditemukan atau belum membuat akun (login).
+                </div>
+              )}
+            </div>
+            
+            <div className="flex gap-[12px] pt-[16px] mt-auto border-t border-[var(--color-hairline)]">
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="flex-1 py-[12px] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3)] text-[var(--color-ink)] rounded-[12px] font-medium transition-colors focus-ring"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handlePromote}
+                disabled={isSubmitting || !selectedMember}
+                className="flex-1 py-[12px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white disabled:opacity-50 rounded-[12px] font-medium transition-colors focus-ring"
+              >
+                {isSubmitting ? 'Memproses...' : 'Angkat Jadi Admin'}
+              </button>
+            </div>
           </div>
         </div>
       )}

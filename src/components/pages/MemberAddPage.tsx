@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
+import { supabase } from '@/lib/supabase';
 import { registerMemberAction } from '@/app/actions/user';
 import { UserPlus, Mail, Phone, User, CheckCircle, Camera, RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -20,6 +21,22 @@ export default function NewMemberPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [cameraActive, setCameraActive] = useState(false);
+
+  const [activeGymId, setActiveGymId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const init = async () => {
+      if (!user) return;
+      
+      let gId = user.gymId;
+      if (user.role === 'Owner') {
+        const { data } = await supabase.from('gyms').select('id').eq('owner_id', user.id).single();
+        if (data) gId = data.id;
+      }
+      setActiveGymId(gId || null);
+    };
+    init();
+  }, [user]);
 
   // Start camera on mount, stop when component unmounts
   useEffect(() => {
@@ -83,7 +100,10 @@ export default function NewMemberPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!user?.gymId) return;
+    if (!activeGymId) {
+      setError("Gym ID tidak ditemukan. Pastikan akun ini terkait dengan sebuah Gym.");
+      return;
+    }
     
     if (!photoBase64) {
       setError("Silakan ambil foto wajah member terlebih dahulu!");
@@ -95,7 +115,7 @@ export default function NewMemberPage() {
     setSuccess(false);
 
     const formData = new FormData(e.currentTarget);
-    formData.append('gymId', user.gymId);
+    formData.append('gymId', activeGymId);
     formData.append('photoBase64', photoBase64);
     
     const result = await registerMemberAction(formData);
@@ -234,7 +254,23 @@ export default function NewMemberPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-300">Email</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const randomString = Math.random().toString(36).substring(2, 6) + Date.now().toString(36).substring(4);
+                        const emailInput = document.querySelector('input[name="email"]') as HTMLInputElement;
+                        if (emailInput) {
+                          emailInput.value = `member_${randomString}@gaulgym.com`;
+                        }
+                      }}
+                      className="text-xs bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-3 py-1 rounded-full hover:bg-[var(--color-primary)] hover:text-white transition-all flex items-center gap-1"
+                    >
+                      <RefreshCcw size={12} />
+                      Random Email
+                    </button>
+                  </div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <Mail size={18} className="text-gray-500" />

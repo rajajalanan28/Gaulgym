@@ -215,7 +215,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
 
       // M-2: Validate the role - only allow 'Member' for self-registration
-      // 'Owner' and 'Admin' roles should only be set through admin APIs
       const allowedRoles = ['Member'];
       const finalRole = allowedRoles.includes(role) ? role : 'Member';
 

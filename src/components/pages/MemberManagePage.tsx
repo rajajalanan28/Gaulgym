@@ -229,6 +229,7 @@ export default function MembersPage() {
           gym_id: activeGymId || 'dummy-gym-id',
           package_id: selectedPkg.id,
           package_name: selectedPkg.name,
+          amount: selectedPkg.price,
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
           status: 'active',

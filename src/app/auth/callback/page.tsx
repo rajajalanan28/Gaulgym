@@ -36,10 +36,16 @@ export default function AuthCallbackPage() {
 
         if (fetchError && fetchError.code === 'PGRST116') {
           // User belum ada (Berdasarkan Google Sign In pertama kali)
-          // OAuth user baru - perlu provisioning oleh admin
-          // Jangan auto-create
-          await supabase.auth.signOut();
-          throw new Error('Akun belum terdaftar di sistem. Hubungi admin untuk aktivasi.');
+          // Auto-provision sebagai Member
+          userRole = 'Member';
+          
+          await supabase.from('users').insert({
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            role: userRole,
+            is_active: true,
+          });
         } else if (existingUser) {
           userRole = existingUser.role;
           

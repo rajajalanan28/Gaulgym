@@ -115,6 +115,13 @@ export default function CheckInPage() {
         return;
       }
 
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (subData.end_date < todayStr) {
+        setLastScanResult({ success: false, message: `Paket Member ${member.name} sudah kedaluwarsa pada ${new Date(subData.end_date).toLocaleDateString('id-ID')}.` });
+        setShowConfirmation(true);
+        return;
+      }
+
       // 3. Hitung jumlah check-in hari ini (Validasi)
       const today = new Date().toISOString().split('T')[0];
       const { data: todayCheckins } = await supabase

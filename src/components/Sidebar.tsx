@@ -1,14 +1,14 @@
 'use client';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { LayoutDashboard, Building2, Users, Package, LineChart, CheckSquare, ClipboardList, Dumbbell } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, Package, LineChart, CheckSquare, ClipboardList, Dumbbell, Wallet } from 'lucide-react';
 
 const OWNER_MENU = [
   { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-  { href: '/gyms', label: 'Kelola Gym', icon: <Building2 size={20} /> },
   { href: '/owner/admin', label: 'Kelola Admin', icon: <Users size={20} /> },
   { href: '/owner/member', label: 'Member', icon: <Users size={20} /> },
-  { href: '/packages', label: 'Paket Membership', icon: <Package size={20} /> },
+  { href: '/dashboard/packages', label: 'Paket Membership', icon: <Package size={20} /> },
+  { href: '/owner/expenses', label: 'Pengeluaran', icon: <Wallet size={20} /> },
   { href: '/owner/reports', label: 'Laporan Keuangan', icon: <LineChart size={20} /> },
 ];
 
@@ -17,6 +17,7 @@ const ADMIN_MENU = [
   { href: '/admin/member', label: 'Member', icon: <Users size={20} /> },
   { href: '/admin/checkin', label: 'Check-in', icon: <CheckSquare size={20} /> },
   { href: '/admin/history', label: 'Riwayat', icon: <ClipboardList size={20} /> },
+  { href: '/admin/expenses', label: 'Pengeluaran', icon: <Wallet size={20} /> },
   { href: '/admin/reports', label: 'Laporan Keuangan', icon: <LineChart size={20} /> },
 ];
 

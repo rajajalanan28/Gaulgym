@@ -103,6 +103,31 @@ export interface DbAttendance {
   created_at: string
 }
 
+export interface DbExpense {
+  id: string
+  gym_id: string
+  amount: number
+  category: string
+  description?: string
+  date: string
+  created_by: string
+  created_at: string
+}
+
+export interface DbShift {
+  id: string
+  gym_id: string
+  admin_id: string
+  start_time: string
+  end_time?: string
+  starting_cash: number
+  ending_cash?: number
+  expected_cash?: number
+  notes?: string
+  status: 'open' | 'closed'
+  created_at: string
+}
+
 // Helper functions for common queries
 export async function getUserWithRole(email: string) {
   try {
