@@ -403,8 +403,102 @@ export default function MembersPage() {
         </div>
 
         <div className="bg-[var(--color-surface-1)] hairline-border rounded-[12px] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
+          {/* Mobile View */}
+          <div className="md:hidden flex flex-col gap-4 p-4">
+            {loading ? (
+              Array(5).fill(0).map((_, i) => (
+                <div key={i} className="h-40 w-full bg-[var(--color-surface-2)] animate-pulse rounded-xl border border-[var(--color-hairline)]"></div>
+              ))
+            ) : paginatedMembers.length > 0 ? (
+              paginatedMembers.map((member) => (
+                <div key={member.id} className="bg-[var(--color-surface-2)] p-4 rounded-xl border border-[var(--color-hairline)] flex flex-col gap-4">
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-[var(--color-surface-3)] shrink-0">
+                        {member.photoUrl ? (
+                          <img src={sanitizeUrl(member.photoUrl)} alt={member.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[var(--color-ink-subtle)] font-bold text-[14px]">
+                            {member.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="text-[15px] font-bold text-[var(--color-ink)]">{member.name}</div>
+                        <div className="text-[12px] text-[var(--color-ink-muted)] font-mono">{member.email.replace('@gaulgym.com', '')}</div>
+                      </div>
+                    </div>
+                    <span
+                      className="px-[10px] py-[4px] rounded-full text-[10px] font-semibold"
+                      style={getStatusStyle(member.status)}
+                    >
+                      {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-[13px] bg-[var(--color-surface-1)] p-3 rounded-lg border border-[var(--color-hairline)]">
+                    <div>
+                      <span className="text-[var(--color-ink-subtle)] text-[11px] block mb-0.5">Telepon</span>
+                      <span className="font-medium text-[var(--color-ink)]">{member.phone}</span>
+                    </div>
+                    <div>
+                      <span className="text-[var(--color-ink-subtle)] text-[11px] block mb-0.5">Paket Aktif</span>
+                      <span className="font-medium text-[var(--color-ink)] line-clamp-1" title={member.membershipType}>{member.membershipType}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-[var(--color-hairline)] flex flex-wrap gap-2">
+                    <button 
+                      onClick={() => setSelectedMember(member)}
+                      className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-[var(--color-primary)]/10 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                    >
+                      <PlusCircle size={14} /> Perpanjang
+                    </button>
+                    <button 
+                      onClick={() => setMemberCardModal(member)}
+                      className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-blue-500/10 text-blue-500 hover:bg-blue-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                    >
+                      <IdCard size={14} /> Kartu
+                    </button>
+                    <button 
+                      onClick={() => handlePromoteToAdmin(member)}
+                      className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-purple-500/10 text-purple-600 hover:bg-purple-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                    >
+                      <Shield size={14} /> Jadi Admin
+                    </button>
+                    {(member.status === 'expired' || member.status === 'inactive') && (
+                      <button 
+                        onClick={() => handleWhatsApp(member)}
+                        className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-green-500/10 text-green-500 hover:bg-green-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                      >
+                        <MessageCircle size={14} /> Kirim WA
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => handleResetPassword(member)}
+                      className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-orange-500/10 text-orange-500 hover:bg-orange-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                    >
+                      <User size={14} /> Reset Pwd
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteMember(member)}
+                      className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                    >
+                      <X size={14} /> Hapus
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-[48px] text-center text-[var(--color-ink-muted)] text-[14px]">
+                {searchTerm ? "Pencarian tidak ditemukan" : "Belum ada member terdaftar"}
+              </div>
+            )}
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full min-w-[1000px]">
               <thead>
                 <tr className="border-b border-[var(--color-hairline)] bg-[var(--color-surface-2)]">
                   {['Nama', 'Username', 'Telepon', 'Paket Aktif', 'Status', 'Aksi'].map(h => (
@@ -450,7 +544,7 @@ export default function MembersPage() {
                         </span>
                       </td>
                       <td className="px-[16px] py-[16px]">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2 max-w-[420px]">
                           <button 
                             onClick={() => setSelectedMember(member)}
                             className="flex items-center gap-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
