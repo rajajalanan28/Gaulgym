@@ -16,9 +16,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 
 import { v4 as uuidv4 } from 'uuid';
 
-function generateSecurePassword() {
-  return 'Gaulgym123!'; // Default password for new members
-}
+
 
 export async function registerMemberAction(formData: FormData) {
   try {
@@ -48,7 +46,7 @@ export async function registerMemberAction(formData: FormData) {
       // User already exists, use their ID
       userId = existingUser.id;
     } else {
-      const tempPassword = generateSecurePassword();
+      const tempPassword = (formData.get('password') as string) || 'Gaulgym123!';
 
       // Create user in Supabase Auth using Admin API
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({

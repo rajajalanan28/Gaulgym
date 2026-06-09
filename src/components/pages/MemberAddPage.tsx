@@ -129,7 +129,7 @@ export default function NewMemberPage() {
               Daftar Member Baru
             </h1>
             <p className="text-sm text-gray-400 mt-2">
-              Member akan menggunakan password default: <strong className="text-white bg-white/10 px-2 py-0.5 rounded">Gaulgym123!</strong> untuk login pertama kali.
+              Silakan isi password atau gunakan tombol <strong className="text-white bg-white/10 px-2 py-0.5 rounded">Random Password</strong>. Pastikan untuk mencatatnya!
             </p>
           </div>
 
@@ -266,6 +266,45 @@ export default function NewMemberPage() {
                       required
                       className="w-full bg-[var(--color-surface-2)] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-colors"
                       placeholder="Contoh: budi@gmail.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium text-gray-300">Password</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+                        let randomPassword = '';
+                        for (let i = 0; i < 10; i++) {
+                          randomPassword += chars[Math.floor(Math.random() * chars.length)];
+                        }
+                        randomPassword += '!1aA'; // Ensure it passes any complexity rules
+                        const pwdInput = document.querySelector('input[name="password"]') as HTMLInputElement;
+                        if (pwdInput) {
+                          pwdInput.value = randomPassword;
+                          pwdInput.type = 'text'; // Show it so admin can copy
+                        }
+                      }}
+                      className="text-xs bg-[var(--color-primary)]/20 text-[var(--color-primary)] px-3 py-1 rounded-full hover:bg-[var(--color-primary)] hover:text-white transition-all flex items-center gap-1"
+                    >
+                      <RefreshCcw size={12} />
+                      Random Password
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <User size={18} className="text-gray-500" />
+                    </div>
+                    <input
+                      type="text"
+                      name="password"
+                      defaultValue="Gaulgym123!"
+                      required
+                      className="w-full bg-[var(--color-surface-2)] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] transition-colors"
+                      placeholder="Password login member"
                     />
                   </div>
                 </div>
