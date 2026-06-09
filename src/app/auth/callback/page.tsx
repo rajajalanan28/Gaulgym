@@ -68,23 +68,17 @@ export default function AuthCallbackPage() {
           if (userRole === 'Member') {
              const { data: memberData } = await supabase.from('members').select('id').eq('user_id', user.id).single();
              if (!memberData) {
-               const { data: firstGym } = await supabase.from('gyms').select('id').limit(1).single();
-               const targetGymId = firstGym ? firstGym.id : null;
-               
-               if (targetGymId) {
-                 const randomBytes = new Uint8Array(4);
-                 crypto.getRandomValues(randomBytes);
-                 const displayId = 'GG-' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 6).toUpperCase();
-                 const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
-                 await supabase.from('members').insert({
-                   user_id: user.id,
-                   gym_id: targetGymId,
-                   name,
-                   email: user.email,
-                   display_id: displayId,
-                   join_date: new Date().toISOString().split('T')[0]
-                 });
-               }
+               const randomBytes = new Uint8Array(4);
+               crypto.getRandomValues(randomBytes);
+               const displayId = 'GG-' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 6).toUpperCase();
+               const name = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
+               await supabase.from('members').insert({
+                 user_id: user.id,
+                 name,
+                 email: user.email,
+                 display_id: displayId,
+                 join_date: new Date().toISOString().split('T')[0]
+               });
              }
           }
         } else if (fetchError) {
