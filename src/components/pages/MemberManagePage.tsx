@@ -803,32 +803,38 @@ export default function MembersPage() {
                             </button>
                           )}
 
-                          <button 
-                            onClick={() => { setEditingMember(member); setEditName(member.name); setEditPhone(member.phone); }}
-                            className="flex items-center gap-1 bg-gray-500/10 text-gray-500 hover:bg-gray-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
-                            title="Edit Member"
-                          >
-                            <Edit size={16} />
-                            <span>Edit</span>
-                          </button>
+                          {user?.role === 'Owner' && (
+                            <button 
+                              onClick={() => { setEditingMember(member); setEditName(member.name); setEditPhone(member.phone); }}
+                              className="flex items-center gap-1 bg-gray-500/10 text-gray-500 hover:bg-gray-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                              title="Edit Member"
+                            >
+                              <Edit size={16} />
+                              <span>Edit</span>
+                            </button>
+                          )}
 
-                          <button 
-                            onClick={() => setMemberCardModal(member)}
-                            className="flex items-center gap-1 bg-blue-500/10 text-blue-500 hover:bg-blue-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
-                            title="Kartu Member"
-                          >
-                            <IdCard size={16} />
-                            <span>Kartu Member</span>
-                          </button>
+                          {user?.role === 'Owner' && (
+                            <button 
+                              onClick={() => setMemberCardModal(member)}
+                              className="flex items-center gap-1 bg-blue-500/10 text-blue-500 hover:bg-blue-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                              title="Kartu Member"
+                            >
+                              <IdCard size={16} />
+                              <span>Kartu Member</span>
+                            </button>
+                          )}
                           
-                          <button 
-                            onClick={() => handlePromoteToAdmin(member)}
-                            className="flex items-center gap-1 bg-purple-500/10 text-purple-600 hover:bg-purple-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
-                            title="Jadikan Admin"
-                          >
-                            <Shield size={16} />
-                            <span>Jadikan Admin</span>
-                          </button>
+                          {user?.role === 'Owner' && (
+                            <button 
+                              onClick={() => handlePromoteToAdmin(member)}
+                              className="flex items-center gap-1 bg-purple-500/10 text-purple-600 hover:bg-purple-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                              title="Jadikan Admin"
+                            >
+                              <Shield size={16} />
+                              <span>Jadikan Admin</span>
+                            </button>
+                          )}
 
                           <button 
                             onClick={() => handleWhatsApp(member)}
@@ -839,23 +845,27 @@ export default function MembersPage() {
                             <span>Kirim WA</span>
                           </button>
 
-                          <button 
-                            onClick={() => handleResetPassword(member)}
-                            className="flex items-center gap-1 bg-orange-500/10 text-orange-500 hover:bg-orange-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
-                            title="Reset Password"
-                          >
-                            <User size={16} />
-                            <span>Reset Pwd</span>
-                          </button>
+                          {user?.role === 'Owner' && (
+                            <button 
+                              onClick={() => handleResetPassword(member)}
+                              className="flex items-center gap-1 bg-orange-500/10 text-orange-500 hover:bg-orange-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                              title="Reset Password"
+                            >
+                              <User size={16} />
+                              <span>Reset Pwd</span>
+                            </button>
+                          )}
 
-                          <button 
-                            onClick={() => handleDeleteMember(member)}
-                            className="flex items-center gap-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
-                            title="Hapus Member"
-                          >
-                            <X size={16} />
-                            <span>Hapus</span>
-                          </button>
+                          {user?.role === 'Owner' && (
+                            <button 
+                              onClick={() => handleDeleteMember(member)}
+                              className="flex items-center gap-1 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                              title="Hapus Member"
+                            >
+                              <X size={16} />
+                              <span>Hapus</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
