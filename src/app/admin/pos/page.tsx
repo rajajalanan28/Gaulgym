@@ -247,9 +247,10 @@ export default function POSPage() {
                         </div>
                         <button 
                           onClick={() => removeFromCart(item.id)}
-                          className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                          className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                          title="Hapus Barang"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={20} />
                         </button>
                       </div>
                     </div>
