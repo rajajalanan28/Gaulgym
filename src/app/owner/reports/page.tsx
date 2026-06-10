@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { supabase } from '@/lib/supabase';
-import { Loader2, TrendingUp, DollarSign, Package, Wallet, Calendar, Download, Filter } from 'lucide-react';
+import { Loader2, TrendingUp, DollarSign, Package, Wallet, Calendar, Download, Filter, AlertTriangle } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -32,6 +32,7 @@ export default function ReportsPage() {
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [allTransactions, setAllTransactions] = useState<RawTransaction[]>([]);
+  const [allVoidedLogs, setAllVoidedLogs] = useState<any[]>([]);
 
   // Filters
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('monthly');
@@ -46,15 +47,17 @@ export default function ReportsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [posRes, subRes, expRes] = await Promise.all([
+      const [posRes, subRes, expRes, voidRes] = await Promise.all([
         supabase.from('sales_transactions').select('created_at, total_amount').order('created_at', { ascending: true }),
         supabase.from('subscriptions').select('created_at, amount, package_name').order('created_at', { ascending: true }),
         supabase.from('expenses').select('date, amount, description').order('date', { ascending: true }),
+        supabase.from('voided_logs').select('*, users(name, email)').order('created_at', { ascending: false })
       ]);
 
       if (posRes.error) throw posRes.error;
       if (subRes.error) throw subRes.error;
       if (expRes.error) throw expRes.error;
+      if (voidRes.error) console.error("Error fetching voided logs:", voidRes.error);
 
       const merged: RawTransaction[] = [
         ...(posRes.data || []).map((t: any) => ({
@@ -78,6 +81,7 @@ export default function ReportsPage() {
       ];
 
       setAllTransactions(merged);
+      setAllVoidedLogs(voidRes.data || []);
     } catch (err) {
       console.error("Error fetching reports:", err);
     } finally {
@@ -113,6 +117,13 @@ export default function ReportsPage() {
       return d >= dateRange.start && d <= dateRange.end;
     });
   }, [allTransactions, dateRange]);
+
+  const filteredVoidedLogs = useMemo(() => {
+    return allVoidedLogs.filter(v => {
+      const d = new Date(v.created_at);
+      return d >= dateRange.start && d <= dateRange.end;
+    });
+  }, [allVoidedLogs, dateRange]);
 
   // Stats from filtered data
   const stats = useMemo(() => {
@@ -488,6 +499,61 @@ export default function ReportsPage() {
                     {filteredTransactions.length > 100 && (
                       <p className="text-center text-xs text-gray-500 py-3 border-t border-[var(--color-hairline)]">Menampilkan 100 dari {filteredTransactions.length} transaksi. Export CSV untuk data lengkap.</p>
                     )}
+                  </div>
+                </div>
+
+                {/* Voided Logs List */}
+                <div className="bg-[var(--color-surface-1)] border border-red-500/20 rounded-2xl overflow-hidden mt-6">
+                  <div className="p-4 sm:p-6 border-b border-red-500/20 flex justify-between items-center bg-red-500/5">
+                    <h3 className="text-base font-bold flex items-center gap-2 text-red-400">
+                      <AlertTriangle size={18} />
+                      Log Transaksi Dibatalkan (Void)
+                    </h3>
+                    <span className="text-xs text-red-400/80 font-medium">{filteredVoidedLogs.length} transaksi dibatalkan</span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-[var(--color-surface-2)]">
+                          <th className="px-6 py-4 text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">Tanggal</th>
+                          <th className="px-6 py-4 text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">Admin</th>
+                          <th className="px-6 py-4 text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">Total & Items</th>
+                          <th className="px-6 py-4 text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">Alasan Pembatalan</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredVoidedLogs.length > 0 ? (
+                          filteredVoidedLogs.map((log, i) => (
+                            <tr key={i} className="border-b border-[var(--color-hairline)] hover:bg-[var(--color-surface-2)] transition-colors">
+                              <td className="px-6 py-4 text-sm text-[var(--color-ink)] whitespace-nowrap">
+                                {new Date(log.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="text-sm font-medium">{log.users?.name || log.users?.email || 'Unknown'}</span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <p className="text-sm font-bold text-red-400 mb-1">{formatCurrency(log.total_amount)} <span className="text-xs text-gray-500 bg-white/5 px-1.5 py-0.5 rounded ml-1">{log.payment_method}</span></p>
+                                <ul className="text-xs text-gray-400 space-y-0.5">
+                                  {log.items_snapshot?.map((item: any, idx: number) => (
+                                    <li key={idx}>• {item.quantity}x {item.product_name}</li>
+                                  ))}
+                                </ul>
+                              </td>
+                              <td className="px-6 py-4">
+                                <p className="text-sm text-gray-300 bg-white/5 p-2 rounded border border-white/10 italic">
+                                  "{log.reason}"
+                                </p>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={4} className="px-6 py-10 text-center text-gray-500">Tidak ada transaksi yang dibatalkan pada periode ini</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </>

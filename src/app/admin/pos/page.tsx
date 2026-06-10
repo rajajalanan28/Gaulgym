@@ -85,11 +85,20 @@ export default function POSPage() {
   }, [showHistory]);
 
   const voidTransaction = async (transactionId: string) => {
-    if (!confirm('Anda yakin ingin membatalkan transaksi ini? Stok barang akan dikembalikan dan data penjualan akan dihapus.')) return;
+    const reason = prompt('PENTING: Masukkan alasan pembatalan transaksi ini (wajib diisi):');
+    if (reason === null) return; // User cancelled the prompt
+    if (reason.trim() === '') {
+      alert('Alasan pembatalan wajib diisi!');
+      return;
+    }
+
+    if (!confirm('Stok barang akan dikembalikan dan transaksi akan dihapus dari target laci. Lanjutkan?')) return;
     
     try {
       const { data, error } = await supabase.rpc('void_pos_transaction', {
-        p_transaction_id: transactionId
+        p_transaction_id: transactionId,
+        p_admin_id: user?.id,
+        p_reason: reason.trim()
       });
 
       if (error) {
