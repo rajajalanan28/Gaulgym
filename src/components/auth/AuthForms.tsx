@@ -5,7 +5,7 @@ import { useAuth, AuthUser } from "@/lib/auth-context";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Suspense } from "react";
-import { Mail, Lock, User, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, ArrowRight, RefreshCcw } from "lucide-react";
 import toast from 'react-hot-toast';
 
 interface TimeoutResult {
@@ -320,7 +320,25 @@ function AuthFormsContent() {
                   {formErrors.username && <p className="text-[12px] mt-[6px] ml-[2px] text-red-400">{formErrors.username}</p>}
                 </div>
                 <div>
-                  <label htmlFor="reg-password" className="block text-[13px] font-medium mb-[6px] text-[var(--color-ink-subtle)] ml-[2px]">Kata Sandi</label>
+                  <div className="flex justify-between items-center mb-[6px]">
+                    <label htmlFor="reg-password" className="block text-[13px] font-medium text-[var(--color-ink-subtle)] ml-[2px]">Kata Sandi</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+                        let pass = 'A1!a';
+                        for (let i = 0; i < 8; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length));
+                        pass = pass.split('').sort(() => 0.5 - Math.random()).join('');
+                        setRegData({ ...regData, password: pass });
+                        setShowRegPw(true);
+                        if (formErrors.password) setFormErrors({ ...formErrors, password: undefined });
+                      }}
+                      className="text-[12px] text-[var(--color-primary)] hover:text-[var(--color-primary-hover)] transition-colors font-medium flex items-center gap-1"
+                    >
+                      <RefreshCcw size={12} />
+                      Acak Sandi
+                    </button>
+                  </div>
                   <div className={inputContainerClass}>
                     <Lock className={iconClass} />
                     <input
@@ -328,7 +346,7 @@ function AuthFormsContent() {
                       type={showRegPw ? "text" : "password"}
                       value={regData.password}
                       onChange={(e) => { setRegData({ ...regData, password: e.target.value }); if (formErrors.password) setFormErrors({ ...formErrors, password: undefined }); }}
-                      placeholder="Minimal 12 karakter dengan huruf besar, kecil, angka, dan simbol"
+                      placeholder="Minimal 12 karakter (A-Z, a-z, 0-9, simbol)"
                       className={`${inputClass} pr-[44px] ${formErrors.password ? 'border-red-500/50 focus:border-red-500 focus:shadow-[0_0_0_4px_rgba(239,68,68,0.1)]' : ''}`}
                       aria-invalid={!!formErrors.password}
                     />
