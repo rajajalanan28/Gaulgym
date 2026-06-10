@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { supabase } from '@/lib/supabase';
-import { Loader2, TrendingUp, DollarSign, Package, Wallet, Calendar, Download, Filter, AlertTriangle } from 'lucide-react';
+import { Loader2, TrendingUp, DollarSign, Package, Wallet, Calendar, Download, Filter, AlertTriangle, ShoppingBag } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -33,6 +33,7 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [allTransactions, setAllTransactions] = useState<RawTransaction[]>([]);
   const [allVoidedLogs, setAllVoidedLogs] = useState<any[]>([]);
+  const [allSalesItems, setAllSalesItems] = useState<any[]>([]);
 
   // Filters
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('monthly');
@@ -48,7 +49,10 @@ export default function ReportsPage() {
     setLoading(true);
     try {
       const [posRes, subRes, expRes, voidRes] = await Promise.all([
-        supabase.from('sales_transactions').select('created_at, total_amount').order('created_at', { ascending: true }),
+        supabase.from('sales_transactions').select(`
+          created_at, total_amount,
+          sales_items ( quantity, price, products ( name ) )
+        `).order('created_at', { ascending: true }),
         supabase.from('subscriptions').select('created_at, amount, package_name').order('created_at', { ascending: true }),
         supabase.from('expenses').select('date, amount, description').order('date', { ascending: true }),
         supabase.from('voided_logs').select('*, users(name, email)').order('created_at', { ascending: false })
@@ -82,6 +86,20 @@ export default function ReportsPage() {
 
       setAllTransactions(merged);
       setAllVoidedLogs(voidRes.data || []);
+
+      const itemsList: any[] = [];
+      posRes.data?.forEach((tx: any) => {
+        tx.sales_items?.forEach((item: any) => {
+          itemsList.push({
+            created_at: tx.created_at,
+            product_name: item.products?.name || 'Produk Dihapus',
+            quantity: item.quantity,
+            price: item.price,
+            total: item.quantity * item.price
+          });
+        });
+      });
+      setAllSalesItems(itemsList);
     } catch (err) {
       console.error("Error fetching reports:", err);
     } finally {
@@ -124,6 +142,24 @@ export default function ReportsPage() {
       return d >= dateRange.start && d <= dateRange.end;
     });
   }, [allVoidedLogs, dateRange]);
+
+  const topSellingItems = useMemo(() => {
+    const filtered = allSalesItems.filter(item => {
+      const d = new Date(item.created_at);
+      return d >= dateRange.start && d <= dateRange.end;
+    });
+
+    const grouped: Record<string, { quantity: number, revenue: number }> = {};
+    filtered.forEach(item => {
+      if (!grouped[item.product_name]) grouped[item.product_name] = { quantity: 0, revenue: 0 };
+      grouped[item.product_name].quantity += item.quantity;
+      grouped[item.product_name].revenue += item.total;
+    });
+
+    return Object.entries(grouped)
+      .map(([name, stats]) => ({ name, quantity: stats.quantity, revenue: stats.revenue }))
+      .sort((a, b) => b.quantity - a.quantity);
+  }, [allSalesItems, dateRange]);
 
   // Stats from filtered data
   const stats = useMemo(() => {
@@ -419,15 +455,52 @@ export default function ReportsPage() {
                   </div>
                 </div>
 
-                {/* Transaction List */}
-                <div className="bg-[var(--color-surface-1)] border border-white/5 rounded-2xl overflow-hidden">
-                  <div className="p-4 sm:p-6 border-b border-[var(--color-hairline)] flex justify-between items-center">
-                    <h3 className="text-base font-bold flex items-center gap-2">
-                      <Calendar size={18} className="text-[var(--color-primary)]" />
-                      Riwayat Transaksi
-                    </h3>
-                    <span className="text-xs text-gray-500">{filteredTransactions.length} transaksi</span>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Top Selling Items */}
+                  <div className="bg-[var(--color-surface-1)] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
+                    <div className="p-4 sm:p-6 border-b border-[var(--color-hairline)] flex justify-between items-center bg-[var(--color-primary)]/10">
+                      <h3 className="text-base font-bold flex items-center gap-2 text-[var(--color-primary)]">
+                        <ShoppingBag size={18} />
+                        Barang Terlaris
+                      </h3>
+                    </div>
+                    <div className="p-4">
+                      {topSellingItems.length > 0 ? (
+                        <div className="space-y-4">
+                          {topSellingItems.map((item, i) => (
+                            <div key={i} className="flex justify-between items-center border-b border-white/5 last:border-0 pb-3 last:pb-0">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-full bg-[var(--color-surface-2)] flex items-center justify-center shrink-0 text-xs font-bold text-gray-400 border border-white/5">
+                                  #{i + 1}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-[13px] font-semibold text-white truncate">{item.name}</p>
+                                  <p className="text-[11px] text-green-400 font-medium">{formatCurrency(item.revenue)}</p>
+                                </div>
+                              </div>
+                              <div className="bg-[var(--color-surface-2)] px-2.5 py-1 rounded-lg border border-white/5 text-xs text-gray-300 font-bold shrink-0">
+                                {item.quantity} Terjual
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-10 text-gray-500 text-sm">
+                          Belum ada data barang terjual pada periode ini.
+                        </div>
+                      )}
+                    </div>
                   </div>
+
+                  {/* Transaction List */}
+                  <div className="bg-[var(--color-surface-1)] border border-white/5 rounded-2xl overflow-hidden lg:col-span-2 shadow-xl">
+                    <div className="p-4 sm:p-6 border-b border-[var(--color-hairline)] flex justify-between items-center">
+                      <h3 className="text-base font-bold flex items-center gap-2">
+                        <Calendar size={18} className="text-[var(--color-primary)]" />
+                        Riwayat Transaksi
+                      </h3>
+                      <span className="text-xs text-gray-500 bg-[var(--color-surface-2)] px-2 py-1 rounded-md">{filteredTransactions.length} transaksi</span>
+                    </div>
 
                   {/* Mobile View */}
                   <div className="md:hidden flex flex-col gap-2 p-3">
@@ -501,6 +574,7 @@ export default function ReportsPage() {
                     )}
                   </div>
                 </div>
+                </div> {/* End of Grid */}
 
                 {/* Voided Logs List */}
                 <div className="bg-[var(--color-surface-1)] border border-red-500/20 rounded-2xl overflow-hidden mt-6">
