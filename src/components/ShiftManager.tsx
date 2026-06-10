@@ -38,8 +38,8 @@ export function ShiftManager({ adminId, children }: ShiftManagerProps) {
 
   const router = useRouter();
 
-  const loadShift = async () => {
-    setLoading(true);
+  const loadShift = async (silent = false) => {
+    if (!silent) setLoading(true);
     const res = await getCurrentActiveShiftAction(adminId);
     if (res.success && res.data) {
       setActiveShift(res.data);
@@ -96,7 +96,7 @@ export function ShiftManager({ adminId, children }: ShiftManagerProps) {
     } else {
       setActiveShift(null);
     }
-    setLoading(false);
+    if (!silent) setLoading(false);
   };
 
   useEffect(() => {
@@ -104,6 +104,13 @@ export function ShiftManager({ adminId, children }: ShiftManagerProps) {
       loadShift();
     }
   }, [adminId]);
+
+  // Refresh data right before showing the close modal
+  useEffect(() => {
+    if (showCloseModal && adminId) {
+      loadShift(true);
+    }
+  }, [showCloseModal]);
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>, setter: (val: string) => void) => {
     const val = e.target.value.replace(/[^0-9]/g, '');
