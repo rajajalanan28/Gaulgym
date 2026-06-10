@@ -1137,14 +1137,19 @@ export default function MembersPage() {
                 {/* Download as JPG */}
                 <button
                   onClick={async () => {
-                    const cardEl = document.getElementById('member-card-capture');
-                    if (!cardEl) return;
-                    const html2canvas = (await import('html2canvas')).default;
-                    const canvas = await html2canvas(cardEl, { backgroundColor: '#0b1014', scale: 3 });
-                    const link = document.createElement('a');
-                    link.download = `kartu-member-${memberCardModal.name.replace(/\s+/g, '-').toLowerCase()}.jpg`;
-                    link.href = canvas.toDataURL('image/jpeg', 0.95);
-                    link.click();
+                    try {
+                      const cardEl = document.getElementById('member-card-capture');
+                      if (!cardEl) return;
+                      const { toJpeg } = await import('html-to-image');
+                      const dataUrl = await toJpeg(cardEl, { quality: 0.95, pixelRatio: 3, backgroundColor: '#0b1014' });
+                      const link = document.createElement('a');
+                      link.download = `kartu-member-${memberCardModal.name.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+                      link.href = dataUrl;
+                      link.click();
+                    } catch (err) {
+                      console.error('Download error:', err);
+                      alert('Gagal download kartu. Coba lagi.');
+                    }
                   }}
                   className="mt-4 w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-semibold text-sm transition-colors"
                 >
