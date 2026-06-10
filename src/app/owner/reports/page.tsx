@@ -483,6 +483,14 @@ export default function ReportsPage() {
                               </div>
                             </div>
                           ))}
+
+                          <div className="flex justify-between items-center pt-3 mt-2 border-t border-white/10 bg-[var(--color-surface-2)] p-3 rounded-xl">
+                            <div className="font-bold text-[13px] text-gray-300">Total Keseluruhan</div>
+                            <div className="text-right">
+                              <div className="text-[13px] font-bold text-[var(--color-primary)]">{topSellingItems.reduce((acc, item) => acc + item.quantity, 0)} Pcs</div>
+                              <div className="text-[12px] font-bold text-green-400">{formatCurrency(topSellingItems.reduce((acc, item) => acc + item.revenue, 0))}</div>
+                            </div>
+                          </div>
                         </div>
                       ) : (
                         <div className="text-center py-10 text-gray-500 text-sm">
