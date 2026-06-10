@@ -703,42 +703,50 @@ export default function MembersPage() {
                         <Edit size={14} /> Edit Tgl
                       </button>
                     )}
-                    <button 
-                      onClick={() => { setEditingMember(member); setEditName(member.name); setEditPhone(member.phone); }}
-                      className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-gray-500/10 text-gray-500 hover:bg-gray-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
-                    >
-                      <Edit size={14} /> Edit
-                    </button>
+                    {user?.role === 'Owner' && (
+                      <button 
+                        onClick={() => { setEditingMember(member); setEditName(member.name); setEditPhone(member.phone); }}
+                        className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-gray-500/10 text-gray-500 hover:bg-gray-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                      >
+                        <Edit size={14} /> Edit
+                      </button>
+                    )}
                     <button 
                       onClick={() => setMemberCardModal(member)}
                       className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-blue-500/10 text-blue-500 hover:bg-blue-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
                     >
                       <IdCard size={14} /> Kartu
                     </button>
-                    <button 
-                      onClick={() => handlePromoteToAdmin(member)}
-                      className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-purple-500/10 text-purple-600 hover:bg-purple-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
-                    >
-                      <Shield size={14} /> Jadi Admin
-                    </button>
+                    {user?.role === 'Owner' && (
+                      <button 
+                        onClick={() => handlePromoteToAdmin(member)}
+                        className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-purple-500/10 text-purple-600 hover:bg-purple-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                      >
+                        <Shield size={14} /> Jadi Admin
+                      </button>
+                    )}
                     <button 
                       onClick={() => handleWhatsApp(member)}
                       className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-green-500/10 text-green-500 hover:bg-green-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
                     >
                       <MessageCircle size={14} /> Kirim WA
                     </button>
-                    <button 
-                      onClick={() => handleResetPassword(member)}
-                      className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-orange-500/10 text-orange-500 hover:bg-orange-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
-                    >
-                      <User size={14} /> Reset Pwd
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteMember(member)}
-                      className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
-                    >
-                      <X size={14} /> Hapus
-                    </button>
+                    {user?.role === 'Owner' && (
+                      <button 
+                        onClick={() => handleResetPassword(member)}
+                        className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-orange-500/10 text-orange-500 hover:bg-orange-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                      >
+                        <User size={14} /> Reset Pwd
+                      </button>
+                    )}
+                    {user?.role === 'Owner' && (
+                      <button 
+                        onClick={() => handleDeleteMember(member)}
+                        className="flex-1 min-w-[110px] flex items-center justify-center gap-1.5 bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white px-[10px] py-[8px] rounded-md transition-colors text-[12px] font-semibold"
+                      >
+                        <X size={14} /> Hapus
+                      </button>
+                    )}
                   </div>
                 </div>
               ))
@@ -831,16 +839,14 @@ export default function MembersPage() {
                             </button>
                           )}
 
-                          {user?.role === 'Owner' && (
-                            <button 
-                              onClick={() => setMemberCardModal(member)}
-                              className="flex items-center gap-1 bg-blue-500/10 text-blue-500 hover:bg-blue-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
-                              title="Kartu Member"
-                            >
-                              <IdCard size={16} />
-                              <span>Kartu Member</span>
-                            </button>
-                          )}
+                          <button 
+                            onClick={() => setMemberCardModal(member)}
+                            className="flex items-center gap-1 bg-blue-500/10 text-blue-500 hover:bg-blue-600 hover:text-white px-[12px] py-[6px] rounded-md transition-colors text-[13px] font-semibold"
+                            title="Kartu Member"
+                          >
+                            <IdCard size={16} />
+                            <span>Kartu Member</span>
+                          </button>
                           
                           {user?.role === 'Owner' && (
                             <button 
