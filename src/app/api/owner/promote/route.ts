@@ -83,10 +83,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Target user not found' }, { status: 404 });
     }
 
-    // Update user role to Admin and assign owner_id
+    // Update user role to Admin
     const { error: updateError } = await supabaseAdmin
       .from('users')
-      .update({ role: 'Admin', owner_id: ownerId })
+      .update({ role: 'Admin' })
       .eq('id', userId);
 
     if (updateError) throw updateError;

@@ -169,7 +169,7 @@ export async function registerMemberAction(formData: FormData) {
         join_date: new Date().toISOString().split('T')[0],
         photo_url: photoUrl,
         qr_code: qrCode
-      });
+      }, { onConflict: 'user_id' });
 
     if (memberError) {
       console.error('Error inserting into members:', memberError);

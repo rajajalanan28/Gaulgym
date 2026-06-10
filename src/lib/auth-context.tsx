@@ -235,29 +235,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (authError) throw authError;
 
       if (authData.user) {
-
-        const { error: profileError } = await supabase.from('users').insert({
-          id: authData.user.id,
-          email,
-          name,
-          role: finalRole,
-          is_active: true,
-        });
-
-        if (profileError) throw profileError;
-
-        // M-16: Auto-create member record without gymId scoping
-        const randomBytes = new Uint8Array(4);
-        crypto.getRandomValues(randomBytes);
-        const displayId = 'GG-' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 6).toUpperCase();
-        await supabase.from('members').insert({
-          user_id: authData.user.id,
-          name,
-          email,
-          display_id: displayId,
-          join_date: new Date().toISOString().split('T')[0]
-        });
-
         const authUser: AuthUser = {
           id: authData.user.id,
           email,
