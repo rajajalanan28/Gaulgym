@@ -41,23 +41,33 @@ export function ShiftManager({ adminId, children }: ShiftManagerProps) {
       
       try {
         const [posRes, subRes, expRes] = await Promise.all([
-          supabase.from('sales_transactions').select('total_amount').eq('admin_id', adminId).gte('created_at', shiftStartTime),
-          supabase.from('subscriptions').select('amount').gte('created_at', shiftStartTime),
+          supabase.from('sales_transactions').select('total_amount, payment_method').eq('admin_id', adminId).gte('created_at', shiftStartTime),
+          supabase.from('subscriptions').select('amount, payment_method').gte('created_at', shiftStartTime),
           supabase.from('expenses').select('amount').eq('created_by', adminId).gte('created_at', shiftStartTime)
         ]);
 
-        let totalPos = 0;
-        posRes.data?.forEach(tx => totalPos += Number(tx.total_amount) || 0);
+        let totalPosCash = 0;
+        posRes.data?.forEach(tx => {
+          if (tx.payment_method === 'Cash') {
+            totalPosCash += Number(tx.total_amount) || 0;
+          }
+        });
 
-        let totalSub = 0;
-        subRes.data?.forEach(sub => totalSub += Number(sub.amount) || 0);
+        let totalSubCash = 0;
+        subRes.data?.forEach(sub => {
+          if (sub.payment_method === 'Cash') {
+            totalSubCash += Number(sub.amount) || 0;
+          }
+        });
 
-        let totalExp = 0;
-        expRes.data?.forEach(exp => totalExp += Number(exp.amount) || 0);
+        let totalExpCash = 0;
+        expRes.data?.forEach(exp => {
+          totalExpCash += Number(exp.amount) || 0; // Assuming all expenses are cash taken from drawer
+        });
 
-        // Calculate Expected Cash: POS + Memberships - Expenses
-        const netSales = totalPos + totalSub - totalExp;
-        setSalesDuringShift(netSales);
+        // Calculate Expected Physical Cash: POS Cash + Memberships Cash - Expenses Cash
+        const netCashSales = totalPosCash + totalSubCash - totalExpCash;
+        setSalesDuringShift(netCashSales);
       } catch (err) {
         console.error('Error fetching shift details:', err);
       }
