@@ -180,7 +180,20 @@ export default function MembersPage() {
 
       // Map data ke UI
       if (membersData) {
-        const mappedMembers: MemberData[] = membersData.map((m) => {
+        // 4. Ambil data users untuk filter out Admin/Owner
+        const { data: usersData } = await supabase
+          .from('users')
+          .select('id, role')
+          .in('role', ['Admin', 'Owner']);
+        
+        if (signal?.aborted) return;
+        
+        const adminOwnerIds = new Set((usersData || []).map(u => u.id));
+        
+        // Filter out members yang sudah jadi Admin/Owner
+        const filteredMembersData = membersData.filter(m => !m.user_id || !adminOwnerIds.has(m.user_id));
+
+        const mappedMembers: MemberData[] = filteredMembersData.map((m) => {
           const subs = subsData?.filter(s => s.member_id === m.id) || [];
           const activeSubs = subs.filter((s: any) => s.status === 'active');
           const expiredSub = subs.find((s: any) => s.status === 'expired');
