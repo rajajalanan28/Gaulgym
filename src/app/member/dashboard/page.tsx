@@ -144,11 +144,11 @@ export default function MemberDashboard() {
                     </div>
                     
                     {/* QR Code Mini */}
-                    <div className="hidden sm:block bg-white p-2 rounded-xl shadow-lg shrink-0 cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowQrModal(true)}>
+                    <div className="hidden sm:block bg-white p-2.5 rounded-xl shadow-lg shrink-0 cursor-pointer hover:scale-105 transition-transform" onClick={() => setShowQrModal(true)}>
                       {memberProfile?.qr_code ? (
-                        <QRCodeSVG value={memberProfile.qr_code} size={64} level="L" />
+                        <QRCodeSVG value={memberProfile.qr_code} size={100} level="L" />
                       ) : (
-                        <QrCode size={64} className="text-gray-300" />
+                        <QrCode size={100} className="text-gray-300" />
                       )}
                     </div>
                   </div>
