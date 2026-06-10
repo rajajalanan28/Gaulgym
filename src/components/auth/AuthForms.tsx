@@ -61,8 +61,7 @@ function AuthFormsContent() {
   const validateRegister = (): boolean => {
     const errs: FormErrors = {};
     if (!regData.name || regData.name.trim().length < 2) errs.name = 'Nama minimal 2 karakter.';
-    if (!regData.username || regData.username.trim().length < 3) errs.username = 'Email tidak valid.';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(regData.username)) errs.username = 'Format email tidak valid.';
+    if (!regData.username || regData.username.trim().length < 3) errs.username = 'Username minimal 3 karakter.';
     
     if (!regData.password || regData.password.length < 12) errs.password = 'Kata sandi minimal 12 karakter.';
     else if (!/[A-Z]/.test(regData.password)) errs.password = 'Kata sandi harus mengandung huruf besar.';
@@ -119,7 +118,10 @@ function AuthFormsContent() {
 
     setIsLoading(true);
 
-    const email = regData.username.trim().toLowerCase();
+    let email = regData.username.trim().toLowerCase();
+    if (!email.includes('@')) {
+      email = `${email.replace(/\s+/g, '')}@gaulgym.com`;
+    }
 
     try {
       let timeoutId: NodeJS.Timeout | undefined;
