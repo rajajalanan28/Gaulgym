@@ -5,7 +5,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
-import { PlusCircle, X, Loader2, Shield, Camera, IdCard, MessageCircle, User, Edit } from "lucide-react";
+import { PlusCircle, X, Loader2, Shield, Camera, IdCard, MessageCircle, User, Edit, Download } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { updateMemberPhotoAction, deleteMemberAction, resetMemberPasswordAction, cleanupOrphanedAuthUsersAction, editMemberAction, editSubscriptionEndDateAction } from "@/app/actions/user";
 import Link from "next/link";
@@ -1071,7 +1071,7 @@ export default function MembersPage() {
               <div className="p-4 sm:p-6 overflow-y-auto">
                 {/* The Membership Card */}
                 {/* The Membership Card */}
-                <div className="bg-[#0b1014] rounded-2xl border border-gray-800 p-4 sm:p-6 relative overflow-hidden flex flex-col gap-4 sm:gap-5 shadow-2xl">
+                <div id="member-card-capture" className="bg-[#0b1014] rounded-2xl border border-gray-800 p-4 sm:p-6 relative overflow-hidden flex flex-col gap-4 sm:gap-5 shadow-2xl">
                   {/* Background decorative elements */}
                   <div className="absolute top-0 right-0 w-full h-full opacity-30 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 100% 100%, rgba(34, 197, 94, 0.15) 0%, transparent 50%), radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.05) 0%, transparent 40%)' }}></div>
                   <div className="absolute -bottom-20 -right-10 w-64 h-64 border border-green-500/20 rounded-full opacity-50 blur-[1px]"></div>
@@ -1104,7 +1104,8 @@ export default function MembersPage() {
                      )}
                      <div className="min-w-0">
                        <h3 className="text-white font-bold text-[17px] sm:text-[22px] tracking-wide mb-0.5 truncate">{memberCardModal.name}</h3>
-                       <p className="text-gray-400 text-[12px] sm:text-[13px] font-mono tracking-widest">*****{memberCardModal.phone ? memberCardModal.phone.slice(-4) : '0000'}</p>
+                       <p className="text-gray-400 text-[11px] sm:text-[12px] font-mono mb-0.5">{memberCardModal.email}</p>
+                       <p className="text-gray-400 text-[12px] sm:text-[13px] font-mono tracking-widest">{memberCardModal.phone || '-'}</p>
                      </div>
                   </div>
 
@@ -1132,6 +1133,24 @@ export default function MembersPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Download as JPG */}
+                <button
+                  onClick={async () => {
+                    const cardEl = document.getElementById('member-card-capture');
+                    if (!cardEl) return;
+                    const html2canvas = (await import('html2canvas')).default;
+                    const canvas = await html2canvas(cardEl, { backgroundColor: '#0b1014', scale: 3 });
+                    const link = document.createElement('a');
+                    link.download = `kartu-member-${memberCardModal.name.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+                    link.href = canvas.toDataURL('image/jpeg', 0.95);
+                    link.click();
+                  }}
+                  className="mt-4 w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white font-semibold text-sm transition-colors"
+                >
+                  <Download size={18} />
+                  Download Kartu (JPG)
+                </button>
 
                 <div className="mt-6 bg-[var(--color-surface-2)] rounded-2xl p-5 border border-white/5">
                   <h4 className="text-sm font-semibold text-gray-300 mb-4 text-center">
