@@ -1085,11 +1085,11 @@ export default function MembersPage() {
                     </div>
                     <div 
                       onClick={() => setEnlargedQr(memberCardModal.display_id || memberCardModal.id)}
-                      className="bg-white p-1 sm:p-1.5 rounded-lg shadow-sm cursor-pointer hover:scale-105 transition-transform"
+                      className="bg-white p-1.5 sm:p-2 rounded-xl shadow-sm cursor-pointer hover:scale-105 transition-transform"
                       title="Perbesar QR Code"
                     >
-                      <QRCodeSVG value={memberCardModal.display_id || memberCardModal.id} size={44} className="sm:hidden" />
-                      <QRCodeSVG value={memberCardModal.display_id || memberCardModal.id} size={54} className="hidden sm:block" />
+                      <QRCodeSVG value={memberCardModal.display_id || memberCardModal.id} size={80} className="sm:hidden" />
+                      <QRCodeSVG value={memberCardModal.display_id || memberCardModal.id} size={100} className="hidden sm:block" />
                     </div>
                   </div>
 
