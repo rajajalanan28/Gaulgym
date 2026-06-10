@@ -545,28 +545,32 @@ export default function MembersPage() {
             <p className="text-[var(--color-ink-muted)] mt-1 text-[15px]">Kelola data member dan perpanjang keanggotaan</p>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={async () => {
-                if (confirm('Fitur ini akan membersihkan sisa data member yang error/dihapus manual (supaya email/username bisa dipakai lagi). Lanjutkan?')) {
-                  try {
-                    const res = await cleanupOrphanedAuthUsersAction();
-                    if (res.error) alert('Gagal: ' + res.error);
-                    else alert(res.message);
-                  } catch (err: any) {
-                    alert('Error: ' + err.message);
+            {user?.role === 'Owner' && (
+              <button
+                onClick={async () => {
+                  if (confirm('Fitur ini akan membersihkan sisa data member yang error/dihapus manual (supaya email/username bisa dipakai lagi). Lanjutkan?')) {
+                    try {
+                      const res = await cleanupOrphanedAuthUsersAction();
+                      if (res.error) alert('Gagal: ' + res.error);
+                      else alert(res.message);
+                    } catch (err: any) {
+                      alert('Error: ' + err.message);
+                    }
                   }
-                }
-              }}
-              className="inline-flex items-center justify-center bg-[var(--color-surface-2)] text-[var(--color-ink)] border border-[var(--color-hairline)] font-medium px-4 py-2.5 rounded-lg hover:bg-[var(--color-surface-3)] transition-colors text-[13px]"
-            >
-              Bersihkan Cache User
-            </button>
-            <Link
-              href={user?.role === 'Owner' ? "/owner/member/new" : "/admin/member/new"}
-              className="inline-flex items-center justify-center bg-[var(--color-primary)] text-white font-medium px-4 py-2.5 rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors shadow-lg shadow-[var(--color-primary)]/20 text-[13px]"
-            >
-              + Daftarkan Member
-            </Link>
+                }}
+                className="inline-flex items-center justify-center bg-[var(--color-surface-2)] text-[var(--color-ink)] border border-[var(--color-hairline)] font-medium px-4 py-2.5 rounded-lg hover:bg-[var(--color-surface-3)] transition-colors text-[13px]"
+              >
+                Bersihkan Cache User
+              </button>
+            )}
+            {user?.role === 'Owner' && (
+              <Link
+                href="/owner/member/new"
+                className="inline-flex items-center justify-center bg-[var(--color-primary)] text-white font-medium px-4 py-2.5 rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors shadow-lg shadow-[var(--color-primary)]/20 text-[13px]"
+              >
+                + Daftarkan Member
+              </Link>
+            )}
           </div>
         </div>
 

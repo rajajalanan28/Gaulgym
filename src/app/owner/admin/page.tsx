@@ -38,7 +38,6 @@ export default function AdminPage() {
         const { data, error } = await supabase
           .from('users')
           .select('*')
-          .eq('owner_id', user.id)
           .eq('role', 'Admin')
           .order('created_at', { ascending: false });
           
@@ -110,7 +109,6 @@ export default function AdminPage() {
       const { data } = await supabase
         .from('users')
         .select('*')
-        .eq('owner_id', user.id)
         .eq('role', 'Admin')
         .order('created_at', { ascending: false });
       if (data) setAdminList(data);
