@@ -5,7 +5,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase';
-import { ShoppingCart, Plus, Minus, Trash2, Receipt, CreditCard, Banknote, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { ShoppingCart, Plus, Minus, Trash2, Receipt, CreditCard, Banknote, CheckCircle, Image as ImageIcon, History, X, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 interface Product {
@@ -31,6 +31,11 @@ export default function POSPage() {
   const [processing, setProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'Cash' | 'QRIS'>('Cash');
   const [showSuccess, setShowSuccess] = useState(false);
+
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   useEffect(() => {
     const init = async () => {
       if (!user) return;
@@ -38,6 +43,73 @@ export default function POSPage() {
     };
     init();
   }, [user]);
+
+  const fetchHistory = async () => {
+    if (!user) return;
+    setLoadingHistory(true);
+    try {
+      const { data: shiftData } = await supabase
+        .from('shifts')
+        .select('created_at')
+        .eq('admin_id', user.id)
+        .eq('status', 'open')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+        
+      const shiftStartTime = shiftData ? shiftData.created_at : new Date(new Date().setHours(0,0,0,0)).toISOString();
+
+      const { data, error } = await supabase
+        .from('sales_transactions')
+        .select(`
+          id, created_at, total_amount, payment_method,
+          sales_items ( quantity, price, products ( name ) )
+        `)
+        .eq('admin_id', user.id)
+        .gte('created_at', shiftStartTime)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setHistoryData(data || []);
+    } catch (err) {
+      console.error('Error fetching history:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showHistory) {
+      fetchHistory();
+    }
+  }, [showHistory]);
+
+  const voidTransaction = async (transactionId: string) => {
+    if (!confirm('Anda yakin ingin membatalkan transaksi ini? Stok barang akan dikembalikan dan data penjualan akan dihapus.')) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('void_pos_transaction', {
+        p_transaction_id: transactionId
+      });
+
+      if (error) {
+        if (error.message?.includes('function void_pos_transaction does not exist')) {
+          alert('Fungsi void_pos_transaction belum dibuat di Supabase. Silakan jalankan file void_pos_transaction.sql di SQL Editor.');
+          return;
+        }
+        throw error;
+      }
+
+      alert('Transaksi berhasil dibatalkan dan stok dikembalikan!');
+      await fetchHistory();
+      await fetchProducts();
+      // Reload the page to force ShiftManager to recalculate total expected cash
+      window.location.reload();
+    } catch (err) {
+      console.error('Error voiding transaction:', err);
+      alert('Gagal membatalkan transaksi');
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -138,14 +210,23 @@ export default function POSPage() {
         
         {user?.id ? (
           <ShiftManager adminId={user.id}>
-            <div className="mb-8">
-              <h1 className="text-[28px] font-semibold text-gray-100 flex items-center gap-3">
-                <ShoppingCart className="text-[var(--color-primary)]" size={28} />
-                Kasir Jualan
-              </h1>
-              <p className="text-gray-400 mt-2 text-sm">
-                Klik barang untuk memasukkan ke keranjang belanja
-              </p>
+            <div className="mb-8 flex justify-between items-start md:items-center flex-col md:flex-row gap-4">
+              <div>
+                <h1 className="text-[28px] font-semibold text-gray-100 flex items-center gap-3">
+                  <ShoppingCart className="text-[var(--color-primary)]" size={28} />
+                  Kasir Jualan
+                </h1>
+                <p className="text-gray-400 mt-2 text-sm">
+                  Klik barang untuk memasukkan ke keranjang belanja
+                </p>
+              </div>
+              <button
+                onClick={() => setShowHistory(true)}
+                className="bg-[var(--color-surface-2)] hover:bg-white/10 text-white px-4 py-2.5 rounded-xl border border-white/10 transition-colors flex items-center gap-2 font-medium shadow-lg"
+              >
+                <History size={20} className="text-blue-400" />
+                Riwayat Transaksi
+              </button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -306,6 +387,66 @@ export default function POSPage() {
             <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
+
+        {/* Modal Riwayat */}
+        {showHistory && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="bg-[var(--color-surface-1)] border border-white/10 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[80vh] animate-fade-in">
+              <div className="flex justify-between items-center p-6 border-b border-white/5 shrink-0">
+                <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                  <History size={24} className="text-blue-400" />
+                  Riwayat Transaksi Shift Ini
+                </h3>
+                <button onClick={() => setShowHistory(false)} className="text-gray-400 hover:text-white transition-colors">
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto flex-1 bg-[var(--color-surface-2)]/30">
+                {loadingHistory ? (
+                  <div className="flex justify-center p-12">
+                    <div className="w-8 h-8 border-4 border-[var(--color-primary)] border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                ) : historyData.length === 0 ? (
+                  <div className="text-center p-12 text-gray-500">
+                    <History size={48} className="mx-auto mb-4 opacity-20" />
+                    <p>Belum ada transaksi di shift ini.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {historyData.map((tx) => (
+                      <div key={tx.id} className="bg-[var(--color-surface-1)] border border-white/5 rounded-xl p-4 shadow-sm">
+                        <div className="flex justify-between items-start mb-3 border-b border-white/5 pb-3">
+                          <div>
+                            <p className="text-sm text-gray-400 mb-1">{new Date(tx.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB</p>
+                            <p className="font-bold text-green-400 text-lg">{formatRp(tx.total_amount)}</p>
+                            <span className="text-[10px] uppercase font-bold bg-white/5 px-2 py-0.5 rounded text-gray-300 border border-white/10 mt-1.5 inline-block">{tx.payment_method}</span>
+                          </div>
+                          <button
+                            onClick={() => voidTransaction(tx.id)}
+                            className="bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 border border-red-500/20"
+                          >
+                            <AlertTriangle size={14} />
+                            Batal (Void)
+                          </button>
+                        </div>
+                        <ul className="space-y-1.5">
+                          {tx.sales_items?.map((item: any, idx: number) => (
+                            <li key={idx} className="flex justify-between text-sm">
+                              <span className="text-gray-300">{item.quantity}x {item.products?.name || 'Barang Terhapus'}</span>
+                              <span className="text-gray-500">{formatRp(item.price * item.quantity)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </ProtectedRoute>
   );
