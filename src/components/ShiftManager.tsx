@@ -28,6 +28,13 @@ export function ShiftManager({ adminId, children }: ShiftManagerProps) {
 
   // Pos transactions total during shift
   const [salesDuringShift, setSalesDuringShift] = useState(0);
+  const [breakdown, setBreakdown] = useState({
+    posCash: 0,
+    posQris: 0,
+    subCash: 0,
+    subQris: 0,
+    expCash: 0
+  });
 
   const router = useRouter();
 
@@ -47,22 +54,36 @@ export function ShiftManager({ adminId, children }: ShiftManagerProps) {
         ]);
 
         let totalPosCash = 0;
+        let totalPosQris = 0;
         posRes.data?.forEach(tx => {
           if (tx.payment_method === 'Cash') {
             totalPosCash += Number(tx.total_amount) || 0;
+          } else if (tx.payment_method === 'QRIS') {
+            totalPosQris += Number(tx.total_amount) || 0;
           }
         });
 
         let totalSubCash = 0;
+        let totalSubQris = 0;
         subRes.data?.forEach(sub => {
           if (sub.payment_method === 'Cash') {
             totalSubCash += Number(sub.amount) || 0;
+          } else if (sub.payment_method === 'QRIS') {
+            totalSubQris += Number(sub.amount) || 0;
           }
         });
 
         let totalExpCash = 0;
         expRes.data?.forEach(exp => {
           totalExpCash += Number(exp.amount) || 0; // Assuming all expenses are cash taken from drawer
+        });
+
+        setBreakdown({
+          posCash: totalPosCash,
+          posQris: totalPosQris,
+          subCash: totalSubCash,
+          subQris: totalSubQris,
+          expCash: totalExpCash
         });
 
         // Calculate Expected Physical Cash: POS Cash + Memberships Cash - Expenses Cash
@@ -208,9 +229,32 @@ export function ShiftManager({ adminId, children }: ShiftManagerProps) {
               </button>
             </div>
             <form onSubmit={handleCloseShift} className="p-6 space-y-4">
-              <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20 mb-4">
-                <p className="text-sm text-blue-200">
-                  Hitung seluruh uang fisik yang ada di laci kasir saat ini, lalu masukkan nominalnya di bawah.
+              <div className="bg-[var(--color-surface-2)] p-4 rounded-xl border border-white/5 mb-4 text-sm space-y-3">
+                <div className="flex justify-between items-center text-gray-300">
+                  <span>Modal Awal Laci</span>
+                  <span className="font-semibold text-white">Rp {Number(activeShift.starting_cash).toLocaleString('id-ID')}</span>
+                </div>
+                <div className="flex justify-between items-center text-gray-300 pt-2 border-t border-white/5">
+                  <span>Pemasukan Tunai (Cash)</span>
+                  <span className="font-semibold text-green-400">+ Rp {(breakdown.posCash + breakdown.subCash).toLocaleString('id-ID')}</span>
+                </div>
+                <div className="flex justify-between items-center text-gray-300">
+                  <span>Pemasukan QRIS <span className="text-xs text-gray-500">(Masuk Bank)</span></span>
+                  <span className="font-semibold text-blue-400">Rp {(breakdown.posQris + breakdown.subQris).toLocaleString('id-ID')}</span>
+                </div>
+                <div className="flex justify-between items-center text-gray-300 border-b border-white/10 pb-3">
+                  <span>Pengeluaran Tunai</span>
+                  <span className="font-semibold text-red-400">- Rp {breakdown.expCash.toLocaleString('id-ID')}</span>
+                </div>
+                <div className="flex justify-between items-center text-gray-200 mt-2 pt-2 border-t border-white/10">
+                  <span>Target Uang Fisik (Laci)</span>
+                  <span className="font-bold text-[var(--color-primary)] text-base">Rp {(Number(activeShift.starting_cash) + breakdown.posCash + breakdown.subCash - breakdown.expCash).toLocaleString('id-ID')}</span>
+                </div>
+              </div>
+
+              <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20 mb-4">
+                <p className="text-xs text-blue-200 leading-relaxed">
+                  Hitung seluruh uang fisik yang ada di laci kasir saat ini, pastikan sesuai dengan <b>Target Uang Fisik</b> di atas, lalu masukkan nominalnya di bawah.
                 </p>
               </div>
 
