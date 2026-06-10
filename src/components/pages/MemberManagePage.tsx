@@ -1140,8 +1140,18 @@ export default function MembersPage() {
                     try {
                       const cardEl = document.getElementById('member-card-capture');
                       if (!cardEl) return;
+                      // Force desktop width for clean capture
+                      const origWidth = cardEl.style.width;
+                      const origMinWidth = cardEl.style.minWidth;
+                      cardEl.style.width = '480px';
+                      cardEl.style.minWidth = '480px';
+                      // Wait for reflow
+                      await new Promise(r => setTimeout(r, 100));
                       const { toJpeg } = await import('html-to-image');
                       const dataUrl = await toJpeg(cardEl, { quality: 0.95, pixelRatio: 3, backgroundColor: '#0b1014' });
+                      // Restore original size
+                      cardEl.style.width = origWidth;
+                      cardEl.style.minWidth = origMinWidth;
                       const link = document.createElement('a');
                       link.download = `kartu-member-${memberCardModal.name.replace(/\s+/g, '-').toLowerCase()}.jpg`;
                       link.href = dataUrl;
