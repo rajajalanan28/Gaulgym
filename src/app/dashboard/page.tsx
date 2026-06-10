@@ -9,7 +9,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { getOwnerStats, getOwnerRevenueChart } from '@/lib/supabase';
+import { getOwnerStatsAction, getOwnerRevenueChartAction } from '@/app/actions/dashboard';
 
 const MapPin = dynamic(() => import('lucide-react').then(m => ({ default: m.MapPin })), { ssr: false, loading: () => <span style={{width:20, height:20}} /> });
 const Users = dynamic(() => import('lucide-react').then(m => ({ default: m.Users })), { ssr: false, loading: () => <span style={{width:20, height:20}} /> });
@@ -29,8 +29,8 @@ export default function OwnerDashboard() {
       if (user?.id) {
         try {
           const [statsRes, chartRes] = await Promise.all([
-            getOwnerStats(user.id),
-            getOwnerRevenueChart()
+            getOwnerStatsAction(),
+            getOwnerRevenueChartAction()
           ]);
           
           if (statsRes.error) throw statsRes.error;

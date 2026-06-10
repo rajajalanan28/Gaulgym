@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { useAuth } from '@/lib/auth-context';
-import { getAdminStats, supabase } from '@/lib/supabase';
+import { getAdminStatsAction } from '@/app/actions/dashboard';
 import Link from 'next/link';
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -15,7 +15,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function loadStats() {
       try {
-        const { data: statsData, error: statsError } = await getAdminStats();
+        const { data: statsData, error: statsError } = await getAdminStatsAction();
         if (statsError) throw statsError;
         if (statsData) setStats(statsData);
 
