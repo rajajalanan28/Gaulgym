@@ -209,10 +209,14 @@ export async function updateMemberPhotoAction(memberId: string, userId: string, 
         .update({ photo_url: photoUrl })
         .eq('id', memberId);
         
-      if (updateError) return { error: 'Gagal update database' };
+      if (updateError) {
+        console.error("DB update error:", updateError);
+        return { error: `Gagal update database: ${updateError.message}` };
+      }
       return { success: true, photoUrl };
     } else {
-      return { error: 'Gagal upload foto' };
+      console.error("Storage upload error:", uploadError);
+      return { error: `Gagal upload foto: ${uploadError.message}` };
     }
   } catch (err: any) {
     return { error: err.message };
