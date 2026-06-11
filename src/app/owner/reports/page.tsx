@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import { supabase } from '@/lib/supabase';
-import { Loader2, TrendingUp, DollarSign, Package, Wallet, Calendar, Download, Filter, AlertTriangle, ShoppingBag } from 'lucide-react';
+import { Loader2, TrendingUp, DollarSign, Package, Wallet, Calendar, Download, Filter, AlertTriangle, ShoppingBag, Clock } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -34,6 +34,7 @@ export default function ReportsPage() {
   const [allTransactions, setAllTransactions] = useState<RawTransaction[]>([]);
   const [allVoidedLogs, setAllVoidedLogs] = useState<any[]>([]);
   const [allSalesItems, setAllSalesItems] = useState<any[]>([]);
+  const [allShifts, setAllShifts] = useState<any[]>([]);
 
   // Filters
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('monthly');
@@ -48,14 +49,15 @@ export default function ReportsPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [posRes, subRes, expRes, voidRes] = await Promise.all([
+      const [posRes, subRes, expRes, voidRes, shiftsRes] = await Promise.all([
         supabase.from('sales_transactions').select(`
           created_at, total_amount,
           sales_items ( quantity, price, products ( name ) )
         `).order('created_at', { ascending: true }),
         supabase.from('subscriptions').select('created_at, amount, package_name').order('created_at', { ascending: true }),
         supabase.from('expenses').select('date, amount, description').order('date', { ascending: true }),
-        supabase.from('voided_logs').select('*, users(name, email)').order('created_at', { ascending: false })
+        supabase.from('voided_logs').select('*, users(name, email)').order('created_at', { ascending: false }),
+        supabase.from('shifts').select('*, users!admin_id(name, email)').eq('status', 'closed').order('created_at', { ascending: false })
       ]);
 
       if (posRes.error) throw posRes.error;
@@ -86,6 +88,7 @@ export default function ReportsPage() {
 
       setAllTransactions(merged);
       setAllVoidedLogs(voidRes.data || []);
+      setAllShifts(shiftsRes.data || []);
 
       const itemsList: any[] = [];
       posRes.data?.forEach((tx: any) => {
@@ -142,6 +145,13 @@ export default function ReportsPage() {
       return d >= dateRange.start && d <= dateRange.end;
     });
   }, [allVoidedLogs, dateRange]);
+
+  const filteredShifts = useMemo(() => {
+    return allShifts.filter(s => {
+      const d = new Date(s.end_time || s.created_at);
+      return d >= dateRange.start && d <= dateRange.end;
+    });
+  }, [allShifts, dateRange]);
 
   const topSellingItems = useMemo(() => {
     const filtered = allSalesItems.filter(item => {
@@ -632,6 +642,89 @@ export default function ReportsPage() {
                         ) : (
                           <tr>
                             <td colSpan={4} className="px-6 py-10 text-center text-gray-500">Tidak ada transaksi yang dibatalkan pada periode ini</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Shift Discrepancies */}
+                <div className="bg-[var(--color-surface-1)] border border-white/5 rounded-2xl overflow-hidden mt-6 shadow-sm">
+                  <div className="p-4 sm:p-6 border-b border-white/5 flex justify-between items-center">
+                    <div>
+                      <h3 className="text-base font-bold flex items-center gap-2 text-white">
+                        <Clock size={18} className="text-blue-400" />
+                        Riwayat & Selisih Tutup Kasir
+                      </h3>
+                      <p className="text-xs text-gray-400 mt-1">Pemantauan akurasi uang fisik (laci) vs target sistem</p>
+                    </div>
+                    <span className="text-xs text-gray-400 font-medium bg-white/5 px-3 py-1 rounded-full">{filteredShifts.length} shift ditutup</span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-[var(--color-surface-2)] border-y border-white/5">
+                          <th className="px-6 py-4 text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">Waktu Shift</th>
+                          <th className="px-6 py-4 text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">Admin</th>
+                          <th className="px-6 py-4 text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">Modal Awal</th>
+                          <th className="px-6 py-4 text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">Target Sistem</th>
+                          <th className="px-6 py-4 text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">Uang Fisik</th>
+                          <th className="px-6 py-4 text-left text-[12px] font-medium text-[var(--color-ink-subtle)] uppercase tracking-wider">Selisih</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--color-hairline)]">
+                        {filteredShifts.length > 0 ? (
+                          filteredShifts.map((shift, i) => {
+                            const expected = shift.expected_cash || 0;
+                            const ending = shift.ending_cash || 0;
+                            const discrepancy = ending - expected;
+                            const isMinus = discrepancy < 0;
+                            const isPlus = discrepancy > 0;
+                            
+                            return (
+                              <tr key={i} className="hover:bg-[var(--color-surface-2)] transition-colors">
+                                <td className="px-6 py-4">
+                                  <div className="text-sm text-[var(--color-ink)] font-medium">
+                                    {new Date(shift.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                                  </div>
+                                  <div className="text-xs text-gray-500 mt-0.5">
+                                    {new Date(shift.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} - {shift.end_time ? new Date(shift.end_time).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : '...'}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <span className="text-sm font-medium">{shift.users?.name || 'Unknown'}</span>
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-400">
+                                  {formatCurrency(shift.starting_cash)}
+                                </td>
+                                <td className="px-6 py-4 text-sm font-medium text-gray-300">
+                                  {formatCurrency(expected)}
+                                </td>
+                                <td className="px-6 py-4 text-sm font-bold text-white">
+                                  {formatCurrency(ending)}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded text-xs font-bold ${
+                                    isMinus ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 
+                                    isPlus ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 
+                                    'bg-white/10 text-gray-300 border border-white/10'
+                                  }`}>
+                                    {isMinus ? '-' : isPlus ? '+' : ''}{formatCurrency(Math.abs(discrepancy))}
+                                  </div>
+                                  {shift.notes && (
+                                    <div className="text-[11px] text-gray-500 mt-1 truncate max-w-[150px]" title={shift.notes}>
+                                      "{shift.notes}"
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td colSpan={6} className="px-6 py-10 text-center text-gray-500">Tidak ada riwayat shift yang ditutup pada periode ini</td>
                           </tr>
                         )}
                       </tbody>

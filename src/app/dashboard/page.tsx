@@ -16,6 +16,7 @@ const Users = dynamic(() => import('lucide-react').then(m => ({ default: m.Users
 const DollarSign = dynamic(() => import('lucide-react').then(m => ({ default: m.DollarSign })), { ssr: false, loading: () => <span style={{width:20, height:20}} /> });
 const UserCheck = dynamic(() => import('lucide-react').then(m => ({ default: m.UserCheck })), { ssr: false, loading: () => <span style={{width:20, height:20}} /> });
 const Tag = dynamic(() => import('lucide-react').then(m => ({ default: m.Tag })), { ssr: false, loading: () => <span style={{width:20, height:20}} /> });
+const Eye = dynamic(() => import('lucide-react').then(m => ({ default: m.Eye })), { ssr: false, loading: () => <span style={{width:20, height:20}} /> });
 
 export default function OwnerDashboard() {
   const { user } = useAuth();
@@ -171,6 +172,12 @@ export default function OwnerDashboard() {
                 title="Manajemen Admin"
                 subtitle="Kelola semua akun admin"
                 href="/owner/admin"
+              />
+              <MenuItem
+                icon={<Eye size={20} />}
+                title="Jejak Audit"
+                subtitle="Pantau aktivitas log semua admin"
+                href="/owner/audit"
               />
               <MenuItem
                 icon={<span className="text-green-500"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg></span>}
