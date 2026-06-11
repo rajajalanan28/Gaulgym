@@ -94,7 +94,7 @@ export default function OwnerDashboard() {
                 <div className="w-full h-full bg-[var(--color-surface-2)] animate-pulse rounded-[12px]"></div>
               ) : chartData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorPendapatan" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3}/>
@@ -112,6 +112,7 @@ export default function OwnerDashboard() {
                     <YAxis 
                       axisLine={false} 
                       tickLine={false} 
+                      width={65}
                       tick={{ fontSize: 12, fill: 'var(--color-ink-muted)' }}
                       tickFormatter={(value) => `Rp${value / 1000}k`}
                     />
