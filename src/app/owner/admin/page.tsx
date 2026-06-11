@@ -5,7 +5,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/lib/supabase";
-import { UserPlus, Shield, MoreVertical, Search, CheckCircle } from "lucide-react";
+import { UserPlus, Shield, MoreVertical, Search, CheckCircle, Key } from "lucide-react";
 
 interface AdminMember {
   id: string;
@@ -138,6 +138,43 @@ export default function AdminPage() {
     }
   };
 
+  const handleResetPassword = async (adminId: string, adminName: string) => {
+    if (!user) return;
+    
+    const newPassword = prompt(`Masukkan password baru untuk Admin: ${adminName}\n(Minimal 6 karakter)`);
+    if (newPassword === null) return; // cancelled
+    if (newPassword.trim().length < 6) {
+      alert("Password minimal harus 6 karakter!");
+      return;
+    }
+
+    if (!confirm(`Apakah Anda yakin ingin mengganti password untuk ${adminName}?`)) return;
+
+    try {
+      const sessionResponse = await supabase.auth.getSession();
+      const token = sessionResponse.data.session?.access_token;
+      
+      const response = await fetch('/api/owner/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          targetUserId: adminId,
+          newPassword: newPassword.trim()
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Gagal mereset password');
+      
+      alert(`Berhasil! Password untuk ${adminName} telah diubah.`);
+    } catch (err: any) {
+      alert(err.message || "Gagal mereset password");
+    }
+  };
+
   const filteredMembers = members.filter(m => 
     m.name.toLowerCase().includes(searchMember.toLowerCase()) || 
     m.email?.toLowerCase().includes(searchMember.toLowerCase())
@@ -185,8 +222,12 @@ export default function AdminPage() {
                         <div className="text-[12px] text-[var(--color-ink-muted)]">{admin.email}</div>
                       </div>
                     </div>
-                    <button className="text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] p-1">
-                      <MoreVertical size={18} />
+                    <button 
+                      onClick={() => handleResetPassword(admin.id, admin.name)}
+                      title="Reset Password"
+                      className="text-[var(--color-ink-subtle)] hover:text-blue-500 transition-colors p-2 rounded-full hover:bg-blue-500/10"
+                    >
+                      <Key size={18} />
                     </button>
                   </div>
                   
@@ -264,8 +305,12 @@ export default function AdminPage() {
                         </button>
                       </td>
                       <td className="px-[24px] py-[16px]">
-                        <button className="text-[var(--color-ink-subtle)] hover:text-[var(--color-ink)] transition-colors p-[8px] rounded-full hover:bg-[var(--color-surface-3)]">
-                          <MoreVertical size={18} />
+                        <button 
+                          onClick={() => handleResetPassword(admin.id, admin.name)}
+                          title="Reset Password"
+                          className="text-[var(--color-ink-subtle)] hover:text-blue-500 transition-colors p-[8px] rounded-full hover:bg-blue-500/10"
+                        >
+                          <Key size={18} />
                         </button>
                       </td>
                     </tr>
