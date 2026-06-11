@@ -206,7 +206,10 @@ export async function updateMemberPhotoAction(memberId: string, userId: string, 
       
       const { error: updateError } = await supabaseAdmin
         .from('members')
-        .update({ photo_url: photoUrl })
+        .update({ 
+          photo_url: photoUrl,
+          last_modified_by: userId
+        })
         .eq('id', memberId);
         
       if (updateError) {

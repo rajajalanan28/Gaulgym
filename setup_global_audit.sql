@@ -32,8 +32,20 @@ DECLARE
   v_admin_id UUID;
 BEGIN
   -- Try to get the user ID from the active Supabase Auth JWT
-  -- If this is called from a backend script with Service Role, auth.uid() might be null
   v_admin_id := auth.uid();
+
+  -- Fallback for Server Actions using Service Role Key (auth.uid is null)
+  -- If the table has a last_modified_by or created_by column, we extract it from the NEW record
+  IF v_admin_id IS NULL AND TG_OP IN ('INSERT', 'UPDATE') THEN
+    BEGIN
+      v_admin_id := COALESCE(
+        (to_jsonb(NEW) ->> 'last_modified_by')::uuid,
+        (to_jsonb(NEW) ->> 'created_by')::uuid
+      );
+    EXCEPTION WHEN OTHERS THEN
+      -- Ignore cast errors or missing columns
+    END;
+  END IF;
 
   IF TG_OP = 'INSERT' THEN
     INSERT INTO global_audit_logs(admin_id, action_type, table_name, record_id, new_data)
