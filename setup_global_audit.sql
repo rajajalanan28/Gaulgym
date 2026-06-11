@@ -37,18 +37,18 @@ BEGIN
 
   IF TG_OP = 'INSERT' THEN
     INSERT INTO global_audit_logs(admin_id, action_type, table_name, record_id, new_data)
-    VALUES (v_admin_id, TG_OP, TG_TABLE_NAME, NEW.id::text, row_to_json(NEW));
+    VALUES (v_admin_id, TG_OP, TG_TABLE_NAME, NEW.id::text, to_jsonb(NEW));
     RETURN NEW;
   ELSIF TG_OP = 'UPDATE' THEN
     -- Only log if something actually changed (optional, but good for saving space)
-    IF row_to_json(OLD) IS DISTINCT FROM row_to_json(NEW) THEN
+    IF to_jsonb(OLD) IS DISTINCT FROM to_jsonb(NEW) THEN
         INSERT INTO global_audit_logs(admin_id, action_type, table_name, record_id, old_data, new_data)
-        VALUES (v_admin_id, TG_OP, TG_TABLE_NAME, NEW.id::text, row_to_json(OLD), row_to_json(NEW));
+        VALUES (v_admin_id, TG_OP, TG_TABLE_NAME, NEW.id::text, to_jsonb(OLD), to_jsonb(NEW));
     END IF;
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
     INSERT INTO global_audit_logs(admin_id, action_type, table_name, record_id, old_data)
-    VALUES (v_admin_id, TG_OP, TG_TABLE_NAME, OLD.id::text, row_to_json(OLD));
+    VALUES (v_admin_id, TG_OP, TG_TABLE_NAME, OLD.id::text, to_jsonb(OLD));
     RETURN OLD;
   END IF;
   RETURN NULL;
