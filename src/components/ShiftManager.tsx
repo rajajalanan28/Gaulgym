@@ -228,14 +228,14 @@ export function ShiftManager({ adminId, children }: ShiftManagerProps) {
       {/* Close Shift Modal */}
       {showCloseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[var(--color-surface-1)] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-fade-in">
-            <div className="flex justify-between items-center p-6 border-b border-white/5">
+          <div className="bg-[var(--color-surface-1)] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl animate-fade-in flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center p-5 sm:p-6 border-b border-white/5 shrink-0">
               <h3 className="text-xl font-semibold text-white">Tutup Kasir</h3>
               <button onClick={() => setShowCloseModal(false)} className="text-gray-400 hover:text-white transition-colors">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleCloseShift} className="p-6 space-y-4">
+            <form onSubmit={handleCloseShift} className="p-5 sm:p-6 space-y-4 overflow-y-auto">
               <div className="bg-[var(--color-surface-2)] p-4 rounded-xl border border-white/5 mb-4 text-sm space-y-3">
                 <div className="flex justify-between items-center text-gray-300">
                   <span>Modal Awal Laci</span>
