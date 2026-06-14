@@ -257,9 +257,11 @@ export async function deleteMemberAction(userId: string) {
       .single();
 
     if (memberData?.id) {
-      // Delete child records that reference member_id
-      await supabaseAdmin.from('subscriptions').delete().eq('member_id', memberData.id);
-      await supabaseAdmin.from('attendance').delete().eq('member_id', memberData.id);
+      // Delete child records in parallel for speed
+      await Promise.all([
+        supabaseAdmin.from('subscriptions').delete().eq('member_id', memberData.id),
+        supabaseAdmin.from('attendance').delete().eq('member_id', memberData.id),
+      ]);
     }
 
     // Delete from members table

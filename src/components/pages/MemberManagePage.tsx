@@ -407,10 +407,12 @@ export default function MembersPage() {
           if (error) throw error;
         }
         
-        alert('Member berhasil dihapus!');
+        // Optimistic update: remove member from list immediately
+        setMembers(prev => prev.filter(m => m.id !== member.id));
+        // Also refresh data in the background for consistency
         fetchData();
       } catch (err: any) {
-        alert("Gagal menghapus member: " + err.message + "\n\n(Pastikan ON DELETE CASCADE sudah disetup di Supabase)");
+        alert("Gagal menghapus member: " + err.message);
       }
     }
   };
