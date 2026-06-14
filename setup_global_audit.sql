@@ -35,16 +35,13 @@ BEGIN
   v_admin_id := auth.uid();
 
   -- Fallback for Server Actions using Service Role Key (auth.uid is null)
-  -- If the table has a last_modified_by or created_by column, we extract it from the NEW record
+  -- If the table has a last_modified_by column, extract admin from there
   IF v_admin_id IS NULL AND TG_OP IN ('INSERT', 'UPDATE') THEN
-    BEGIN
-      v_admin_id := COALESCE(
-        (to_jsonb(NEW) ->> 'last_modified_by')::uuid,
-        (to_jsonb(NEW) ->> 'created_by')::uuid
-      );
-    EXCEPTION WHEN OTHERS THEN
-      -- Ignore cast errors or missing columns
-    END;
+    IF (to_jsonb(NEW)) ? 'last_modified_by' AND (to_jsonb(NEW) ->> 'last_modified_by') IS NOT NULL THEN
+      v_admin_id := (to_jsonb(NEW) ->> 'last_modified_by')::uuid;
+    ELSIF (to_jsonb(NEW)) ? 'created_by' AND (to_jsonb(NEW) ->> 'created_by') IS NOT NULL THEN
+      v_admin_id := (to_jsonb(NEW) ->> 'created_by')::uuid;
+    END IF;
   END IF;
 
   IF TG_OP = 'INSERT' THEN
@@ -92,8 +89,7 @@ CREATE TRIGGER audit_subscriptions_trigger
 AFTER INSERT OR UPDATE OR DELETE ON subscriptions
 FOR EACH ROW EXECUTE FUNCTION log_audit_event();
 
--- Users (Role changes, ban/unban)
-DROP TRIGGER IF EXISTS audit_users_trigger ON users;
-CREATE TRIGGER audit_users_trigger
-AFTER UPDATE OR DELETE ON users
-FOR EACH ROW EXECUTE FUNCTION log_audit_event();
+-- Users: REMOVED - This trigger conflicts with Supabase Auth's internal
+-- user creation process and causes "Database error creating new user".
+-- User changes are already tracked via the members and subscriptions triggers.
+-- DROP TRIGGER IF EXISTS audit_users_trigger ON users;
