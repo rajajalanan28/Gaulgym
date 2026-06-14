@@ -81,10 +81,17 @@ export async function registerMemberAction(formData: FormData) {
         });
 
         if (authError) {
+          console.error('AUTH CREATE USER ERROR:', JSON.stringify({
+            message: authError.message,
+            status: authError.status,
+            name: authError.name,
+            code: (authError as any).code,
+            full: authError
+          }));
           if (authError.message.includes('already been registered') || authError.message.includes('already exists')) {
             // Orphaned auth user, continue to next suffix
           } else {
-            return { error: authError.message };
+            return { error: `[${authError.status || 'unknown'}] ${authError.message} | email: ${finalEmail}` };
           }
         } else {
           // Success! User created in auth
