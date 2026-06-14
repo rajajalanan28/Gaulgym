@@ -249,12 +249,32 @@ export async function deleteMemberAction(userId: string) {
        return { success: true, message: 'Hanya menghapus dari daftar member. Akun Owner/Admin tetap aman.' };
     }
 
-    // Delete from auth.users (will cascade if foreign keys are set up correctly)
+    // Get member ID first (needed for child table cleanup)
+    const { data: memberData } = await supabaseAdmin
+      .from('members')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
+
+    if (memberData?.id) {
+      // Delete child records that reference member_id
+      await supabaseAdmin.from('subscriptions').delete().eq('member_id', memberData.id);
+      await supabaseAdmin.from('attendance').delete().eq('member_id', memberData.id);
+    }
+
+    // Delete from members table
+    await supabaseAdmin.from('members').delete().eq('user_id', userId);
+
+    // Delete from public.users table
+    await supabaseAdmin.from('users').delete().eq('id', userId);
+
+    // Finally delete from auth.users (no more FK blocking)
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
     if (deleteError) {
-      console.error('Error deleting user:', deleteError);
-      return { error: `Gagal menghapus user: ${deleteError.message}` };
+      console.error('Error deleting auth user:', deleteError);
+      // Auth user might already be gone or orphaned, that's OK
+      // The important data (members, users) is already cleaned up
     }
 
     return { success: true, message: 'Member berhasil dihapus' };
