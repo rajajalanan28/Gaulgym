@@ -36,6 +36,7 @@ export default function CheckInPage() {
   const [manualInput, setManualInput] = useState("");
   const [showManualModal, setShowManualModal] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [multipleMatches, setMultipleMatches] = useState<any[] | null>(null);
 
   // Fetch recent checkins today
   const loadRecentCheckins = useCallback(async () => {
@@ -63,6 +64,84 @@ export default function CheckInPage() {
   useEffect(() => {
     loadRecentCheckins();
   }, [loadRecentCheckins]);
+
+  const executeCheckin = useCallback(async (member: any) => {
+    setIsProcessing(true);
+    try {
+      // 2. Cari Subscription aktif
+      const { data: subData } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('member_id', member.id)
+        .eq('status', 'active')
+        .order('end_date', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!subData) {
+        setLastScanResult({ success: false, message: `Member ${member.name} tidak memiliki paket aktif.` });
+        setShowConfirmation(true);
+        return;
+      }
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (subData.end_date < todayStr) {
+        setLastScanResult({ success: false, message: `Paket Member ${member.name} sudah kedaluwarsa pada ${new Date(subData.end_date).toLocaleDateString('id-ID')}.` });
+        setShowConfirmation(true);
+        return;
+      }
+
+      // 3. Hitung jumlah check-in hari ini (Validasi)
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayCheckins } = await supabase
+        .from('attendance')
+        .select('id')
+        .eq('member_id', member.id)
+        .eq('date', today);
+        
+      const checkInCount = todayCheckins ? todayCheckins.length : 0;
+
+      // 4. Catat di Attendance
+      const now = new Date().toISOString();
+      const { error: insertErr } = await supabase
+        .from('attendance')
+        .insert({
+          member_id: member.id,
+          member_name: member.name,
+          date: today,
+          check_in: now,
+          check_in_by: 'Admin',
+          checked_in_by_admin_id: user?.id,
+          status: 'checked_in'
+        });
+
+      if (insertErr) throw insertErr;
+
+      // Berhasil
+      setLastScanResult({
+        success: true,
+        message: "Check-in Berhasil!",
+        data: {
+          memberId: member.display_id,
+          memberName: member.name,
+          checkInTime: new Date(now),
+          membershipType: subData.package_name,
+          photoUrl: member.photo_url,
+          checkInCountToday: checkInCount + 1
+        }
+      });
+      setShowConfirmation(true);
+      loadRecentCheckins();
+    } catch (err: any) {
+      setLastScanResult({ success: false, message: err.message || "Terjadi kesalahan saat check-in." });
+      setShowConfirmation(true);
+    } finally {
+      setIsProcessing(false);
+      setShowManualModal(false);
+      setManualInput("");
+      setMultipleMatches(null);
+    }
+  }, [user, loadRecentCheckins]);
 
   const processCheckin = useCallback(async (memberIdQuery: string) => {
     if (!user) return;
@@ -112,92 +191,42 @@ export default function CheckInPage() {
         }
       }
 
-      const members = [...(membersByDisplayId || []), ...(membersByQrCode || []), ...membersByPhone];
+      // Also search by name
+      const { data: membersByName } = await supabase
+        .from('members')
+        .select('*')
+        .ilike('name', `%${memberIdQuery.trim()}%`);
+
+      const members = [...(membersByDisplayId || []), ...(membersByQrCode || []), ...membersByPhone, ...(membersByName || [])];
       // Deduplicate by id
       const uniqueMembers = members.filter((m, i, arr) => arr.findIndex(x => x.id === m.id) === i);
 
       if (uniqueMembers.length === 0) {
         setLastScanResult({ success: false, message: "Member tidak ditemukan." });
         setShowConfirmation(true);
+        setIsProcessing(false);
+        setShowManualModal(false);
+        setManualInput("");
+        return;
+      }
+
+      if (uniqueMembers.length > 1) {
+        setMultipleMatches(uniqueMembers);
+        setIsProcessing(false);
         return;
       }
 
       const member = uniqueMembers[0];
-
-      // 2. Cari Subscription aktif
-      const { data: subData } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('member_id', member.id)
-        .eq('status', 'active')
-        .order('end_date', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (!subData) {
-        setLastScanResult({ success: false, message: `Member ${member.name} tidak memiliki paket aktif.` });
-        setShowConfirmation(true);
-        return;
-      }
-
-      const todayStr = new Date().toISOString().split('T')[0];
-      if (subData.end_date < todayStr) {
-        setLastScanResult({ success: false, message: `Paket Member ${member.name} sudah kedaluwarsa pada ${new Date(subData.end_date).toLocaleDateString('id-ID')}.` });
-        setShowConfirmation(true);
-        return;
-      }
-
-      // 3. Hitung jumlah check-in hari ini (Validasi)
-      const today = new Date().toISOString().split('T')[0];
-      const { data: todayCheckins } = await supabase
-        .from('attendance')
-        .select('id')
-        .eq('member_id', member.id)
-        .eq('date', today);
-        
-      const checkInCount = todayCheckins ? todayCheckins.length : 0;
-
-      // 4. Catat di Attendance
-      const now = new Date().toISOString();
-      const { error: insertErr } = await supabase
-        .from('attendance')
-        .insert({
-          member_id: member.id,
-          member_name: member.name,
-          date: today,
-          check_in: now,
-          check_in_by: 'Admin',
-          checked_in_by_admin_id: user.id,
-          status: 'checked_in'
-        });
-
-      if (insertErr) throw insertErr;
-
-      // Berhasil
-      setLastScanResult({
-        success: true,
-        message: "Check-in Berhasil!",
-        data: {
-          memberId: member.display_id,
-          memberName: member.name,
-          checkInTime: new Date(now),
-          membershipType: subData.package_name,
-          photoUrl: member.photo_url,
-          checkInCountToday: checkInCount + 1
-        }
-      });
-      setShowConfirmation(true);
-      loadRecentCheckins();
+      await executeCheckin(member);
 
     } catch (err: any) {
       setLastScanResult({ success: false, message: err.message || "Terjadi kesalahan." });
       setShowConfirmation(true);
-    } finally {
       setIsProcessing(false);
       setShowManualModal(false);
       setManualInput("");
     }
-  }, [user, loadRecentCheckins]);
+  }, [user, executeCheckin]);
   useEffect(() => {
     let html5QrCode: Html5Qrcode | null = null;
 
@@ -498,38 +527,73 @@ export default function CheckInPage() {
       {/* Manual Input Modal */}
       {showManualModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-[var(--color-surface-1)] w-full max-w-md rounded-[24px] p-[32px] border border-[var(--color-hairline)] shadow-2xl">
+          <div className="bg-[var(--color-surface-1)] w-full max-w-md rounded-[24px] p-[32px] border border-[var(--color-hairline)] shadow-2xl max-h-[90vh] flex flex-col">
             <h3 className="text-[20px] font-bold text-[var(--color-ink)] mb-[8px] tracking-[-0.01em]">Input Manual Check-in</h3>
-            <p className="text-[14px] text-[var(--color-ink-muted)] mb-[24px]">Masukkan ID Member, No. HP, atau Scan ID QR</p>
+            <p className="text-[14px] text-[var(--color-ink-muted)] mb-[24px]">Masukkan Nama, ID Member, atau No. HP</p>
             
-            <form onSubmit={handleManualEntrySubmit}>
-              <input
-                type="text"
-                autoFocus
-                placeholder="ID Member / No. HP..."
-                value={manualInput}
-                onChange={(e) => setManualInput(e.target.value)}
-                className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring mb-[24px] font-medium text-[16px]"
-              />
-              
-              <div className="flex gap-[12px]">
+            {!multipleMatches ? (
+              <form onSubmit={handleManualEntrySubmit}>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Nama / ID Member / No. HP..."
+                  value={manualInput}
+                  onChange={(e) => setManualInput(e.target.value)}
+                  className="w-full px-[16px] py-[12px] bg-[var(--color-surface-2)] text-[var(--color-ink)] rounded-[12px] border border-[var(--color-hairline)] focus-ring mb-[24px] font-medium text-[16px]"
+                />
+                
+                <div className="flex gap-[12px]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowManualModal(false);
+                      setManualInput("");
+                    }}
+                    className="flex-1 py-[12px] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3)] text-[var(--color-ink)] rounded-[12px] font-medium transition-colors focus-ring"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isProcessing || !manualInput.trim()}
+                    className="flex-1 py-[12px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white disabled:opacity-50 rounded-[12px] font-medium transition-colors focus-ring flex justify-center items-center gap-2"
+                  >
+                    {isProcessing && <Loader2 size={16} className="animate-spin" />}
+                    Cari / Check-in
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="flex flex-col flex-1 overflow-hidden">
+                <p className="text-sm font-medium text-orange-500 mb-4 bg-orange-500/10 p-3 rounded-xl border border-orange-500/20">
+                  Ditemukan {multipleMatches.length} member. Pilih member yang tepat:
+                </p>
+                <div className="overflow-y-auto pr-2 space-y-3 mb-6 max-h-[40vh]">
+                  {multipleMatches.map(m => (
+                    <button
+                      key={m.id}
+                      onClick={() => executeCheckin(m)}
+                      disabled={isProcessing}
+                      className="w-full text-left p-4 rounded-xl border border-[var(--color-hairline)] hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/5 transition-all group disabled:opacity-50"
+                    >
+                      <div className="font-bold text-[var(--color-ink)] group-hover:text-[var(--color-primary)] transition-colors">{m.name}</div>
+                      <div className="text-sm text-[var(--color-ink-muted)] mt-1 flex justify-between">
+                        <span>ID: {m.display_id}</span>
+                        <span>{m.phone}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
                 <button
                   type="button"
-                  onClick={() => setShowManualModal(false)}
-                  className="flex-1 py-[12px] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3)] text-[var(--color-ink)] rounded-[12px] font-medium transition-colors focus-ring"
+                  onClick={() => setMultipleMatches(null)}
+                  disabled={isProcessing}
+                  className="w-full py-[12px] bg-[var(--color-surface-2)] hover:bg-[var(--color-surface-3)] text-[var(--color-ink)] rounded-[12px] font-medium transition-colors focus-ring"
                 >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={isProcessing || !manualInput.trim()}
-                  className="flex-1 py-[12px] bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white disabled:opacity-50 rounded-[12px] font-medium transition-colors focus-ring flex justify-center items-center gap-2"
-                >
-                  {isProcessing && <Loader2 size={16} className="animate-spin" />}
-                  Check-in
+                  Kembali Pencarian
                 </button>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}
