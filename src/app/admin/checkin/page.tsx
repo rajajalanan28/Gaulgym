@@ -161,34 +161,16 @@ export default function CheckInPage() {
         .select('*')
         .eq('qr_code', sanitizedQuery);
 
-      // Also search by phone number (allow original input with special chars for phone)
-      const phoneQuery = memberIdQuery.replace(/[^0-9+]/g, '');
+      // Also search by phone number (allow partial match like last 4 digits)
+      // Extract only digits to make partial matching robust
+      const phoneQuery = memberIdQuery.replace(/[^0-9]/g, '');
       let membersByPhone: any[] = [];
-      if (phoneQuery.length >= 8) {
+      if (phoneQuery.length >= 4) {
         const { data } = await supabase
           .from('members')
           .select('*')
-          .eq('phone', memberIdQuery.trim());
+          .ilike('phone', `%${phoneQuery}%`);
         membersByPhone = data || [];
-        
-        // Also try without leading 0 -> +62 and vice versa
-        if (membersByPhone.length === 0) {
-          let altPhone = '';
-          if (phoneQuery.startsWith('0')) {
-            altPhone = '+62' + phoneQuery.substring(1);
-          } else if (phoneQuery.startsWith('62')) {
-            altPhone = '0' + phoneQuery.substring(2);
-          } else if (phoneQuery.startsWith('+62')) {
-            altPhone = '0' + phoneQuery.substring(3);
-          }
-          if (altPhone) {
-            const { data: altData } = await supabase
-              .from('members')
-              .select('*')
-              .eq('phone', altPhone);
-            membersByPhone = altData || [];
-          }
-        }
       }
 
       // Also search by name
