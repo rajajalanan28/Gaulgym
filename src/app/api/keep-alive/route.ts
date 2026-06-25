@@ -32,7 +32,7 @@ export async function GET() {
       message: 'Supabase is awake! 🚀', 
       timestamp: new Date().toISOString(),
       // Tampilkan ID gym (kalau ada) sekadar bukti query sukses
-      ping_result: data?.length ? 'Database connected' : 'Database connected (No gyms)'
+      ping_result: data?.length ? 'Database connected' : 'Database connected (No members)'
     });
   } catch (error: any) {
     console.error('Keep-alive error:', error);
