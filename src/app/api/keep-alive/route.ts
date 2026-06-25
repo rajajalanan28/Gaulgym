@@ -19,9 +19,9 @@ export async function GET() {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    // Melakukan query sangat ringan ke tabel gyms hanya untuk memberi sinyal aktivitas ke Supabase
+    // Melakukan query sangat ringan ke tabel members hanya untuk memberi sinyal aktivitas ke Supabase
     const { data, error } = await supabase
-      .from('gyms')
+      .from('members')
       .select('id')
       .limit(1);
 
