@@ -19,9 +19,9 @@ export async function GET() {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    // Melakukan query sangat ringan ke tabel members hanya untuk memberi sinyal aktivitas ke Supabase
+    // Melakukan query sangat ringan ke tabel users (karena admin pasti terdaftar) untuk memberi sinyal aktivitas
     const { data, error } = await supabase
-      .from('members')
+      .from('users')
       .select('id')
       .limit(1);
 
@@ -31,8 +31,8 @@ export async function GET() {
       status: 'success', 
       message: 'Supabase is awake! 🚀', 
       timestamp: new Date().toISOString(),
-      // Tampilkan ID gym (kalau ada) sekadar bukti query sukses
-      ping_result: data?.length ? 'Database connected' : 'Database connected (No members)'
+      // Tampilkan ID user sekadar bukti query sukses
+      ping_result: data?.length ? 'Database connected' : 'Database connected (No users)'
     });
   } catch (error: any) {
     console.error('Keep-alive error:', error);
